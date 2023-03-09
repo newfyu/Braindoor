@@ -1,6 +1,6 @@
 # 🧠  Braindoor
 
-[中文](../README.md) | English
+[中文](README.md) | English
 
 ## Overview
 
