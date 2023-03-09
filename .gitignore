@@ -1,0 +1,17 @@
+__pycache__
+bak/
+corpus/
+corpus_bak/
+*.ipynb
+.ipynb_checkpoints
+key
+*.pkl
+others/
+.DS_store
+flagged/
+temp/
+.jupyter
+*.vault
+*.base
+bases/
+*.log

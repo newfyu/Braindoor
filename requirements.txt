@@ -1,0 +1,13 @@
+backoff
+beautifulsoup4
+gradio==3.18.0
+html2text
+langchain==0.0.83
+numpy
+openai
+pandas
+PyPDF2
+python-docx
+PyYAML
+tiktoken
+faiss-cpu

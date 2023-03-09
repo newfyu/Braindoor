@@ -1,0 +1,14 @@
+HyDE: false
+answer_depth: 1.0
+ask_topk: 5
+bases_root: bases
+key: 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
+localtext_cutoff: 2000
+max_context: 1000
+max_l2: 0.4
+proxy: "http://127.0.0.1:1087"
+rate_limit: 1
+result_size: 300
+review_chunk_overlap: 50
+review_chunk_size: 2000
+search_topk: 20
