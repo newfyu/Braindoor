@@ -16,8 +16,8 @@ opt = mygpt.opt
 with open("ui/style.css", "r", encoding="utf8") as file:
     css = file.read()
 
-with gr.Blocks(css=css, title="BrainDoor", elem_id="main_block") as demo:
-    gr.Markdown("## 🧠 BrainDoor")
+with gr.Blocks(css=css, title="Braindoor", elem_id="main_block") as demo:
+    gr.Markdown("## 🧠 Braindoor")
     base_list = sorted((mygpt.bases.keys()))
     with gr.Tab("Search"):
         search.search_interface.render()
