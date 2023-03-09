@@ -34,8 +34,8 @@ pip install -r requirements.txt
 ```shell
 python app.py
 ```
-<font color="#660000">浏览器中打开地址 127.0.0.1:7086，然后在Config标签中配置你的openai key才能正常使用！</font>   
-国内用户可能还要在Config中配置http代理服务器地址，或则开全局代理    
+**浏览器中打开地址 127.0.0.1:7086，然后在Config标签中配置你的openai key才能正常使用！** 
+国内用户可能还要在Config中配置http代理服务器地址，或则开全局代理。    
 
 ---
 ### 创建知识库 Config / Create: new knowledge base
@@ -103,7 +103,7 @@ python app.py
 | -------------------- | ----- | -------------------------------------------------------------------------------- | ----- |
 | key                  | str   | 填写你的openai的key                                                                   | ‘‘    |
 | rate_limit           | int   | 由于openai有请求速率限制，在创建向量仓库时候很容易被限制访问。1表示发送一个请求后休息1秒。只对创建和更新知识库时起作用。                 | 1     |
-| proxy                | str   | 可在请求openai api时启用代理。填写你的代理地址，比如："http://127.0.0.1:1087"                           | ‘‘    |
+| proxy                | str   | 可在请求openai api时启用代理。填写你的http代理地址，比如："http://127.0.0.1:1087"                           | ‘‘    |
 | search_topk          | int   | 作用于Search模块。搜索返回的结果数。                                                            | 20    |
 | result_size          | int   | 作用于Search模块。预览文字的长度。                                                             | 300   |
 | answer_depth         | int:  | 作用于Ask模块，chabot在回答时，参考你的本地文档片段的最大数量。                                             | 1     |
@@ -115,7 +115,7 @@ python app.py
 
 ---
 ### 主要第三方依赖
-- 大语言模型：chatgpt
-- 文本拆分工具：langchain
+- 语言模型：chatgpt
+- 文本拆分：langchain
 - 向量仓库：faiss
 - Web界面: gradio
