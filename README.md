@@ -1,6 +1,6 @@
 # 🧠 大脑门儿 Braindoor
 
-中文|[English](README_EN.md)
+中文 | [English](doc/README_EN.md)
 
 ## 概述
 
