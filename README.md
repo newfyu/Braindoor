@@ -34,7 +34,7 @@ pip install -r requirements.txt
 ```shell
 python app.py
 ```
-***浏览器中打开地址 127.0.0.1:7086，然后在Config标签中配置你的openai key才能正常使用！***    
+<span style="color:red">浏览器中打开地址 127.0.0.1:7086，然后在Config标签中配置你的openai key才能正常使用！</span>    
 国内用户可能还要在Config中配置http代理服务器地址，或则开全局代理    
 
 ---
