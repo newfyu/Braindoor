@@ -43,8 +43,18 @@ conda install -c conda-forge faiss-cpu
 
 3、启动
 
+Windows, Liunx
+
 ```shell
 python app.py
+```
+
+Mac os 增加了工具栏开关，还可以下面命令运行
+
+```shell
+python run.py 
+# 后台运行
+# nohup python run.py&
 ```
 
 **浏览器中打开地址 `127.0.0.1:7086`，然后在`Config`标签中配置你的`openai key`才能正常使用！** 
@@ -52,7 +62,7 @@ python app.py
 
 ---
 
-### 创建知识库 Config / Create: new knowledge base
+### 创建知识库
 
 - 在大脑门儿中，一个向量仓库及它索引的文件夹，称为一个knowledge base。     
 
@@ -71,9 +81,9 @@ python app.py
 
 ---
 
-### 更新知识库 Config / Update existing knowledge base
+### 更新知识库
 
-- 当索引的文件夹内容有改动，点击`Update`按钮检查同时更新向量仓库
+- 当索引的文件夹内容有改动，在`Config/update knowledge base`中`Load`已创建的知识库后。再点击`Update`按钮检查并更新向量库
 - 改变知识库的一些配置后，也需要点击`Save base config`按钮
 - 可以为一个知识库增加更多的索引文件夹
 

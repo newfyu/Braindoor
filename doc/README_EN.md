@@ -43,9 +43,16 @@ conda install -c conda-forge faiss-cpu
 
 3、Launch
 
+Windows, Liunx
+
+```shell
+python app.py
+```
+
+Mac OS has added a toolbar switch that can also be run with the following command
+
 ```shell
 python run.py
-
 # Background running
 # nohup python run.py& 
 ```
@@ -56,9 +63,9 @@ Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config`
 
 ### Create a new knowledge base
 
-- In  braindoor, A vectorstore  and its indexed folders are called a knowledge base  
+- In  braindoor, a vectorstore and its indexed folders are called a knowledge base  
 
-- In `Config \ Create a new knowledge base`, enter the base name and a local folder path, and the file type to create a knowledge base
+- When the contents of the index folder are changed, `Load` the knowledge base created in `Config/update knowledge base`. Click the `Update` button again to check and update
 
 - Only one index folder is allowed to be added during creation, but more folders can be added in update after creation is successful
 
