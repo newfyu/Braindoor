@@ -10,4 +10,3 @@ PyPDF2
 python-docx
 PyYAML
 tiktoken
-faiss-cpu
