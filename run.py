@@ -17,6 +17,7 @@ class BrainDoorBar(rumps.App):
         self.menu.clear()
         self.menu.add(self.item_stop)
         self.menu.add(self.item_quit)
+        self.title = "🧠"
 
 
     def stop_app(self, _):
@@ -24,6 +25,7 @@ class BrainDoorBar(rumps.App):
         self.menu.clear()
         self.menu.add(self.item_run)
         self.menu.add(self.item_quit)
+        self.title = "🌀"
         
 
     def quit(self, _):
