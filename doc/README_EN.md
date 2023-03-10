@@ -47,7 +47,7 @@ conda install -c conda-forge faiss-cpu
 python app.py
 ```
 
-Open "127.0.0.1:7086" in browser and configure your openai key in the Config TAB to work!  
+Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config` TAB to work!  
 
 ---
 
@@ -55,34 +55,34 @@ Open "127.0.0.1:7086" in browser and configure your openai key in the Config TAB
 
 - In  braindoor, A vectorstore  and its indexed folders are called a knowledge base  
 
-- In Config --> Create a new knowledge base, enter the base name and a local folder path, and the file type to create a knowledge base
+- In `Config \ Create a new knowledge base`, enter the base name and a local folder path, and the file type to create a knowledge base
 
 - Only one index folder is allowed to be added during creation, but more folders can be added in update after creation is successful
 
 - Chunk size is the max size of a document chunk. If you want to answer questions, the size of 1000-2000 is appropriate. Over 2000, it is easy to break the token limit of gpt3.5-turbo
 
-> Example: Suppose I want to build a knowledge base with my obsidian notes.  My obsidian note location is `~/obsidian/myvult`。 
+> Example: Suppose I want to build a knowledge base with my obsidian notes.  My obsidian note location is `~/obsidian/myvult`. 
 > 
-> 1. First fill in a knowledge base name, such as: "mybase“
-> 2. `~/obsidian/myvult``Paste into the "Directory" textbox
-> 3. Select "md" and "txt" for file type“
-> 4. Then click the Create button
+> 1. First fill in a knowledge base name, such as: `mybase`
+> 2. `~/obsidian/myvult`Paste into the `Directory` textbox
+> 3. Select `md` and `txt` for file type
+> 4. Then click the `Create` button
 
 ---
 
 ### Update existing knowledge base
 
-- When the contents of the indexed folder have changed, click the update button to check the changes and update the vector store.
-- After changing some configurations of the knowledge base, you need to click the "Save base config" button
+- When the contents of the indexed folder have changed, click the `Update` button to check the changes and update the vectorstore.
+- After changing some configurations of the knowledge base, you need to click the `Save base config` button
 - You can add more index folders for a knowledge base
 
 > Example:：I also want to add my Evernote to the knowledge base。
 > 
-> - First, use EverNote's export feature to export your notes in html format to any directory such as `~/evernote` 
+> 1. First, use EverNote's export feature to export your notes in html format to any directory such as `~/evernote` 
 > 
-> - In the “Add a new directory to current knowledge base” text box, enter `~/evernote`, Type select `html`.
+> 2. In the `Add a new directory to current knowledge base` text box, enter `~/evernote`, Type select `html`.
 > 
-> - Click the "Save base config" button. After confirming the information, click "Update" to update it. 
+> 3. Click the `Save base config` button. After confirming the information, click `Update` to update it. 
 
 > Delete a knowledge base: directly delete the corresponding `.base` file in the bases folder
 

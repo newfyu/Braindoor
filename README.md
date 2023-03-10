@@ -47,8 +47,8 @@ conda install -c conda-forge faiss-cpu
 python app.py
 ```
 
-**浏览器中打开地址 127.0.0.1:7086，然后在Config标签中配置你的openai key才能正常使用！** 
-国内用户可能还要在Config中配置http代理服务器地址，或则开全局代理。    
+**浏览器中打开地址 `127.0.0.1:7086`，然后在`Config`标签中配置你的`openai key`才能正常使用！** 
+国内用户可能还要在`Config`标签中配置http代理服务器地址，或则开全局代理。    
 
 ---
 
@@ -56,7 +56,7 @@ python app.py
 
 - 在大脑门儿中，一个向量仓库及它索引的文件夹，称为一个knowledge base。     
 
-- 在Config --> Create a new knowledge base中，填写库名和一个本地文件夹路径，文件类型即可创建一个knowledge base。
+- 在`Config \ Create a new knowledge base`中，填写库名和一个本地文件夹路径，文件类型即可创建一个knowledge base。
 
 - 创建时只允许加入一个索引文件夹，但创建成功后可以在update中添加更多的文件夹
 
@@ -64,28 +64,28 @@ python app.py
 
 > 例：假设我想用我的obsidian笔记构建一个知识库，笔记路径为 `~/obsidian/myvult`。 
 > 
-> 1. 填写库名如: "mybase“
-> 2. `~/obsidian/myvult`地址粘贴到 "Directory“文本框中
-> 3. 文件类型选择"md"和“txt“
-> 4. 点击Create按钮
+> 1. 填写库名如: `mybase`
+> 2. `~/obsidian/myvult`地址粘贴到 `Directory`文本框中
+> 3. 文件类型选择`md`和`txt`
+> 4. 点击`Create`按钮
 
 ---
 
 ### 更新知识库 Config / Update existing knowledge base
 
-- 当索引的文件夹内容有改动，点击update按钮检查同时更新向量仓库
-- 改变知识库的一些配置后，也需要点击"Save base config"按钮
+- 当索引的文件夹内容有改动，点击`Update`按钮检查同时更新向量仓库
+- 改变知识库的一些配置后，也需要点击`Save base config`按钮
 - 可以为一个知识库增加更多的索引文件夹
 
 > 例：我想把我的印象笔记也加入知识库中。
 > 
-> - 先使用印象笔记的导出功能把所有笔记用单个html的格式导出到任意文件夹比如`~/evernote` 中。
+> 1. 先使用印象笔记的导出功能把所有笔记用单个html的格式导出到任意文件夹比如`~/evernote` 中。
 > 
-> - 然后在`Add a new directory to current knowledge base`文本框中，填写`~/evernote`，类型选择`html`。 
+> 2. 然后在`Add a new directory to current knowledge base`文本框中，填写`~/evernote`，类型选择`html`。 
 > 
-> - 点击 "Save base config"按钮。确认信息无误后，点击“Update"更新。
+> 3. 点击 `Save base config`按钮。确认信息无误后，点击`Update`更新。
 
-> 删除知识库: 在bases文件夹中直接删除对应的.base文件
+> 删除知识库: 在`bases`文件夹中直接删除对应的`base`文件
 
 ---
 
