@@ -104,7 +104,7 @@ def with_proxy(proxy_address):
 
 def txt2html(text):
     text = text.replace("\n", "<br>")
-    text = text.replace(" ", "&nbsp;")
+    #  text = text.replace(" ", "&nbsp;")
     #  text = text.replace('`', '&#96;')
     text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
     return text

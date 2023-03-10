@@ -6,7 +6,7 @@
 
 大脑门儿可以方便的用本地文件来构建ChatGPT的外部知识库。支持自然语言搜索、问答和全文分析本地文档。
 
-![](doc/fig1.png)
+![](doc/fig0.png)
 
 ### 常见用例
 
@@ -62,12 +62,12 @@ python app.py
 
 - chunk size是将文件切片后嵌入的大小，如果你希望进行问答，切片大小1000-2000是合适的。超过2000容易突破gpt3.5-turbo的token限制。
 
-> 例：假设我有一个obidian笔记仓库，路径为 `~/obsidian/myvult`。 
+> 例：假设我想用我的obsidian笔记构建一个知识库，笔记路径为 `~/obsidian/myvult`。 
 > 
-> 1. 先填写一个知识库名如: "mybase“
-> 2. obsidian地址粘贴到 “Directory“中
+> 1. 填写库名如: "mybase“
+> 2. `~/obsidian/myvult`地址粘贴到 "Directory“文本框中
 > 3. 文件类型选择"md"和“txt“
-> 4. 然后点击Create按钮
+> 4. 点击Create按钮
 
 ---
 
@@ -77,7 +77,13 @@ python app.py
 - 改变知识库的一些配置后，也需要点击"Save base config"按钮
 - 可以为一个知识库增加更多的索引文件夹
 
-> 例：我想把我的印象笔记也加入知识库中。先使用印象笔记的导出功能把所有笔记用单个html的形式导出到文件夹`~/evernote` 中。然后在“Add a new directory to current knowledge base”文本框中，填写`~/evernote`，类型选择`html`。 然后点击 "Save base config"按钮。确认信息无误后，点击“Update"更新。
+> 例：我想把我的印象笔记也加入知识库中。
+> 
+> - 先使用印象笔记的导出功能把所有笔记用单个html的格式导出到任意文件夹比如`~/evernote` 中。
+> 
+> - 然后在`Add a new directory to current knowledge base`文本框中，填写`~/evernote`，类型选择`html`。 
+> 
+> - 点击 "Save base config"按钮。确认信息无误后，点击“Update"更新。
 
 > 删除知识库: 在bases文件夹中直接删除对应的.base文件
 
@@ -97,9 +103,11 @@ python app.py
 - 默认情况下会参考库中最相似的文档片段（docoment chunk）
 - 可以增加answer depth来让chatbot去参考更多相似文档
 - 支持连续的问答，但不同的主题尽可能重新开启对话
-  ![](/doc/fig3.png)
+  ![](doc/ask_en.png)
 
-> default表示不使用本地知识库，返回的是chatgpt的原始回答。
+> default表示不使用本地知识库，返回的是chatgpt的原始回答.
+
+> help是一个示例knowledge base，存储的即本文
 
 ---
 
@@ -126,19 +134,19 @@ python app.py
 常用配置可以在config标签中设置
 还有一些高级参数，不建议改动。如果需要可以在config.yaml文件中修改
 
-| 参数名                  | 类型    | 说明                                                                               | 默认值   |
-| -------------------- | ----- | -------------------------------------------------------------------------------- | ----- |
-| key                  | str   | 填写你的openai的key                                                                   | ‘‘    |
-| rate_limit           | int   | 由于openai有请求速率限制，在创建向量仓库时候很容易被限制访问。1表示发送一个请求后休息1秒。只对创建和更新知识库时起作用。                 | 1     |
-| proxy                | str   | 可在请求openai api时启用代理。填写你的http代理地址，比如："http://127.0.0.1:1087"                      | ‘‘    |
-| search_topk          | int   | 作用于Search模块。搜索返回的结果数。                                                            | 20    |
-| result_size          | int   | 作用于Search模块。预览文字的长度。                                                             | 300   |
-| answer_depth         | int:  | 作用于Ask模块，chabot在回答时，参考你的本地文档片段的最大数量。                                             | 1     |
-| max_context          | int   | 作用于Ask模块。上下文最大token值。                                                            | 1000  |
-| max_l2               | float | 作用于Ask模块。搜索相似本地片段时允许的最大L2距离。                                                     | 0.4   |
-| HyDE                 | bool  | 作用于ASK模块。chatbot在参考本地文档前，根据你的问题预先用chatgpt生成一个初步回答，然后再匹配相似的本地文档。会增加准确性，但也会增加一点开销。 | false |
-| review_chunk_size    | int   | 作用于Review模块，对传入的长文本切片时每块的最大token值。                                               | 2000  |
-| review_chunk_overlap | int   | 作用于Review模块，对传入的长文本切片时重叠的token值。                                                 | 50    |
+| 参数名                  | 类型    | 说明                                                                         | 默认值   |
+| -------------------- | ----- | -------------------------------------------------------------------------- | ----- |
+| key                  | str   | 填写openai的key                                                               | ‘‘    |
+| rate_limit           | int   | 由于openai有请求速率限制，在创建向量仓库时候如果短时间有大量请求，很容易被限制访问。1表示发送一个请求后休息1秒。只在创建和更新知识库时生效。 | 1     |
+| proxy                | str   | 可在请求openai api时启用代理。填写你的http代理地址，比如："http://127.0.0.1:1087"                | ‘‘    |
+| search_topk          | int   | 作用于Search模块。搜索返回的结果数。                                                      | 20    |
+| result_size          | int   | 作用于Search模块。预览文字的长度。                                                       | 300   |
+| answer_depth         | int:  | 作用于Ask模块，chabot在回答时，读取本地文档片段的最大数量。默认1表示只会读取最相似的一个片段。                       | 1     |
+| max_context          | int   | 作用于Ask模块。上下文最大token值。                                                      | 1000  |
+| max_l2               | float | 作用于Ask模块。匹配相似本地片段时允许的最大L2距离。                                               | 0.4   |
+| HyDE                 | bool  | 作用于ASK模块。chatbot在匹配本地文档前，根据你的问题预先用chatgpt生成一个初步回答，然后再匹配。可增加准确性，但也会增加一点开销。  | false |
+| review_chunk_size    | int   | 作用于Review模块。对长文本分割时每块的最大token值。                                            | 2000  |
+| review_chunk_overlap | int   | 作用于Review模块。长文本分割时重叠的token数。                                               | 50    |
 
 ---
 
