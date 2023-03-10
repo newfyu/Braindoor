@@ -43,18 +43,8 @@ conda install -c conda-forge faiss-cpu
 
 3、启动
 
-Windows, Liunx
-
 ```shell
 python app.py
-```
-
-Mac os 增加了工具栏开关，还可以下面命令运行
-
-```shell
-python run.py 
-# 后台运行
-# nohup python run.py&
 ```
 
 **浏览器中打开地址 `127.0.0.1:7086`，然后在`Config`标签中配置你的`openai key`才能正常使用！** 

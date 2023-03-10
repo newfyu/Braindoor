@@ -49,14 +49,6 @@ Windows, Liunx
 python app.py
 ```
 
-Mac OS has added a toolbar switch that can also be run with the following command
-
-```shell
-python run.py
-# Background running
-# nohup python run.py& 
-```
-
 Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config` TAB to work!  
 
 ---
