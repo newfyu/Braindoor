@@ -10,3 +10,4 @@ PyPDF2
 python-docx
 PyYAML
 tiktoken
+rumps
