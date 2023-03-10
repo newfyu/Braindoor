@@ -44,7 +44,10 @@ conda install -c conda-forge faiss-cpu
 3、Launch
 
 ```shell
-python app.py
+python run.py
+
+# Background running
+# nohup python run.py& 
 ```
 
 Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config` TAB to work!  
