@@ -95,7 +95,6 @@ def create_vstore(df_docs):
     for file_path in df_docs.file_path:
         metadatas.append({"file_path": file_path})
     vstore = FAISS.from_texts(list(df_docs["doc"]), embeddings, metadatas=metadatas)
-
     return vstore
 
 
@@ -125,8 +124,13 @@ def create_base(base_name, paths, chunk_size, chunk_overlap, max_chunk_num):
         vstore = create_vstore(df_docs)
         if not ".base" in base_name:
             base_name = base_name + ".base"
-        base_path = os.path.join(opt["bases_root"], base_name)
-        if not os.path.exists('bash_pash'):
+        root = opt["bases_root"]
+        base_path = os.path.join(root, base_name)
+
+        if not os.path.exists(root):
+            os.mkdir(root)
+
+        if not os.path.exists(base_path):
             with open(base_path, "wb") as f:
                 save = {
                     "df_file_md5": df_file_md5,

@@ -159,6 +159,7 @@ def run_create_base(base_name, path, types, chunk_size, chunk_overlap, max_chunk
             gr.update(choices=base_list),
             gr.update(choices=base_list),
             gr.update(choices=base_list_ask),
+            gr.update(visible=True)
         )
     except Exception as e:
         info = f"Failed to create {base_name}! Error:{e}"
@@ -186,10 +187,16 @@ with gr.Blocks(title="ask") as config_interface:
     general_configs = [cmpt_key, box_rate_limit, box_topk, box_hyde, box_answer_depth, box_proxy]
 
     with gr.Accordion("Update existing knowledge base", open=False, elem_id="acc"):
-        #  with gr.Row().style(equal_height=True):
-        box_base_name = gr.Dropdown(base_list,value=base_list[0],label="Select a knowledge base")
-            #  btn_load_base = gr.Button("Load", elem_id="low_btn1", variant="primary")
-            #  btn_load_base.style(full_width=False)
+        with gr.Row().style(equal_height=True):
+            if len(base_list)>0:
+                box_base_name = gr.Dropdown(base_list,label="Select a knowledge base")
+                btn_load_base = gr.Button("Load", elem_id="low_btn1", variant="primary")
+                btn_load_base.style(full_width=False)
+            else:
+                box_base_name = gr.Dropdown(base_list,label="Select a knowledge base")
+                btn_load_base = gr.Button("Load", elem_id="low_btn1", variant="primary",visible=False)
+                btn_load_base.style(full_width=False)
+
         with gr.Row():
             box_chunk_size = gr.Number(label="chunk size", value=0)
             box_chunk_overlap = gr.Number(label="chunk overlap", value=0)
@@ -251,7 +258,7 @@ with gr.Blocks(title="ask") as config_interface:
     btn_load.click(fn=reload, outputs=general_configs)
 
     # load base for update
-    config_interface.load(
+    btn_load_base.click(
         fn=get_base_info,
         inputs=box_base_name,
         outputs=[
@@ -267,21 +274,21 @@ with gr.Blocks(title="ask") as config_interface:
         ],
     )
 
-    box_base_name.change(
-        fn=get_base_info,
-        inputs=box_base_name,
-        outputs=[
-            box_chunk_size,
-            box_chunk_overlap,
-            box_max_chunk_num,
-            menu_dir,
-            state_dir_list,
-            btn_remove_dir,
-            btn_add_dir,
-            btn_update_base,
-            btn_save_base_config,
-        ],
-    )
+    #  box_base_name.change(
+        #  fn=get_base_info,
+        #  inputs=box_base_name,
+        #  outputs=[
+            #  box_chunk_size,
+            #  box_chunk_overlap,
+            #  box_max_chunk_num,
+            #  menu_dir,
+            #  state_dir_list,
+            #  btn_remove_dir,
+            #  btn_add_dir,
+            #  btn_update_base,
+            #  btn_save_base_config,
+        #  ],
+    #  )
 
     btn_remove_dir.click(
         fn=remove_dir,
@@ -325,6 +332,7 @@ with gr.Blocks(title="ask") as config_interface:
             box_base_name,
             search.radio_base_name,
             ask.radio_base_name_ask,
+            btn_load_base
         ],
     )
     show_log_create = btn_create_base.click(fn=get_last_log, outputs=box_log, every=1)

@@ -27,20 +27,19 @@ class MyGPT:
         self.bases_root = self.opt["bases_root"]
         self.bases = dict()
         base_paths = list(Path(self.bases_root).glob("*.base"))
-        if len(base_paths) == 0:
-            if not os.path.exists(self.opt['bases_root']):
-                os.mkdir(self.opt['bases_root'])
-            shutil.copy('help',os.path.join(self.opt['bases_root'],'help.base'))
-        base_paths = list(Path(self.bases_root).glob("*.base"))
-        for base_path in base_paths:
-            vstore, df_file_md5, df_docs, metadata = load_base(base_path)
-            base_name = metadata["name"]
-            self.bases[base_name] = {
-                "df_docs": df_docs,
-                "df_file_md5": df_file_md5,
-                "metadata": metadata,
-                "vstore": vstore,
-            }
+        if len(base_paths) > 0:
+            base_paths = list(Path(self.bases_root).glob("*.base"))
+            for base_path in base_paths:
+                vstore, df_file_md5, df_docs, metadata = load_base(base_path)
+                base_name = metadata["name"]
+                self.bases[base_name] = {
+                    "df_docs": df_docs,
+                    "df_file_md5": df_file_md5,
+                    "metadata": metadata,
+                    "vstore": vstore,
+                }
+        else:
+            logger.info('no base exists')
 
         openai.api_key = self.opt["key"]
 

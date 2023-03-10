@@ -77,9 +77,15 @@ with gr.Blocks(title="search") as search_interface:
     box_search.style(container=False)
     base_list = sorted((mygpt.bases.keys()))
     with gr.Row():
-        radio_base_name = gr.Radio(
-            base_list, show_label=False, value=base_list[0], interactive=True
-        )
+        if len(base_list)>0:
+            radio_base_name = gr.Radio(
+                base_list, show_label=False, value=base_list[0], interactive=True
+            )
+        else:
+            radio_base_name = gr.Radio(
+                base_list, show_label=False, interactive=True
+            )
+
         radio_base_name.style(container=False, item_container=False)
         search_mode = gr.Radio(
             ["similarity", "keyword"],
