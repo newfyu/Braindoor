@@ -180,11 +180,11 @@ with gr.Blocks(title="ask") as config_interface:
         with gr.Row().style(equal_height=True):
             box_proxy = gr.Textbox(opt['proxy'], label='Proxy')
             box_answer_depth = gr.Number(1, label="Answer depth")
-            box_hyde = gr.Checkbox(False, label="HyDE")
+            #  box_hyde = gr.Checkbox(False, label="HyDE")
         with gr.Row():
             btn_load = gr.Button("Reload config", variant="primary")
             btn_save = gr.Button("Save config", variant="primary")
-    general_configs = [cmpt_key, box_rate_limit, box_topk, box_hyde, box_answer_depth, box_proxy]
+    general_configs = [cmpt_key, box_rate_limit, box_topk, ask.box_hyde, box_answer_depth, box_proxy]
 
     with gr.Accordion("Update existing knowledge base", open=False, elem_id="acc"):
         with gr.Row().style(equal_height=True):

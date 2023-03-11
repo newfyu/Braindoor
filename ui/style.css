@@ -72,6 +72,16 @@ div.svelte-1dl81bf {
     transform: translate(15%, 15%);
 }
 
+#btn_stop {
+    flex-grow: 0;
+	width: 40px;
+    min-width: 40px;
+    flex-grow: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(125%, 15%);
+}
 #btn_clear_context_review {
     flex-grow: 0;
 	width: 40px;
@@ -82,6 +92,29 @@ div.svelte-1dl81bf {
     left: 0;
     transform: translate(15%, 15%);
 }
+#btn_stop_review {
+    flex-grow: 0;
+	width: 40px;
+    min-width: 40px;
+    flex-grow: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(125%, 15%);
+}
+
+#box_hyde {
+    flex-grow: 0;
+    width: 40px;
+    min-width: 40px;
+    flex-grow: 0;
+    position: absolute;
+    right: 0;
+    transform: translate(-100%, 10%);
+    bottom: 0;
+    background: none;
+}
+
 .asklink {
     color: LightGray !important;
 }

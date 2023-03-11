@@ -52,11 +52,19 @@ Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config`
 
 ---
 
+### Test connection
+
+After filling in the key of openai. In the `Ask` module, select the `default` knowledge base to ask a question. If the result can be returned, the connection with chatgpt is normal.
+
+> "Default" means that the local knowledge base is not used, and the original answer of chatgpt is returned.
+
+---
+
 ### Create a new knowledge base
 
 - In  braindoor, a vectorstore and its indexed folders are called a knowledge base  
 
-- When the contents of the index folder are changed, `Load` the knowledge base created in `Config/update knowledge base`. Click the `Update` button again to check and update
+- When the contents of the index folder are changed, `Load` the knowledge base created in `Config / update knowledge base`. Click the `Update` button again to check and update
 
 - Only one index folder is allowed to be added during creation, but more folders can be added in update after creation is successful
 
@@ -108,10 +116,6 @@ The search module is used to retrieve your knowledge base. Select a knowledge ba
 - Support continuous Q & A, but reopen the dialogue on different topics as much as possible
 
 ![](ask_en.png)
-
-> "Default" means that the local knowledge base is not used, and the original answer of chatgpt is returned.
-
-> "help" is an example knowledge base, stored for this readme.md
 
 ---
 

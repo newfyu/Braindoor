@@ -38,6 +38,7 @@ conda activate braindoor
 git clone https://github.com/newfyu/Braindoor.git
 cd Braindoor
 pip install -r requirements.txt
+# conda install -c conda-forge faiss-cpu # windows
 ```
 
 3、启动
@@ -51,11 +52,19 @@ python app.py
 
 ---
 
+### 测试连接
+
+填写好openai的key，或完成一些代理配置后。可在`Ask`模块中，选择`default`知识库进行一次提问。如果能返回结果，表示和chatgpt连接正常。
+
+> default表示不使用本地知识库，返回的是chatgpt的原始回答.
+
+---
+
 ### 创建知识库
 
 - 在大脑门儿中，一个向量仓库及它索引的文件夹，称为一个knowledge base。     
 
-- 在`Config \ Create a new knowledge base`中，填写库名和一个本地文件夹路径，文件类型即可创建一个knowledge base。
+- 在`Config / Create a new knowledge base`中，填写库名和一个本地文件夹路径，文件类型即可创建一个knowledge base。
 
 - 创建时只允许加入一个索引文件夹，但创建成功后可以在update中添加更多的文件夹
 
@@ -72,7 +81,7 @@ python app.py
 
 ### 更新知识库
 
-- 当索引的文件夹内容有改动，在`Config/update knowledge base`中`Load`已创建的知识库后。再点击`Update`按钮检查并更新向量库
+- 当索引的文件夹内容有改动，在`Config / update knowledge base`中`Load`已创建的知识库后。再点击`Update`按钮检查并更新向量库
 - 改变知识库的一些配置后，也需要点击`Save base config`按钮
 - 可以为一个知识库增加更多的索引文件夹
 
@@ -103,10 +112,6 @@ python app.py
 - 可以增加answer depth来让chatbot去参考更多相似文档
 - 支持连续的问答，但不同的主题尽可能重新开启对话
   ![](doc/ask_en.png)
-
-> default表示不使用本地知识库，返回的是chatgpt的原始回答.
-
-> help是一个示例knowledge base，存储的即本文
 
 ---
 

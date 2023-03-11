@@ -62,6 +62,9 @@ def run_chat(question, history, base_name):
 def run_clear_context():
     return "", []
 
+def change_hyde(i):
+    mygpt.opt["HyDE"]= i
+
 with gr.Blocks(title="ask") as ask_interface:
     base_list_ask = sorted((mygpt.bases.keys()))
     base_list_ask.insert(0, "default")
@@ -70,19 +73,27 @@ with gr.Blocks(title="ask") as ask_interface:
     state_chat = gr.State([])
     btn_clear_context = gr.Button("🔄", elem_id="btn_clear_context")
     btn_clear_context.style(full_width=False)
+    btn_stop = gr.Button("⏸️",elem_id="btn_stop")
+    btn_stop.style(full_width=False)
     chat_inp = gr.Textbox(
         show_label=False, placeholder="Enter text and press enter", max_lines=20
     )
     chat_inp.style(container=False)
-    radio_base_name_ask = gr.Radio(
-        base_list_ask, show_label=False, value=base_list_ask[0], interactive=True
-    )
-    radio_base_name_ask.style(container=False, item_container=False)
+    with gr.Row():
+        radio_base_name_ask = gr.Radio(
+            base_list_ask, show_label=False, value=base_list_ask[0], interactive=True
+        )
+        radio_base_name_ask.style(container=False, item_container=False)
+        box_hyde = gr.Checkbox(value=mygpt.opt['HyDE'],label='HyDE',elem_id='box_hyde',interactive=True)
+        box_hyde.style(container=True)
 
-    chat_inp.submit(
+    chatting = chat_inp.submit(
         fn=run_chat,
         inputs=[chat_inp, state_chat, radio_base_name_ask],
         outputs=[chatbot, state_chat, chat_inp],
+        api_name='ask'
     )
     btn_clear_context.click(fn=run_clear_context, outputs=[chatbot, state_chat])
+    btn_stop.click(fn=lambda :None, cancels=[chatting])
+    box_hyde.change(fn=change_hyde, inputs=[box_hyde])
 

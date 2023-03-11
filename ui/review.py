@@ -1,3 +1,4 @@
+from docx import api
 import gradio as gr
 from utils import get_last_log
 from utils import with_proxy, logger, read_text_file,txt2html
@@ -45,6 +46,8 @@ with gr.Blocks(title="review") as reaview_interface:
     state_context = gr.State([])
     btn_clear_context = gr.Button("🔄", elem_id="btn_clear_context_review")
     btn_clear_context.style(full_width=False)
+    btn_stop = gr.Button("⏸️", elem_id="btn_stop_review")
+    btn_stop.style(full_width=False)
     with gr.Row():
         textbox_chat = gr.Textbox(
             show_label=False, placeholder="Wait for file upload", interactive=False, max_lines=20
@@ -58,10 +61,11 @@ with gr.Blocks(title="review") as reaview_interface:
         box_info = gr.HTML("")
         box_log = gr.Markdown()
 
-    textbox_chat.submit(
+    reviewing = textbox_chat.submit(
         fn=run_review,
         inputs=[textbox_chat, state_context, state_chunks],
         outputs=[reviewbot, state_context,textbox_chat],
+        api_name='review'
     )
     btn_clear_context.click(fn=run_clear_context, outputs=[reviewbot, state_context])
     btn_upload.upload(
@@ -76,3 +80,4 @@ with gr.Blocks(title="review") as reaview_interface:
     
     show_log = textbox_chat.submit(fn=get_last_log, outputs=box_log, every=1)
     reviewbot.change(fn=lambda: "", outputs=box_log, cancels=[show_log])
+    btn_stop.click(fn=lambda :None, cancels=[reviewing])
