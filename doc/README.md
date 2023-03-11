@@ -29,6 +29,7 @@
 
 ```shell
 conda create -n braindoor python=3.9
+conda activate braindoor
 ```
 
 2、安装依赖包
@@ -36,7 +37,6 @@ conda create -n braindoor python=3.9
 ```shell
 git clone https://github.com/newfyu/Braindoor.git
 cd Braindoor
-conda activate braindoor
 pip install -r requirements.txt
 ```
 

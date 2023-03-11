@@ -49,9 +49,8 @@ def remove_asklink(html):
     return html
 
 
+
 # This tool copies html files to a temporary directory for viewing
-
-
 def copy_html(html_path, save_root="temp"):
     try:
         html_path = Path(html_path)
@@ -148,7 +147,7 @@ def read_html(filename):
 def read_text_file(file_path):
     file_type = (Path(file_path).suffix).lower()
     if file_type in [".md", ".txt"]:
-        with open(file_path, "r") as f:
+        with open(file_path, "r", encoding='utf-8') as f:
             text = f.read()
     elif file_type in [".docx"]:
         text = read_docx(file_path)
@@ -174,6 +173,3 @@ def cutoff_localtext(local_text, max_len=2000):
         code = code[:max_len]
         local_text = tiktoken_encoder.decode(code)
     return local_text
-
-#  if __name__ == '__main__':
-#  copy_html("/Users/lhan/Documents/印象笔记导出/继续更新/新浪微博/图解：简单四步打造基于 GPT-3 的 PDF 文档问答系统.html")
