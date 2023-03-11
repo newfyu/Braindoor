@@ -50,7 +50,7 @@ python app.py
 
 Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config` TAB to work!  
 
->Install in macos, macos M1, ubuntu, windows pass, if you have other installation questions, you can check [FAQ] (doc/FAQ.md), or leave a message.
+> Install in macos, macos M1, ubuntu, windows pass, if you have other installation questions, you can check [FAQ] (doc/FAQ.md), or leave a message.
 
 ---
 
@@ -145,25 +145,26 @@ The openai key needs to be prepared. The text-ada-001 model is used for create v
 General configuration can be set in the config tab
 There are some advanced parameters, which are not recommended to be changed. Modify it in the config.yaml file if necessary
 
-| Parameter name       | Type  | Description                                                                                                                                                                                                                                                                                  | Default |
-| -------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| key                  | str   | Fill in your openai key                                                                                                                                                                                                                                                                      | ‘‘      |
-| rate_limit           | int   | Because openai has a request rate limit, it is easy to restrict access if there are a large number of requests in a short period of time when creating a vectorstore. 1 means a break of 1 second after sending a request. Takes effect only when the knowledge base is created and updated. | 1       |
-| proxy                | str   | The proxy can be enabled when the openai api is requested. Enter your http proxy address, for example: "http://127.0.0.1:1087"                                                                                                                                                               | ‘‘      |
-| search_topk          | int   | For the Search module. The number of results returned by the search.                                                                                                                                                                                                                         | 20      |
-| result_size          | int   | For the Search module. Preview the length of the text.                                                                                                                                                                                                                                       | 300     |
-| answer_depth         | int:  | For the Ask module. Chabot reads the maximum number of local document chunks when answering. The default of 1 means that only the most similar chunk will be read.                                                                                                                           | 1       |
-| max_context          | int   | For the Ask module. Maximum number of token for context.                                                                                                                                                                                                                                     | 1000    |
-| max_l2               | float | For the Ask module. Maximum L2 distance allowed when searching similar document chunk                                                                                                                                                                                                        | 0.4     |
-| HyDE                 | bool  | For the Ask module. Chatbot uses chatgpt to generate a preliminary answer and then matches the similar local document. It will increase accuracy, but it will also add a little overhead.                                                                                                    | false   |
-| review_chunk_size    | int   | For the Review module, the maximum token number of each block when splitting the long text.                                                                                                                                                                                                  | 2000    |
-| review_chunk_overlap | int   | The number of overlapping tokens when splitting long text.                                                                                                                                                                                                                                   | 50      |
+| Parameter name                  | Type  | Description                                                                                                                                                                                                                                                                                  | Default |
+| ------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| key                             | str   | Fill in your openai key                                                                                                                                                                                                                                                                      | ‘‘      |
+| rate_limit                      | int   | Because openai has a request rate limit, it is easy to restrict access if there are a large number of requests in a short period of time when creating a vectorstore. 1 means a break of 1 second after sending a request. Takes effect only when the knowledge base is created and updated. | 1       |
+| proxy                           | str   | The proxy can be enabled when the openai api is requested. Enter your http proxy address, for example: "http://127.0.0.1:1087"                                                                                                                                                               | ‘‘      |
+| search_topk                     | int   | For the Search module. The number of results returned by the search.                                                                                                                                                                                                                         | 20      |
+| result_size                     | int   | For the Search module. Preview the length of the text.                                                                                                                                                                                                                                       | 300     |
+| answer_depth                    | int:  | For the Ask module. Chabot reads the maximum number of local document chunks when answering. The default of 1 means that only the most similar chunk will be read.                                                                                                                           | 1       |
+| max_context                     | int   | For the Ask module. Maximum number of token for context.                                                                                                                                                                                                                                     | 1000    |
+| max_l2                          | float | For the Ask module. Maximum L2 distance allowed when searching similar document chunk                                                                                                                                                                                                        | 0.4     |
+| HyDE                            | bool  | For the Ask module. Chatbot uses chatgpt to generate a preliminary answer and then matches the similar local document. It will increase accuracy, but it will also add a little overhead.                                                                                                    | false   |
+| review_chunk_size               | int   | For the Review module, the maximum token number of each block when splitting the long text.                                                                                                                                                                                                  | 2000    |
+| review_chunk_overlap            | int   | The number of overlapping tokens when splitting long text.                                                                                                                                                                                                                                   | 50      |
+| enable_search/ask/review/config | bool  | Enable each module,  false can hide the module                                                                                                                                                                                                                                               | true    |
 
 ---
 
 ### Main third-party dependencies
 
-- Language model: chatgpt
-- Text splitting: langchain
-- Vector stores: faiss
-- Web interface: gradio
+- Language model: ChatGPT
+- Text splitting: LangChain
+- Vector stores: Faiss
+- Web interface: Gradio

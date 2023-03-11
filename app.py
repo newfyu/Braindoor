@@ -19,17 +19,21 @@ with open("ui/style.css", "r", encoding="utf8") as file:
 with gr.Blocks(css=css, title="Braindoor", elem_id="main_block") as demo:
     gr.Markdown("## 🧠 Braindoor")
     base_list = sorted((mygpt.bases.keys()))
-    with gr.Tab("Search"):
-        search.search_interface.render()
+    if opt['enable_search']:
+        with gr.Tab("Search"):
+            search.search_interface.render()
 
-    with gr.Tab("Ask"):
-        ask.ask_interface.render()
+    if opt['enable_ask']:
+        with gr.Tab("Ask"):
+            ask.ask_interface.render()
 
-    with gr.Tab("Review"):
-        review.reaview_interface.render()
+    if opt['enable_review']:
+        with gr.Tab("Review"):
+            review.reaview_interface.render()
 
-    with gr.Tab("Config", elem_id="tabs"):
-        config.config_interface.render()
+    if opt['enable_config']:
+        with gr.Tab("Config", elem_id="tabs"):
+            config.config_interface.render()
 
 
 def load_js():

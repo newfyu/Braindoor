@@ -50,7 +50,7 @@ python app.py
 **浏览器中打开地址 `127.0.0.1:7086`，然后在`Config`标签中配置你的`openai key`才能正常使用！** 
 国内用户可能还要在`Config`标签中配置http代理服务器地址，或则开全局代理。    
 
->安装在macos, macos m1, ubuntu, windows通过，有其他安装问题可以查看[FAQ](doc/FAQ.md),或留言。
+> 安装在macos, macos m1, ubuntu, windows通过，有其他安装问题可以查看[FAQ](doc/FAQ.md),或留言。
 
 ---
 
@@ -140,25 +140,26 @@ python app.py
 常用配置可以在config标签中设置
 还有一些高级参数，不建议改动。如果需要可以在config.yaml文件中修改
 
-| 参数名                  | 类型    | 说明                                                                         | 默认值   |
-| -------------------- | ----- | -------------------------------------------------------------------------- | ----- |
-| key                  | str   | 填写openai的key                                                               | ‘‘    |
-| rate_limit           | int   | 由于openai有请求速率限制，在创建向量仓库时候如果短时间有大量请求，很容易被限制访问。1表示发送一个请求后休息1秒。只在创建和更新知识库时生效。 | 1     |
-| proxy                | str   | 可在请求openai api时启用代理。填写你的http代理地址，比如："http://127.0.0.1:1087"                | ‘‘    |
-| search_topk          | int   | 作用于Search模块。搜索返回的结果数。                                                      | 20    |
-| result_size          | int   | 作用于Search模块。预览文字的长度。                                                       | 300   |
-| answer_depth         | int:  | 作用于Ask模块，chabot在回答时，读取本地文档片段的最大数量。默认1表示只会读取最相似的一个片段。                       | 1     |
-| max_context          | int   | 作用于Ask模块。上下文最大token值。                                                      | 1000  |
-| max_l2               | float | 作用于Ask模块。匹配相似本地片段时允许的最大L2距离。                                               | 0.4   |
-| HyDE                 | bool  | 作用于ASK模块。chatbot在匹配本地文档前，根据你的问题预先用chatgpt生成一个初步回答，然后再匹配。可增加准确性，但也会增加一点开销。  | false |
-| review_chunk_size    | int   | 作用于Review模块。对长文本分割时每块的最大token值。                                            | 2000  |
-| review_chunk_overlap | int   | 作用于Review模块。长文本分割时重叠的token数。                                               | 50    |
+| 参数名                             | 类型    | 说明                                                                         | 默认值   |
+| ------------------------------- | ----- | -------------------------------------------------------------------------- | ----- |
+| key                             | str   | 填写openai的key                                                               | ‘‘    |
+| rate_limit                      | int   | 由于openai有请求速率限制，在创建向量仓库时候如果短时间有大量请求，很容易被限制访问。1表示发送一个请求后休息1秒。只在创建和更新知识库时生效。 | 1     |
+| proxy                           | str   | 可在请求openai api时启用代理。填写你的http代理地址，比如："http://127.0.0.1:1087"                | ‘‘    |
+| search_topk                     | int   | 作用于Search模块。搜索返回的结果数。                                                      | 20    |
+| result_size                     | int   | 作用于Search模块。预览文字的长度。                                                       | 300   |
+| answer_depth                    | int:  | 作用于Ask模块，chabot在回答时，读取本地文档片段的最大数量。默认1表示只会读取最相似的一个片段。                       | 1     |
+| max_context                     | int   | 作用于Ask模块。上下文最大token值。                                                      | 1000  |
+| max_l2                          | float | 作用于Ask模块。匹配相似本地片段时允许的最大L2距离。                                               | 0.4   |
+| HyDE                            | bool  | 作用于ASK模块。chatbot在匹配本地文档前，根据你的问题预先用chatgpt生成一个初步回答，然后再匹配。可增加准确性，但也会增加一点开销。  | false |
+| review_chunk_size               | int   | 作用于Review模块。对长文本分割时每块的最大token值。                                            | 2000  |
+| review_chunk_overlap            | int   | 作用于Review模块。长文本分割时重叠的token数。                                               | 50    |
+| enable_search/ask/review/config | bool  | 启用各个模块。false可以隐藏模块                                                         | true  |
 
 ---
 
 ### 主要第三方依赖
 
-- 语言模型：chatgpt
-- 文本拆分：langchain
-- 向量仓库：faiss
-- Web界面：gradio
+- 语言模型：ChatGPT
+- 文本拆分：LangChain
+- 向量储存：Faiss
+- Web界面：Gradio
