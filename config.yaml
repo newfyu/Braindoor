@@ -2,6 +2,10 @@ HyDE: false
 answer_depth: 1.0
 ask_topk: 5
 bases_root: bases
+enable_ask: true
+enable_config: true
+enable_review: true
+enable_search: true
 key: 
 localtext_cutoff: 2000
 max_context: 1000
