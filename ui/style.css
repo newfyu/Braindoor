@@ -115,6 +115,17 @@ div.svelte-1dl81bf {
     background: none;
 }
 
+#checkbox_search_mode {
+    flex-grow: 0;
+    width: 40px;
+    min-width: 40px;
+    flex-grow: 0;
+    position: absolute;
+    right: 0;
+    transform: translate(-150%, 135%);
+    top: 0;
+    background: none;
+}
 .asklink {
     color: LightGray !important;
 }
