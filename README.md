@@ -50,6 +50,8 @@ python app.py
 **浏览器中打开地址 `127.0.0.1:7086`，然后在`Config`标签中配置你的`openai key`才能正常使用！** 
 国内用户可能还要在`Config`标签中配置http代理服务器地址，或则开全局代理。    
 
+>安装在macos, macos m1, ubuntu, windows通过，有其他安装问题可以查看[FAQ](doc/FAQ.md),或留言。
+
 ---
 
 ### 测试连接

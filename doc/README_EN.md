@@ -50,6 +50,8 @@ python app.py
 
 Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config` TAB to work!  
 
+>Install in macos, macos M1, ubuntu, windows pass, if you have other installation questions, you can check [FAQ] (doc/FAQ.md), or leave a message.
+
 ---
 
 ### Test connection

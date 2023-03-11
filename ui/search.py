@@ -87,16 +87,7 @@ with gr.Blocks(title="search") as search_interface:
             )
 
         radio_base_name.style(container=False, item_container=False)
-        
-        #  search_mode = gr.Radio(
-            #  ["similarity", "keyword"],
-            #  value="similarity",
-            #  interactive=True,
-            #  show_label=False,
-        #  )
-        #  search_mode.style(container=False, item_container=False)
         search_mode = gr.Checkbox(False,label='keyword', elem_id='checkbox_search_mode')
-        #  search_mode.style(container=True)
 
     box_results_similarity = Markdown(elem_id="box_results_similarity")
     box_results_keyword = Markdown(visible=False, elem_id="box_results_keyword")
