@@ -102,12 +102,21 @@ def with_proxy(proxy_address):
         return inner_wrapper
     return wrapper
 
+def html_escape(text):
+    text = html.escape(text)
+    text = text.replace(" ", "&nbsp;")
+    return text
+
+
 def txt2html(text):
     p = re.compile(r"(```)(.*?)(```)",re.DOTALL)
-    text = p.sub(lambda m: m.group(1) + html.escape(m.group(2)) + m.group(3), text)
-    text = text.replace(" ", "&nbsp;")
+    #  text = p.sub(lambda m: m.group(1) + html.escape(m.group(2)) + m.group(3), text)
+    text = p.sub(lambda m: m.group(1) + html_escape(m.group(2)) + m.group(3), text)
+    #  text = text.replace(" ", "&nbsp;")
     text = text.replace("\n", "<br>")
     text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
+    #  text = re.sub(r"`(.+?)`", r"<code>\1</code>", text, flags=re.DOTALL)
+    import ipdb;ipdb.set_trace()
     return text
 
 
