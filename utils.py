@@ -105,13 +105,14 @@ def txt2html(text):
     text = text.replace("\n", "<br>")
     #  text = text.replace(" ", "&nbsp;")
     #  text = text.replace('`', '&#96;')
-    text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
+    #  text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
+    text = re.sub(r"```(.+?)```", r"<pre class='codebox'><code>\1</code></pre>", text, flags=re.DOTALL)
     return text
 
 
 def html2txt(text):
-    text = text.replace("<code><div class='codebox'>", "```")
-    text = text.replace("</div></code>", "```")
+    text = text.replace("<pre class='codebox'><code>", "```")
+    text = text.replace("</code></pre>", "```")
     text = text.replace("<br>", "\n")
     text = text.replace("&nbsp;", " ")
     text = text.replace("&#96;", "`")
