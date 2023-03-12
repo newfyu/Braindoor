@@ -103,11 +103,11 @@ def with_proxy(proxy_address):
     return wrapper
 
 def txt2html(text):
-    text = html.escape(text)
+    p = re.compile(r"(```)(.*?)(```)",re.DOTALL)
+    text = p.sub(lambda m: m.group(1) + html.escape(m.group(2)) + m.group(3), text)
     text = text.replace(" ", "&nbsp;")
     text = text.replace("\n", "<br>")
     text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
-    
     return text
 
 
