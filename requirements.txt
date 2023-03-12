@@ -11,3 +11,4 @@ python-docx
 PyYAML
 tiktoken
 faiss-cpu
+pystray

@@ -1,45 +1,68 @@
 import subprocess
-import rumps
 import webbrowser
+import time
+from PIL import Image
+import signal
+
+from pystray import Icon as icon, Menu as menu, MenuItem as item
+from PIL import Image, ImageDraw
+import sys
+
+p = subprocess.Popen(['python', 'app.py'])
+running = True
+time.sleep(2)
+run_icon = Image.open('doc/nao.png')
+stop_icon = Image.open('doc/zzz.png')
+
+def run_open():
+    url = "http://127.0.0.1:7860"
+    webbrowser.open(url)
+
+def run_quit(icon):
+    p.terminate()
+    icon.stop()
+    sys.exit()
+
+def run_switch(icon):
+    global running 
+    global p
+    if running:
+        p.terminate()
+        running = False
+        icon.icon = stop_icon
+        icon.update_menu()
+    else:
+        p = subprocess.Popen(['python', 'app.py'])
+        time.sleep(2)
+        running = True
+        icon.icon = run_icon
+        icon.update_menu()
+
+def switch_title(_):
+    if running:
+        return "Stop"
+    else:
+        return "Run"
+
+def handler(signum,_):
+    if signum == signal.SIGINT:
+        p.terminate()
 
 
-class BrainDoorBar(rumps.App):
-    def __init__(self):
-        super().__init__("🧠", quit_button=None)
-        self.p = subprocess.Popen(['python', 'app.py'])
-        self.item_open = rumps.MenuItem("Open",callback=self.run_open)
-        self.item_run = rumps.MenuItem("Run",callback=self.run_app)
-        self.item_stop = rumps.MenuItem("Stop",callback=self.stop_app)
-        self.item_quit = rumps.MenuItem("Quit",callback=self.quit)
-        self.menu.add(self.item_open)
-        self.menu.add(self.item_stop)
-        self.menu.add(self.item_quit)
+item_open = item("Open", run_open, visible=lambda _:running)
+item_switch = item(switch_title, run_switch)
+item_quit = item('Quit',run_quit)
+signal.signal(signal.SIGINT, handler)
 
-    def run_open(self,_):
-        url = "http://127.0.0.1:7860"
-        webbrowser.open(url)
-
-    def run_app(self, _):
-        self.p = subprocess.Popen(['python', 'app.py'])
-        self.menu.clear()
-        self.menu.add(self.item_open)
-        self.menu.add(self.item_stop)
-        self.menu.add(self.item_quit)
-        self.title = "🧠"
+icon('braindoor', icon=run_icon, menu=menu(item_open,item_switch,item_quit)).run()
 
 
-    def stop_app(self, _):
-        self.p.terminate()
-        self.menu.clear()
-        self.menu.add(self.item_run)
-        self.menu.add(self.item_quit)
-        self.title = "🌀"
-        
-
-    def quit(self, _):
-        self.p.terminate()
-        rumps.quit_application()
 
 
-if __name__ == "__main__":
-    BrainDoorBar().run()
+
+
+
+
+
+
+
