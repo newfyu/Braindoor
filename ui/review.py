@@ -50,7 +50,7 @@ with gr.Blocks(title="review") as reaview_interface:
     btn_stop.style(full_width=False)
     with gr.Row():
         textbox_chat = gr.Textbox(
-            show_label=False, placeholder="Wait for file upload", interactive=False, max_lines=20
+            show_label=False, placeholder="Wait for file upload", interactive=False, lines=1
         )
         textbox_chat.style(container=False)
         btn_upload = gr.UploadButton(

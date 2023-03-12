@@ -76,7 +76,7 @@ with gr.Blocks(title="ask") as ask_interface:
     btn_stop = gr.Button("⏸️",elem_id="btn_stop")
     btn_stop.style(full_width=False)
     chat_inp = gr.Textbox(
-        show_label=False, placeholder="Enter text and press enter", max_lines=20
+        show_label=False, placeholder="Enter text and press enter", lines=1
     )
     chat_inp.style(container=False)
     with gr.Row():

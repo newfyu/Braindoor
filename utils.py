@@ -9,6 +9,7 @@ import tiktoken
 import docx
 import PyPDF2
 import html2text
+import html
 
 from bs4 import BeautifulSoup
 
@@ -102,20 +103,20 @@ def with_proxy(proxy_address):
     return wrapper
 
 def txt2html(text):
+    text = html.escape(text)
+    text = text.replace(" ", "&nbsp;")
     text = text.replace("\n", "<br>")
-    #  text = text.replace(" ", "&nbsp;")
-    #  text = text.replace('`', '&#96;')
-    #  text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
-    text = re.sub(r"```(.+?)```", r"<pre class='codebox'><code>\1</code></pre>", text, flags=re.DOTALL)
+    text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
+    
     return text
 
 
 def html2txt(text):
-    text = text.replace("<pre class='codebox'><code>", "```")
-    text = text.replace("</code></pre>", "```")
+    text = text.replace("<code><div class='codebox'>", "```")
+    text = text.replace("</div></code>", "```")
     text = text.replace("<br>", "\n")
     text = text.replace("&nbsp;", " ")
-    text = text.replace("&#96;", "`")
+    text = html.unescape(text)
     text = unicodedata.normalize("NFKC", text)
     return text
 
