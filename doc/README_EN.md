@@ -66,7 +66,7 @@ After filling in the key of openai. In the `Ask` module, select the `default` kn
 
 - In  braindoor, a vectorstore and its indexed folders are called a knowledge base  
 
-- When the contents of the index folder are changed, `Load` the knowledge base created in `Config / update knowledge base`. Click the `Update` button again to check and update
+- When the contents of the index folder are changed, `Load` the knowledge base created in `Config`  Tab `Update knowledge base`. Click the `Update` button again to check and update
 
 - Only one index folder is allowed to be added during creation, but more folders can be added in update after creation is successful
 
@@ -136,7 +136,7 @@ The search module is used to retrieve your knowledge base. Select a knowledge ba
 
 ### Overhead
 
-The openai key needs to be prepared. The text-ada-001 model is used for create vectorstores and Search. Ask module use the gpt-3.5-turbo model, both of which cost very little. But be aware, if you have a large knowledge base, be aware of the cost of access. In addition, increasing answer_depth value and frequent use Review can add overhead depending on the length of the local text.
+The openai key needs to be prepared. The text-ada-001 model is used for create vectorstores and Search. Ask module use the gpt-3.5-turbo model, both of which cost very little. But be aware, if you have a large knowledge base, be aware of the cost of create knowledge base. In addition, increasing answer_depth value and frequent use Review can add overhead depending on the length of the local text.
 
 ---
 
@@ -155,10 +155,10 @@ There are some advanced parameters, which are not recommended to be changed. Mod
 | answer_depth                    | int:  | For the Ask module. Chabot reads the maximum number of local document chunks when answering. The default of 1 means that only the most similar chunk will be read.                                                                                                                           | 1       |
 | max_context                     | int   | For the Ask module. Maximum number of token for context.                                                                                                                                                                                                                                     | 1000    |
 | max_l2                          | float | For the Ask module. Maximum L2 distance allowed when searching similar document chunk                                                                                                                                                                                                        | 0.4     |
-| HyDE                            | bool  | For the Ask module. Chatbot uses chatgpt to generate a preliminary answer and then matches the similar local document. It will increase accuracy, but it will also add a little overhead.                                                                                                    | false   |
+| HyDE                            | bool  | For the Ask module. Chatbot uses chatgpt to generate a preliminary answer and then matches the similar local document chunk. It will increase accuracy, but it will also add a little overhead.                                                                                              | false   |
 | review_chunk_size               | int   | For the Review module, the maximum token number of each block when splitting the long text.                                                                                                                                                                                                  | 2000    |
 | review_chunk_overlap            | int   | The number of overlapping tokens when splitting long text.                                                                                                                                                                                                                                   | 50      |
-| enable_search/ask/review/config | bool  | Enable each module,  false can hide the module                                                                                                                                                                                                                                               | true    |
+| enable_search/ask/review/config | bool  | Enable each module,  false can hide the module.                                                                                                                                                                                                                                              | true    |
 
 ---
 

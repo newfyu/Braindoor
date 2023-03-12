@@ -12,7 +12,7 @@
 
 - 用自然语言搜索个人文档或笔记
 - 用本地文本资料构建一个特定领域的问答机器人
-- 用chatgpt对长文本分析和问答
+- 用ChatGPT对长文本分析和问答
 
 ### 主要特点
 
@@ -66,9 +66,9 @@ python run.py
 
 - 在大脑门儿中，一个向量仓库及它索引的文件夹，称为一个knowledge base。     
 
-- 在`Config / Create a new knowledge base`中，填写库名和一个本地文件夹路径，文件类型即可创建一个knowledge base。
+- 在`Config`标签`Create a new knowledge base`栏中，填写库名和一个本地文件夹路径，文件类型即可创建一个knowledge base。
 
-- 创建时只允许加入一个索引文件夹，但创建成功后可以在update中添加更多的文件夹
+- 创建时只允许加入一个索引文件夹，但创建成功后可以在`Update`栏中添加更多的文件夹
 
 - chunk size是将文件切片后嵌入的大小，如果你希望进行问答，切片大小1000-2000是合适的。超过2000容易突破gpt3.5-turbo的token限制。
 
@@ -83,9 +83,9 @@ python run.py
 
 ### 更新知识库
 
-- 当索引的文件夹内容有改动，在`Config / update knowledge base`中`Load`已创建的知识库后。再点击`Update`按钮检查并更新向量库
+- 当索引的文件夹内容有改动，在`Config`标签 `Update knowledge base`中`Load`已创建的知识库后。再点击`Update`按钮检查并更新向量库
 - 改变知识库的一些配置后，也需要点击`Save base config`按钮
-- 可以为一个知识库增加更多的索引文件夹
+- 可以在这个地方为一个知识库增加更多的索引文件夹
 
 > 例：我想把我的印象笔记也加入知识库中。
 > 
@@ -109,8 +109,8 @@ python run.py
 
 ### 问答 Ask
 
-- 一个chatbot，将依据你的知识库中的内容作为证据来来回答你问题
-- 默认情况下会参考库中最相似的文档片段（docoment chunk）
+- 一个chatbot，将访问你的知识库中的内容作为证据来来回答你问题
+- 默认情况下会访问库中最相似的文档片段（docoment chunk）
 - 可以增加answer depth来让chatbot去参考更多相似文档
 - 支持连续的问答，但不同的主题尽可能重新开启对话
   ![](doc/ask_en.png)
@@ -120,7 +120,7 @@ python run.py
 ### 全文阅读 Review：
 
 - 传入一份文档后即可针对该文档自由提问
-- 和Ask不同的是，Review模块不会仅参考向量相似性匹配的文档片段，而是完整的阅读全文后给出答案
+- 和Ask不同的是，Review模块不仅仅参考向量相似性匹配的文档片段，而是完整的阅读全文后给出答案
 - 全文速度较慢，但不会遗漏信息，威力巨大
 - 适用于详细的总结分析一份长文档，或辅助阅读文献
 - 由于token限制，Review模块取消了联系上下文对话，仅对最近请求做出反应。所以每次提问都要清晰完整
@@ -131,7 +131,7 @@ python run.py
 
 ### 开销
 
-需要准备openai的key。入库和Search使用text-ada-001模型。Ask和Review使用gpt-3.5-turbo模型，这两个模型费用都很低。但如果你的知识库很庞大，仍需要注意入库的开销。另外，增加answer_depth和频繁的使用review功能也会根据本地文本的长度相应的增加开销。
+需要准备openai的key。入库和Search使用text-ada-001模型。Ask和Review使用gpt-3.5-turbo模型，这两个模型费用都很低。但如果你的知识库很庞大，仍需要留意入库的开销。另外，增加answer_depth和频繁的使用review功能也会根据本地文本的长度相应的增加开销。
 
 ---
 
@@ -147,13 +147,13 @@ python run.py
 | proxy                           | str   | 可在请求openai api时启用代理。填写你的http代理地址，比如："http://127.0.0.1:1087"                | ‘‘    |
 | search_topk                     | int   | 作用于Search模块。搜索返回的结果数。                                                      | 20    |
 | result_size                     | int   | 作用于Search模块。预览文字的长度。                                                       | 300   |
-| answer_depth                    | int:  | 作用于Ask模块，chabot在回答时，读取本地文档片段的最大数量。默认1表示只会读取最相似的一个片段。                       | 1     |
+| answer_depth                    | int:  | 作用于Ask模块，chabot在回答时，访问本地文档片段的最大数量。默认1表示只会访问最相似的一个片段。                       | 1     |
 | max_context                     | int   | 作用于Ask模块。上下文最大token值。                                                      | 1000  |
 | max_l2                          | float | 作用于Ask模块。匹配相似本地片段时允许的最大L2距离。                                               | 0.4   |
-| HyDE                            | bool  | 作用于ASK模块。chatbot在匹配本地文档前，根据你的问题预先用chatgpt生成一个初步回答，然后再匹配。可增加准确性，但也会增加一点开销。  | false |
+| HyDE                            | bool  | 作用于ASK模块。chatbot在匹配本地文档前，根据你的问题预先用chatgpt生成一个初步回答后再匹配。可增加准确性，但也会增加一点开销。    | false |
 | review_chunk_size               | int   | 作用于Review模块。对长文本分割时每块的最大token值。                                            | 2000  |
 | review_chunk_overlap            | int   | 作用于Review模块。长文本分割时重叠的token数。                                               | 50    |
-| enable_search/ask/review/config | bool  | 启用各个模块。false可以隐藏模块                                                         | true  |
+| enable_search/ask/review/config | bool  | 启用各个模块。false可以隐藏模块。                                                        | true  |
 
 ---
 

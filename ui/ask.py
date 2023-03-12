@@ -55,7 +55,7 @@ def run_chat(question, history, base_name):
     links = "".join(links)
 
     answer = txt2html(answer)
-    answer = f"<div>{answer}</div><br><br>{links}"
+    answer = f"{answer}<br><br>{links}"
     history.append((question, answer))
     return history, history, gr.update(value="")
 
