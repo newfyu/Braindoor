@@ -45,7 +45,7 @@ pip install -r requirements.txt
 Windows, Liunx
 
 ```shell
-python app.py
+python run.py
 ```
 
 Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config` TAB to work!  
