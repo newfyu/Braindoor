@@ -16,10 +16,10 @@ Braindoor can easily use local files to build ChatGPT's external knowledge base.
 
 ### Features
 
-- Flexible construction of local knowledge base. Support  txt, md, html, pdf, docx
-- Incremental update
-- Provides a Web UI. Documents referenced by Search module or Ask module can be opened directly in the browser.
-- Full-text deep review
+- Flexible construction of local knowledge base (support txt, md, html, pdf, docx), only need to specify the local folder path
+- Monitor the content change of the local index folder and update file incrementally
+- Provide a web UI and tray shortcut switch, easy to use
+- Long document reading scheme based on continuous reading
 
 ----
 
@@ -51,6 +51,8 @@ python run.py
 Open `127.0.0.1:7086` in browser and configure your `openai key` in the `Config` TAB to work!  
 
 > Install in macos, macos M1, ubuntu, windows pass, if you have other installation questions, you can check [FAQ] (doc/FAQ.md), or leave a message.
+
+>  The background run can be 'nohup python run.py &' then switched on and off via the tray icon
 
 ---
 
@@ -127,10 +129,11 @@ The search module is used to retrieve your knowledge base. Select a knowledge ba
 - Unlike Ask, the Review chatbot will not only read the document chunk matched by vector similarity, but will read the full text for each question and give the answer
 - Full text reading does not omit information, which is slow but powerful
 - It is suitable for detailed summary and analysis of a long document or auxiliary reading of literature
+- Due to token restrictions, Review canceled the contact context dialog and only responded to the latest request. So every question should be clear and complete
 
 ![](review_en.png)
 
-> Due to token restrictions, Review canceled the contact context dialog and only responded to the latest request. So every question should be clear and complete
+> About the principle of long text reading: this scheme can be understood as a kind of attention mechanism, comparing the problem to key and the document chunk to query. After the question (key) and the first document chunk (query) interact with chatgpt, a value is generated, which can be understood as a summary of the extracted information about the current document chunk of the question. Value adds the second query and interacts with key again until the full text is read. The consumption of token in this scheme is relatively high, but the reading mode is closer to human.
 
 ---
 

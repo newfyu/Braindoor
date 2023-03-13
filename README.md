@@ -8,7 +8,7 @@
 
 ![](doc/fig0.png)
 
-### 常见用例
+### 功能
 
 - 用自然语言搜索个人文档或笔记
 - 用本地文本资料构建一个特定领域的问答机器人
@@ -16,10 +16,10 @@
 
 ### 主要特点
 
-- 灵活的构建本地的知识库，支持（txt，md，html，pdf，docx）。
-- 增量更新入库文件
-- 提供一个Web UI。Search模块和Ask模块引用的本地文档支持在浏览器中直接打开
-- 长文档的全文深度阅读
+- 灵活的构建本地的知识库（支持txt，md，html，pdf，docx），只需要指定本地文件夹路径
+- 监测本地索引文件夹内容变化，增量更新入库文件
+- 提供一个Web UI 和 托盘快捷开关，易于使用
+- 基于连续阅读的长文档阅读方案
 
 ----
 
@@ -45,12 +45,20 @@ pip install -r requirements.txt
 
 ```shell
 python run.py
+
+
 ```
 
 **浏览器中打开地址 `127.0.0.1:7086`，然后在`Config`标签中配置你的`openai key`才能正常使用！** 
 国内用户可能还要在`Config`标签中配置http代理服务器地址，或则开全局代理。    
 
 > 安装在macos, macos m1, ubuntu, windows通过，有其他安装问题可以查看[FAQ](doc/FAQ.md),或留言。
+
+
+
+>  后台运行可以 `nohup python run.py &`  然后通过托盘图标来开关
+
+
 
 ---
 
@@ -127,11 +135,13 @@ python run.py
 
 ![](doc/fig4.png)
 
+> 关于长文阅读的原理：这个方案可以理解成一种注意力机制，把问题比做key，把文档片段比做query。问题key和第一个文档片段query使用chatgpt交互后，生成一个value，可以理解为提取的有关问题的当前文档片段的信息总结。value加入第二段query，再次和key交互，直到阅读完全文。这个方案对token的消耗是相对高一些的，但阅读方式更接近人类。
+
 ---
 
 ### 开销
 
-需要准备openai的key。入库和Search使用text-ada-001模型。Ask和Review使用gpt-3.5-turbo模型，这两个模型费用都很低。但如果你的知识库很庞大，仍需要留意入库的开销。另外，增加answer_depth和频繁的使用review功能也会根据本地文本的长度相应的增加开销。
+需要准备openai的key。入库（Embeding）和Search使用text-ada-001模型。Ask和Review使用gpt-3.5-turbo模型，这两个模型费用都很低。但如果你的知识库很庞大，仍需要留意入库的开销。另外，增加answer_depth和频繁的使用review功能也会根据本地文本的长度相应的增加开销。
 
 ---
 
