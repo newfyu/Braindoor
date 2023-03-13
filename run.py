@@ -3,9 +3,10 @@ import webbrowser
 import time
 from PIL import Image
 import signal
+from utils import logger
 
 from pystray import Icon as icon, Menu as menu, MenuItem as item
-from PIL import Image, ImageDraw
+from PIL import Image
 import sys
 
 p = subprocess.Popen(['python', 'app.py'])
@@ -13,6 +14,7 @@ running = True
 time.sleep(2)
 run_icon = Image.open('doc/nao.png')
 stop_icon = Image.open('doc/zzz.png')
+logger.info('Launch service')
 
 def run_open():
     url = "http://127.0.0.1:7860"
@@ -31,12 +33,14 @@ def run_switch(icon):
         running = False
         icon.icon = stop_icon
         icon.update_menu()
+        logger.info('Stop service')
     else:
         p = subprocess.Popen(['python', 'app.py'])
         time.sleep(2)
         running = True
         icon.icon = run_icon
         icon.update_menu()
+        logger.info('Restart service')
 
 def switch_title(_):
     if running:

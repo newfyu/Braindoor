@@ -116,7 +116,6 @@ def txt2html(text):
     text = text.replace("\n", "<br>")
     text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
     #  text = re.sub(r"`(.+?)`", r"<code>\1</code>", text, flags=re.DOTALL)
-    import ipdb;ipdb.set_trace()
     return text
 
 
