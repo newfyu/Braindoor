@@ -1,5 +1,5 @@
 import gradio as gr
-from utils import with_proxy,copy_html, remove_asklink,html2txt,txt2html, tiktoken_encoder
+from utils import with_proxy,copy_html, remove_asklink,html2txt,txt2html, tiktoken_encoder, send_notify
 import shutil
 from pathlib import Path
 from mygpt import mygpt
@@ -57,6 +57,8 @@ def run_chat(question, history, base_name):
     answer = txt2html(answer)
     answer = f"{answer}<br><br>{links}"
     history.append((question, answer))
+    if opt['notify']:
+        send_notify(answer[:20]+'...')
     return history, history, gr.update(value="")
 
 def run_clear_context():
@@ -69,7 +71,8 @@ with gr.Blocks(title="ask") as ask_interface:
     base_list_ask = sorted((mygpt.bases.keys()))
     base_list_ask.insert(0, "default")
     chatbot = gr.Chatbot(elem_id="chatbot",show_label=False)
-    chatbot.style(color_map=("Orange", "DimGray"))
+    #  chatbot.style(color_map=("Orange", "DimGray"))
+    chatbot.style(color_map=("Orange", "SteelBlue "))
     state_chat = gr.State([])
     btn_clear_context = gr.Button("🔄", elem_id="btn_clear_context")
     btn_clear_context.style(full_width=False)

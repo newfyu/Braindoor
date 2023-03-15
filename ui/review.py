@@ -1,7 +1,7 @@
 from docx import api
 import gradio as gr
 from utils import get_last_log
-from utils import with_proxy, logger, read_text_file,txt2html
+from utils import with_proxy, logger, read_text_file,txt2html, send_notify
 from pathlib import Path
 from mygpt import mygpt
 
@@ -17,6 +17,8 @@ def run_review(question, context, chunks):
     answer = mygpt.review(question, chunks)
     answer = txt2html(answer)
     context.append((question, answer))
+    if opt['notify']:
+        send_notify(answer[:20]+'...')
     return context, context, ""
 
 
