@@ -23,4 +23,4 @@
 3. 下方会出现`Update`按钮，点击即可更新
 4. 如果你想在`help`知识库中增加一个文件夹，也可以在下方的`Add a new directory`中填写。必须`Save config`，再点击`Update`按钮，会对新添加的文件夹进行扫描入库
 
-![[Pasted image 20230315183730.png]]
+![](update.png)
