@@ -66,7 +66,7 @@ python run.py
 
 ### 创建知识库
 
-- 可以参考 [创建你的一个知识库](doc/create help.md)
+- 可以参考 [创建你的一个知识库](doc/createhelp.md)
 
 - 在大脑门儿中，一个向量仓库及它索引的文件夹，称为一个knowledge base。     
 
