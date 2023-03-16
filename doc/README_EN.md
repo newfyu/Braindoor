@@ -19,7 +19,7 @@ Braindoor can easily use local files to build ChatGPT's external knowledge base.
 - Flexible construction of local knowledge base (support txt, md, html, pdf, docx), only need to specify the local folder path
 - Monitor the content change of the local index folder and update file incrementally
 - Provide a web UI and tray shortcut switch, easy to use
-- Long document reading scheme based on continuous reading
+- Support the context of any length document (principles)[#principle]
 
 ----
 
@@ -133,7 +133,9 @@ The search module is used to retrieve your knowledge base. Select a knowledge ba
 
 ![](review_en.png)
 
-> About the principle of long text reading: this scheme can be understood as a kind of attention mechanism, comparing the problem to key and the document chunk to query. After the question (key) and the first document chunk (query) interact with chatgpt, a value is generated, which can be understood as a summary of the extracted information about the current document chunk of the question. Value adds the second query and interacts with key again until the full text is read. The consumption of token in this scheme is relatively high, but the reading mode is closer to human.
+##### Principle
+
+> GPT3.5 only supports 4000 tokens. To allow a user's question to fully browse any length of text before responding, a loop reading method is adopted in the review module. The principle is similar to a memory-based recurrent neural network. The long text is split into chunks of 2000 or less, and each segment is read sequentially with the question. The intermediate information obtained is then merged into the next chunk, until the full text has been read.
 
 ---
 
