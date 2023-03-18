@@ -179,7 +179,7 @@ with gr.Blocks(title="ask") as config_interface:
             )
         with gr.Row().style(equal_height=True):
             box_proxy = gr.Textbox(opt['proxy'], label='Proxy')
-            box_answer_depth = gr.Number(1, label="Answer depth")
+            box_answer_depth = gr.Number(opt['answer_depth'], label="Answer depth")
             #  box_hyde = gr.Checkbox(False, label="HyDE")
         with gr.Row():
             btn_load = gr.Button("Reload config", variant="primary")

@@ -70,7 +70,7 @@ with gr.Blocks(title="review") as reaview_interface:
         btn_upload.style(full_width=False)
     with gr.Box():
         box_info = gr.HTML("")
-        box_log = gr.Markdown()
+        #  box_log = gr.Markdown()
 
     reviewing = chat_inp.submit(
         fn=run_review,
@@ -99,6 +99,6 @@ with gr.Blocks(title="review") as reaview_interface:
         ],
     )
     
-    show_log = chat_inp.submit(fn=get_last_log, outputs=box_log, every=0.2)
-    reviewbot.change(fn=lambda: "", outputs=box_log, cancels=[show_log])
+    #  show_log = chat_inp.submit(fn=get_last_log, outputs=box_log, every=0.2)
+    #  reviewbot.change(fn=lambda: "", outputs=box_log, cancels=[show_log])
     btn_stop.click(fn=lambda :None, cancels=[reviewing,show_answer])

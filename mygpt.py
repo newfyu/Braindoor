@@ -92,7 +92,7 @@ class MyGPT:
         context=[],
         sys_msg="",
         temperature=1.0,
-        max_tokens=1000,
+        max_tokens=1500,
         stream=False,
     ):
         if sys_msg == "":
@@ -158,7 +158,7 @@ class MyGPT:
 
             else:  # deep answer
                 answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
-                chunks = [i[0].page_content for i in mydocs[0:answer_depth][::-1]]
+                chunks = [i[0].page_content for i in mydocs[0: int(answer_depth)][::-1]]
                 answer = self.review(question, chunks)
                 mygpt.temp_result = ''
 
@@ -180,7 +180,7 @@ class MyGPT:
                 ask_prompt = f"""known:{prev_answer}
                 Extra text:{chunk}
                 quesion:{question}
-                The text is incomplete. Don't answer the questions immediately. First record the original text say about the answer
+                The text is incomplete. Don't answer the questions immediately. First record the related text about the question
                 """
             else:
                 ask_prompt = f"""known:{prev_answer}
