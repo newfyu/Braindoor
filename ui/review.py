@@ -1,4 +1,3 @@
-from docx import api
 import gradio as gr
 from utils import get_last_log
 from utils import with_proxy, logger, read_text_file,txt2html, send_notify
@@ -40,10 +39,20 @@ def get_text(file):
         logger.error("read or split text error:" + str(e))
         return str(e), "", []
 
+def run_show_answer(question, history):
+    if mygpt.temp_result:
+        answer = txt2html(mygpt.temp_result)
+        _history = history.copy()
+        _history.append((question, answer))
+        return _history
+    else:
+        return history
+
+
 
 with gr.Blocks(title="review") as reaview_interface:
     reviewbot = gr.Chatbot(elem_id="reviewbot", show_label=False)
-    reviewbot.style(color_map=("Orange", "DimGray"))
+    reviewbot.style(color_map=("Orange", "SteelBlue "))
     state_chunks = gr.State([])
     state_context = gr.State([])
     btn_clear_context = gr.Button("🔄", elem_id="btn_clear_context_review")
@@ -51,10 +60,10 @@ with gr.Blocks(title="review") as reaview_interface:
     btn_stop = gr.Button("⏸️", elem_id="btn_stop_review")
     btn_stop.style(full_width=False)
     with gr.Row():
-        textbox_chat = gr.Textbox(
+        chat_inp = gr.Textbox(
             show_label=False, placeholder="Wait for file upload", interactive=False, lines=1
         )
-        textbox_chat.style(container=False)
+        chat_inp.style(container=False)
         btn_upload = gr.UploadButton(
             file_types=["file"],
         )
@@ -63,23 +72,33 @@ with gr.Blocks(title="review") as reaview_interface:
         box_info = gr.HTML("")
         box_log = gr.Markdown()
 
-    reviewing = textbox_chat.submit(
+    reviewing = chat_inp.submit(
         fn=run_review,
-        inputs=[textbox_chat, state_context, state_chunks],
-        outputs=[reviewbot, state_context,textbox_chat],
+        inputs=[chat_inp, state_context, state_chunks],
+        outputs=[reviewbot, state_context, chat_inp],
         api_name='review'
     )
+
+    show_answer = chat_inp.submit(
+        fn=run_show_answer,
+        inputs=[chat_inp, state_context],
+        outputs=[reviewbot],
+        every=0.2
+    )
+    chat_inp.change(fn=lambda:None,  cancels=[show_answer])    
+
+
     btn_clear_context.click(fn=run_clear_context, outputs=[reviewbot, state_context])
     btn_upload.upload(
         fn=get_text,
         inputs=[btn_upload],
         outputs=[
             box_info,
-            textbox_chat,
+            chat_inp,
             state_chunks,
         ],
     )
     
-    show_log = textbox_chat.submit(fn=get_last_log, outputs=box_log, every=1)
+    show_log = chat_inp.submit(fn=get_last_log, outputs=box_log, every=0.2)
     reviewbot.change(fn=lambda: "", outputs=box_log, cancels=[show_log])
-    btn_stop.click(fn=lambda :None, cancels=[reviewing])
+    btn_stop.click(fn=lambda :None, cancels=[reviewing,show_answer])

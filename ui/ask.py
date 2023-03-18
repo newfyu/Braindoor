@@ -4,8 +4,10 @@ import shutil
 from pathlib import Path
 from mygpt import mygpt
 import os
+import time
 
 opt = mygpt.opt
+
 
 @with_proxy(opt['proxy'])
 def run_chat(question, history, base_name):
@@ -61,6 +63,15 @@ def run_chat(question, history, base_name):
         send_notify(answer[:20]+'...')
     return history, history, gr.update(value="")
 
+def run_show_answer(question, history):
+    if mygpt.temp_result:
+        answer = txt2html(mygpt.temp_result)
+        _history = history.copy()
+        _history.append((question, answer))
+        return _history
+    else:
+        return history
+
 def run_clear_context():
     return "", []
 
@@ -96,7 +107,16 @@ with gr.Blocks(title="ask") as ask_interface:
         outputs=[chatbot, state_chat, chat_inp],
         api_name='ask'
     )
+    show_answer = chat_inp.submit(
+        fn=run_show_answer,
+        inputs=[chat_inp, state_chat],
+        outputs=[chatbot],
+        every=0.2
+    )
+    chat_inp.change(fn=lambda:None,  cancels=[show_answer])    
+    
+
     btn_clear_context.click(fn=run_clear_context, outputs=[chatbot, state_chat])
-    btn_stop.click(fn=lambda :None, cancels=[chatting])
+    btn_stop.click(fn=lambda :None, cancels=[chatting,show_answer]) 
     box_hyde.change(fn=change_hyde, inputs=[box_hyde])
 
