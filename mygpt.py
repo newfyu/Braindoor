@@ -59,6 +59,19 @@ class MyGPT:
         return self.opt
 
     def search(self, query, base_name, mode="similarity"):
+    def search(self, query, base_name, mode="similarity"):
+        """
+        Search for documents based on the query string and return the results.
+
+        Args:
+        query (str): The query string.
+        base_name (str): The name of the database to search.
+        mode (str, optional): The search mode, can be "similarity" or "keyword". Defaults to "similarity".
+
+        Returns:
+        list: A list of search results containing documents related to the query string.
+        """
+
         base = self.bases[base_name]
         if mode == "keyword":
             results = []
@@ -84,6 +97,20 @@ class MyGPT:
         ),
     )
     def chatgpt(self, input,context=[],sys_msg='',  temperature=1., max_tokens=1000):
+        """
+        This function interacts with the GPT model to generate a response based on the input, context, and system message.
+        It handles rate limit errors and other API errors using the backoff library.
+
+        Args:
+        input (str): The input message from the user.
+        context (list): A list of tuples containing previous user and assistant messages.
+        sys_msg (str, optional): A system message to set the behavior of the assistant. Defaults to ''.
+        temperature (float, optional): Controls the randomness of the generated response. Defaults to 1.0.
+        max_tokens (int, optional): The maximum number of tokens in the generated response. Defaults to 1000.
+
+        Returns:
+        str: The generated response from the GPT model.
+        """
         if sys_msg == '':
             messages = [{"role": "system", "content": "You are a helpful assistant."}]
         else:
@@ -104,6 +131,19 @@ class MyGPT:
         return completion.choices[0].message.content
 
     def ask(self, question, context, base_name):
+        """
+        Ask a question and get an answer based on the context and the specified base_name.
+
+        Args:
+        question (str): The question to ask.
+        context (list): A list of tuples containing previous user and assistant messages.
+        base_name (str): The name of the database to search for relevant information.
+
+        Returns:
+        tuple: A tuple containing the answer, the documents found, and the draft response.
+        """
+
+        
         if base_name != "default":
             base = self.bases[base_name]
             if self.opt['HyDE']:
@@ -162,6 +202,16 @@ class MyGPT:
         #  return prev_answer
 
     def review(self, question, chunks):
+        """
+        Review the given chunks of text and generate an answer to the question based on the content.
+
+        Args:
+        question (str): The question to be answered.
+        chunks (list): A list of text chunks to review for answering the question.
+
+        Returns:
+        str: The generated answer based on the reviewed text chunks.
+        """
         prev_answer = ""
         logger.info(f"Start long text reading, estimated to take {len(chunks)*15} seconds")
         chunk_num = len(chunks)

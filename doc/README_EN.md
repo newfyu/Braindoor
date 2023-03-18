@@ -18,7 +18,7 @@ Braindoor can easily use local files to build ChatGPT's external knowledge base.
 
 - Flexible construction of local knowledge base (support txt, md, html, pdf, docx), only need to specify the local folder path
 - Monitor the content change of the local index folder and update file incrementally
-- Provide a web UI and tray shortcut switch, easy to use
+- Provide a locally deployed web UI and tray shortcut switch, easy to use
 - Support the context of any length document (principles)[#principle]
 
 ----

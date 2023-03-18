@@ -1,13 +1,12 @@
-import subprocess
 import webbrowser
 import time
-from PIL import Image
 import signal
 from utils import logger
 
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 from PIL import Image
 import sys
+import subprocess
 
 p = subprocess.Popen(['python', 'app.py'])
 running = True
@@ -59,14 +58,5 @@ item_quit = item('Quit',run_quit)
 signal.signal(signal.SIGINT, handler)
 
 icon('braindoor', icon=run_icon, menu=menu(item_open,item_switch,item_quit)).run()
-
-
-
-
-
-
-
-
-
 
 
