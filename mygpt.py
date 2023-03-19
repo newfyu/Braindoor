@@ -166,6 +166,7 @@ class MyGPT:
             draft = self.chatgpt(question, context, stream=True)
             answer = draft
             mydocs = []
+            mygpt.temp_result = ''
 
         #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
         return answer, mydocs, draft
