@@ -16,3 +16,4 @@ result_size: 300
 review_chunk_overlap: 50
 review_chunk_size: 2000
 search_topk: 20
+notify: false
