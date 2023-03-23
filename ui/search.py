@@ -95,7 +95,7 @@ with gr.Blocks(title="search") as search_interface:
         fn=run_search,
         inputs=[box_search, radio_base_name],
         outputs=[box_results_similarity, box_results_keyword],
-        api_name="search"
+        #  api_name="search"
     )
     search_mode.change(
         fn=change_search_mode,

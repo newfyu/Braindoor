@@ -4,7 +4,6 @@ import shutil
 from pathlib import Path
 from mygpt import mygpt
 import os
-import time
 
 opt = mygpt.opt
 
@@ -116,7 +115,7 @@ with gr.Blocks(title="ask") as ask_interface:
     chat_inp.change(fn=lambda:None,  cancels=[show_answer])    
     
 
-    btn_clear_context.click(fn=run_clear_context, outputs=[chatbot, state_chat])
+    btn_clear_context.click(fn=run_clear_context, outputs=[chatbot, state_chat],api_name='clear_context')
     btn_stop.click(fn=lambda :None, cancels=[chatting,show_answer]) 
     box_hyde.change(fn=change_hyde, inputs=[box_hyde])
 

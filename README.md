@@ -1,10 +1,10 @@
-# 🧠 大脑门儿 Braindoor
+# 🧠 大脑门 Braindoor
 
 中文 | [English](doc/README_EN.md)
 
 ## 概述
 
-大脑门儿可以方便的用本地文件来构建ChatGPT的外部知识库。支持自然语言搜索、问答和全文分析本地文档。
+大脑门可以方便的用本地文件来构建ChatGPT的外部知识库。支持自然语言搜索、问答和全文分析本地文档。
 
 ![](doc/fig0.png)
 
@@ -60,7 +60,8 @@ python run.py
 
 填写好openai的key，或完成一些代理配置后。可在`Ask`模块中，选择`default`知识库进行一次提问。如果能返回结果，表示和chatgpt连接正常。
 
-> default表示不使用本地知识库，返回的是chatgpt的原始回答.
+> `default`表示不访问本地知识库，返回的是chatgpt的原始回答.
+> `review`模块在连接api成功后直接使用，不依赖创建本地知识库.
 
 ---
 
