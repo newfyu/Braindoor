@@ -11,6 +11,7 @@ import docx
 import PyPDF2
 import html2text
 import html
+import json
 
 from bs4 import BeautifulSoup
 
@@ -192,3 +193,24 @@ def send_notify(msg):
     notification.application_name = 'Braindoor'
     notification.icon = "doc/nao.png"
     notification.send(block=False)
+
+def save_chat_history(chat_id, history):
+    if not os.path.exists('history'):
+        os.mkdir('history')
+    with open(f'history/{chat_id}.json', 'w', encoding='utf-8') as f:
+        json.dump(history, f, ensure_ascii=False, indent=4)
+
+
+def get_history_pages():
+    history_dir = "history"
+    history_jsons = sorted([f for f in os.listdir(history_dir) if f.endswith(".json")], key=lambda x: os.path.getmtime(os.path.join(history_dir, x)), reverse=True)
+    return history_jsons
+
+def load_context(chat_id):
+    try:
+        with open(f'history/{chat_id}.json', 'r', encoding='utf-8') as f:
+            context = json.load(f)
+    except:
+        context = []
+    return context
+

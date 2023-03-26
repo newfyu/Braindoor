@@ -16,3 +16,4 @@ temp/
 bases/
 *.log
 nohup.out
+history/
