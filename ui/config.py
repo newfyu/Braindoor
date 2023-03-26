@@ -1,4 +1,5 @@
 import gradio as gr
+from pandas.core.arrays.categorical import contains
 from mygpt import mygpt
 import os
 import yaml

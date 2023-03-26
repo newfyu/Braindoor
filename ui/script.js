@@ -36,3 +36,16 @@ function scroll_to_bottom(x){
 
 var addListener = false
 
+// document.addEventListener('DOMContentLoaded', function() {
+  // const xpath = "/html/body/gradio-app/div[2]/div[2]/footer/a";
+  // const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+// });
+
+window.onload = function() {
+  const xpath = "/html/body/gradio-app/div[2]/div[2]/footer/a";
+  const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+
+	element.setAttribute("href", "https://github.com/newfyu/Braindoor");
+	element.textContent = "Developed by lhan & juan  ✉️ "
+};
+
