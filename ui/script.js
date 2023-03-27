@@ -46,6 +46,6 @@ window.onload = function() {
   const element = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
 	element.setAttribute("href", "https://github.com/newfyu/Braindoor");
-	element.textContent = "Developed by lhan & juan  ✉️ "
+	element.textContent = "Developed by lhan & hjuan  💌"
 };
 

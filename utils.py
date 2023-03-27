@@ -214,3 +214,9 @@ def load_context(chat_id):
         context = []
     return context
 
+def del_page(chat_id):
+    if os.path.exists(f'history/{chat_id}.json'):
+        os.remove(f'history/{chat_id}.json')
+        return True
+    else:
+        return False

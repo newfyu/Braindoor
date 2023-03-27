@@ -9,7 +9,8 @@ from utils import (
     tiktoken_encoder,
     save_chat_history,
     get_history_pages,
-    load_context
+    load_context,
+    del_page
 )
 import shutil
 from pathlib import Path
@@ -89,7 +90,7 @@ def go_page(current_page, offset, pages):
         current_page -= offset
     chat_id = pages[current_page].split(".")[0]
     context = load_context(chat_id)
-    return context, context, chat_id, current_page, f"{current_page}/{len(pages)-1}" 
+    return context, context, chat_id, current_page, f"{current_page+1}/{len(pages)}" 
 
 def run_show_answer(question, history):
     if mygpt.temp_result:
@@ -105,8 +106,25 @@ def run_clear_context():
     new_chat_id = uuid.uuid1()
     pages = get_history_pages()
     pages.insert(0, f"{new_chat_id}.json")
-    return "", [], new_chat_id, 0, pages, f"0/{len(pages)-1}" 
+    return "", [], new_chat_id, 0, pages, f"1/{len(pages)}" 
 
+def run_del_page(chat_id, pages):
+    if f"{chat_id}.json" in pages:
+        del_page(chat_id)
+        pages.remove(f"{chat_id}.json")
+    new_chat_id = uuid.uuid1()
+    pages = get_history_pages()
+    pages.insert(0, f"{new_chat_id}.json")
+    return "", [], new_chat_id, 0, pages, f"1/{len(pages)}",gr.update(value="▶️"), gr.update(visible=False),gr.update(visible=False)
+
+def fold_tool(fold):
+    if fold == "▶️":
+        fold = "◀️"
+        visible = True
+    else:
+        fold = "▶️"
+        visible = False
+    return gr.update(value=fold), gr.update(visible=visible),gr.update(visible=visible)
 
 def change_hyde(i):
     mygpt.opt["HyDE"] = i
@@ -128,14 +146,18 @@ with gr.Blocks(title="ask") as ask_interface:
     state_current_page = gr.State(0)
 
     with gr.Row(elem_id="ask_toolbar"):
-        btn_clear_context = gr.Button("🔄", elem_id="btn_clear_context")
+        btn_clear_context = gr.Button("🆕", elem_id="btn_clear_context")
         btn_clear_context.style(full_width=False)
-        btn_stop = gr.Button("⏸️", elem_id="btn_stop")
+        btn_fold = gr.Button("▶️", elem_id="btn_del")
+        btn_fold.style(full_width=False)
+        btn_stop = gr.Button("⏸️", elem_id="btn_stop", visible=False)
         btn_stop.style(full_width=False)
+        btn_del = gr.Button("🗑", elem_id="btn_del", visible=False)
+        btn_del.style(full_width=False)
     with gr.Row(elem_id="page_bar"):
         btn_ask_next = gr.Button("<", elem_id="ask_next")
         btn_ask_next.style(full_width=False)
-        btn_ask_page = gr.Button(f"0/{len(state_pages.value)-1}", elem_id="ask_page")
+        btn_ask_page = gr.Button(f"1/{len(state_pages.value)}", elem_id="ask_page")
         btn_ask_page.style(full_width=False)
         btn_ask_prev = gr.Button(">", elem_id="ask_prev")
         btn_ask_prev.style(full_width=False)
@@ -177,6 +199,10 @@ with gr.Blocks(title="ask") as ask_interface:
         outputs=[chatbot, state_chat, state_chat_id, state_current_page, btn_ask_page],
         api_name="ask_next",
     )
+
+    btn_fold.click(fn=fold_tool,inputs=[btn_fold],outputs=[btn_fold, btn_stop,btn_del])
+
+    btn_del.click(fn=run_del_page,inputs=[state_chat_id, state_pages], outputs=[chatbot, state_chat, state_chat_id, state_current_page, state_pages, btn_ask_page, btn_fold, btn_stop,btn_del])
 
 
     btn_clear_context.click(
