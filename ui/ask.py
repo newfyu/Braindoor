@@ -146,7 +146,7 @@ with gr.Blocks(title="ask") as ask_interface:
     state_current_page = gr.State(0)
 
     with gr.Row(elem_id="ask_toolbar"):
-        btn_clear_context = gr.Button("🆕", elem_id="btn_clear_context")
+        btn_clear_context = gr.Button("🔄", elem_id="btn_clear_context")
         btn_clear_context.style(full_width=False)
         btn_fold = gr.Button("▶️", elem_id="btn_del")
         btn_fold.style(full_width=False)
