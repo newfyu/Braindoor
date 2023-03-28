@@ -44,7 +44,7 @@ def handle_upload_file(file, chat_id, context):
         chunks = mygpt.fulltext_splitter.split_text(text)
         # chunk save
         save_review_chunk(chat_id, chunks)
-        info = (f"Can you see this file: {Path(file_path).name} ({len(chunks)} chunk)",
+        info = (f'Can you see this file: <b><div class="filebox">{Path(file_path).name}<br>{len(chunks)} chunk </div>',
                 "Yes, you can now ask any questions about the file.")
         
         context.append(info)

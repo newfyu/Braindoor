@@ -212,3 +212,8 @@ label.svelte-1wjs5yr.svelte-1wjs5yr.svelte-1wjs5yr {
     padding: 10px;
     border-radius: 10px;
 }
+.filebox {
+    border: 1px solid white;
+    padding: 5px;
+	margin: 10px
+}
