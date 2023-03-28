@@ -1,4 +1,5 @@
 import gradio as gr
+from gradio.helpers import plt
 from utils import (
     save_chat_history,
     with_proxy,
@@ -23,7 +24,8 @@ def run_clear_context():
     new_chat_id = uuid.uuid1()
     pages = get_history_pages(dir="review")
     pages.insert(0, f"{new_chat_id}.json")
-    return "", [], new_chat_id, 0, pages, f"1/{len(pages)}"
+    placeholder = "Wait for file upload"
+    return "", [], new_chat_id, 0, pages, f"1/{len(pages)}", gr.update(interactive=False, placeholder=placeholder)
 
 
 @with_proxy(opt["proxy"])
@@ -187,7 +189,7 @@ with gr.Blocks(title="review") as reaview_interface:
     )
     chat_inp.change(fn=lambda: None, cancels=[show_answer])
 
-    btn_clear_context.click(fn=run_clear_context, outputs=[reviewbot, state_chat, state_chat_id, state_current_page, state_pages, btn_page])
+    btn_clear_context.click(fn=run_clear_context, outputs=[reviewbot, state_chat, state_chat_id, state_current_page, state_pages, btn_page, chat_inp])
 
     btn_upload.upload(
         fn=handle_upload_file,
