@@ -145,7 +145,7 @@ with gr.Blocks(title="review") as reaview_interface:
     state_chat = gr.State([])
 
     with gr.Row(elem_id="review_toolbar"):
-        btn_clear_context = gr.Button("🔄", elem_id="btn_clear_context_review")
+        btn_clear_context = gr.Button("🆕", elem_id="btn_clear_context_review")
         btn_clear_context.style(full_width=False)
         btn_fold = gr.Button("▶️", elem_id="btn_fold_review")
         btn_fold.style(full_width=False)
