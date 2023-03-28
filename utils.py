@@ -194,29 +194,48 @@ def send_notify(msg):
     notification.icon = "doc/nao.png"
     notification.send(block=False)
 
-def save_chat_history(chat_id, history):
-    if not os.path.exists('history'):
-        os.mkdir('history')
-    with open(f'history/{chat_id}.json', 'w', encoding='utf-8') as f:
+def save_chat_history(chat_id, history, dir='ask'):
+    path = Path(f'history/{dir}')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(Path(f'history/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
         json.dump(history, f, ensure_ascii=False, indent=4)
 
+def save_review_chunk(chat_id, chunks):
+    path = Path('history/review')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(Path(f'history/review/{chat_id}.chunk'), 'w', encoding='utf-8') as f:
+        json.dump(chunks, f, ensure_ascii=False, indent=4)
 
-def get_history_pages():
-    history_dir = "history"
+def get_history_pages(dir='ask'):
+    history_dir = Path(f'history/{dir}')
+    if not os.path.exists(history_dir):
+        os.makedirs(history_dir)
     history_jsons = sorted([f for f in os.listdir(history_dir) if f.endswith(".json")], key=lambda x: os.path.getmtime(os.path.join(history_dir, x)), reverse=True)
     return history_jsons
 
-def load_context(chat_id):
+def load_context(chat_id, dir='ask'):
     try:
-        with open(f'history/{chat_id}.json', 'r', encoding='utf-8') as f:
+        with open(Path(f'history/{dir}/{chat_id}.json'), 'r', encoding='utf-8') as f:
             context = json.load(f)
     except:
         context = []
     return context
 
-def del_page(chat_id):
-    if os.path.exists(f'history/{chat_id}.json'):
-        os.remove(f'history/{chat_id}.json')
+def load_review_chunk(chat_id):
+    try:
+        with open(Path(f'history/review/{chat_id}.chunk'), 'r', encoding='utf-8') as f:
+            chunks = json.load(f)
+    except:
+        chunks = []
+    return chunks
+
+def del_page(chat_id, dir='ask'):
+    if os.path.exists(Path(f'history/{dir}/{chat_id}.json')):
+        os.remove(Path(f'history/{dir}/{chat_id}.json'))
+    if os.path.exists(Path(f'history/{dir}/{chat_id}.chunk')):
+        os.remove(Path(f'history/{dir}/{chat_id}.chunk'))
         return True
     else:
         return False

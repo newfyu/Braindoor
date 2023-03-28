@@ -24,7 +24,6 @@ opt = mygpt.opt
 @with_proxy(opt["proxy"])
 def run_chat(question, history, base_name, chat_id):
     dir_name = "temp"
-
     # cutoff context
     context = []
     context_len = 0
@@ -137,7 +136,7 @@ with gr.Blocks(title="ask") as ask_interface:
     chatbot.style(color_map=("Orange", "SteelBlue "))
     state_chat = gr.State([])
 
-    # create chat id
+    # create new chat id
     chat_id = str(uuid.uuid1())
     state_chat_id = gr.State(chat_id)
     pages = get_history_pages()
@@ -148,19 +147,19 @@ with gr.Blocks(title="ask") as ask_interface:
     with gr.Row(elem_id="ask_toolbar"):
         btn_clear_context = gr.Button("🔄", elem_id="btn_clear_context")
         btn_clear_context.style(full_width=False)
-        btn_fold = gr.Button("▶️", elem_id="btn_del")
+        btn_fold = gr.Button("▶️", elem_id="btn_fold")
         btn_fold.style(full_width=False)
-        btn_stop = gr.Button("⏸️", elem_id="btn_stop", visible=False)
+        btn_stop = gr.Button("⏹️", elem_id="btn_stop", visible=False)
         btn_stop.style(full_width=False)
         btn_del = gr.Button("🗑", elem_id="btn_del", visible=False)
         btn_del.style(full_width=False)
     with gr.Row(elem_id="page_bar"):
-        btn_ask_next = gr.Button("<", elem_id="ask_next")
-        btn_ask_next.style(full_width=False)
-        btn_ask_page = gr.Button(f"1/{len(state_pages.value)}", elem_id="ask_page")
-        btn_ask_page.style(full_width=False)
-        btn_ask_prev = gr.Button(">", elem_id="ask_prev")
-        btn_ask_prev.style(full_width=False)
+        btn_next = gr.Button("<", elem_id="ask_next")
+        btn_next.style(full_width=False)
+        btn_page = gr.Button(f"1/{len(state_pages.value)}", elem_id="ask_page")
+        btn_page.style(full_width=False)
+        btn_prev = gr.Button(">", elem_id="ask_prev")
+        btn_prev.style(full_width=False)
 
     chat_inp = gr.Textbox(
         show_label=False, placeholder="Enter text and press enter", lines=1
@@ -187,27 +186,27 @@ with gr.Blocks(title="ask") as ask_interface:
     )
     chat_inp.change(fn=lambda: None, cancels=[stream_answer])
 
-    btn_ask_prev.click(
+    btn_prev.click(
         fn=go_page,
         inputs=[state_current_page, gr.State(1), state_pages],
-        outputs=[chatbot, state_chat, state_chat_id, state_current_page, btn_ask_page],
+        outputs=[chatbot, state_chat, state_chat_id, state_current_page, btn_page],
         api_name="ask_prev",
     )
-    btn_ask_next.click(
+    btn_next.click(
         fn=go_page,
         inputs=[state_current_page, gr.State(-1), state_pages],
-        outputs=[chatbot, state_chat, state_chat_id, state_current_page, btn_ask_page],
+        outputs=[chatbot, state_chat, state_chat_id, state_current_page, btn_page],
         api_name="ask_next",
     )
 
     btn_fold.click(fn=fold_tool,inputs=[btn_fold],outputs=[btn_fold, btn_stop,btn_del])
 
-    btn_del.click(fn=run_del_page,inputs=[state_chat_id, state_pages], outputs=[chatbot, state_chat, state_chat_id, state_current_page, state_pages, btn_ask_page, btn_fold, btn_stop,btn_del])
+    btn_del.click(fn=run_del_page,inputs=[state_chat_id, state_pages], outputs=[chatbot, state_chat, state_chat_id, state_current_page, state_pages, btn_page, btn_fold, btn_stop,btn_del])
 
 
     btn_clear_context.click(
         fn=run_clear_context,
-        outputs=[chatbot, state_chat, state_chat_id, state_current_page, state_pages, btn_ask_page],
+        outputs=[chatbot, state_chat, state_chat_id, state_current_page, state_pages, btn_page],
         api_name="clear_context",
     )
     btn_stop.click(fn=lambda: None, cancels=[chatting, stream_answer])
