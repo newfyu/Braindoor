@@ -12,4 +12,3 @@ PyYAML
 tiktoken
 faiss-cpu
 pystray
-notify-py

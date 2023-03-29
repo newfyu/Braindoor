@@ -175,12 +175,30 @@ with gr.Blocks(title="ask") as ask_interface:
         )
         box_hyde.style(container=True)
 
+    #  box_plugin = gr.Dataset(components=[gr.Textbox(visible=False)],
+    #  label="Plugin（Developing...）",
+    #  samples=[
+        #  ["英译汉"],
+        #  ["润色"],
+        #  ["google"],
+    #  ])
+
+    #  def insert_plugin(value,inp):
+        #  inp += f" #{str(value[0])} "
+        #  return inp
+
+    #  box_plugin.click(fn=insert_plugin,inputs=[box_plugin, chat_inp], outputs=[chat_inp])
+    
+    
+
+
     chatting = chat_inp.submit(
         fn=run_chat,
         inputs=[chat_inp, state_chat, radio_base_name_ask, state_chat_id],
         outputs=[chatbot, state_chat, chat_inp],
         api_name="ask",
     )
+
     stream_answer = chat_inp.submit(
         fn=run_show_answer, inputs=[chat_inp, state_chat], outputs=[chatbot], every=0.1
     )

@@ -1,5 +1,4 @@
 import logging
-from notifypy import Notify
 import os
 from pathlib import Path
 import re
@@ -185,14 +184,6 @@ def cutoff_localtext(local_text, max_len=2000):
         code = code[:max_len]
         local_text = tiktoken_encoder.decode(code)
     return local_text
-
-def send_notify(msg):
-    notification = Notify()
-    notification.title = "New message"
-    notification.message = f"{msg}"
-    notification.application_name = 'Braindoor'
-    notification.icon = "doc/nao.png"
-    notification.send(block=False)
 
 def save_chat_history(chat_id, history, dir='ask'):
     path = Path(f'history/{dir}')

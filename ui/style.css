@@ -176,8 +176,8 @@ div.svelte-1dl81bf {
     flex-grow: 0;
     position: absolute;
     right: 0;
-    transform: translate(-100%, 10%);
-    bottom: 0;
+    transform: translate(-100%, -10%);
+    /* bottom: 0; */
     background: none;
 }
 
@@ -213,7 +213,9 @@ label.svelte-1wjs5yr.svelte-1wjs5yr.svelte-1wjs5yr {
     border-radius: 10px;
 }
 .filebox {
-    border: 1px solid white;
+    /* border: 1px solid white; */
     padding: 5px;
-	margin: 10px
+	margin: 10px;
+	background: gray;
+	border-radius: 10px;
 }
