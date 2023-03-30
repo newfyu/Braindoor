@@ -175,19 +175,20 @@ with gr.Blocks(title="ask") as ask_interface:
         )
         box_hyde.style(container=True)
 
-    #  box_plugin = gr.Dataset(components=[gr.Textbox(visible=False)],
-    #  label="Plugin（Developing...）",
-    #  samples=[
-        #  ["英译汉"],
-        #  ["润色"],
-        #  ["google"],
-    #  ])
+    # magic tags
+    samples = []
+    for tag in mygpt.magictags.keys():
+        samples.append([tag])
 
-    #  def insert_plugin(value,inp):
-        #  inp += f" #{str(value[0])} "
-        #  return inp
+    box_magictags = gr.Dataset(components=[gr.Textbox(visible=False)],
+    label="Magic tag",
+    samples=samples)
 
-    #  box_plugin.click(fn=insert_plugin,inputs=[box_plugin, chat_inp], outputs=[chat_inp])
+    def insert_magictag(value,inp):
+        inp += f" #{str(value[0])} "
+        return inp
+
+    box_magictags.click(fn=insert_magictag,inputs=[box_magictags, chat_inp], outputs=[chat_inp])
     
     
 

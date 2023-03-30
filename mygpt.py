@@ -11,9 +11,7 @@ from utils import logger, tiktoken_encoder, cutoff_localtext
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from functools import partial
 from create_base import token_len
-import os
-import shutil
-
+import importlib
 
 class Result:
     def __init__(self, page_content, metadata):
@@ -29,6 +27,7 @@ class MyGPT:
         self.bases = dict()
         base_paths = list(Path(self.bases_root).glob("*.base"))
         self.load_base(base_paths)
+        self.magictags = self.load_magictags()
 
         openai.api_key = self.opt["key"]
         if self.opt["key"]:
@@ -39,6 +38,18 @@ class MyGPT:
             chunk_overlap=self.opt["review_chunk_overlap"],
             length_function=partial(token_len, encoder=tiktoken_encoder),
         )
+
+    # load magic tag from tags/
+    def load_magictags(self):
+        tag_file = list(Path('magictags').glob("*.py"))
+        magictags = dict()
+        for tag_file in tag_file:
+            tag_name = tag_file.stem
+            magictag = importlib.import_module(f"magictags.{tag_name}")
+            magictag = magictag.MagicTag()
+            magictags[magictag.tag] = magictag
+        return magictags
+
 
     def load_base(self, base_paths):
         if len(base_paths) > 0:
@@ -133,6 +144,21 @@ class MyGPT:
             return mygpt.temp_result
 
     def ask(self, question, context, base_name):
+        # 解析question中的magic tag，加入use_magictag列表
+        use_magictags = []
+        for key in self.magictags.keys():
+            tag = f" #{key} " 
+            if  tag in question:
+                question = question.replace(tag, "")
+                use_magictags.append(self.magictags[key])
+
+        # qustion前处理
+        for magictag in use_magictags:
+            try:
+                question = magictag.before_llm(question)
+            except Exception as e:
+                logger.error(e)
+
         if base_name != "default":
             base = self.bases[base_name]
             if self.opt["HyDE"]:
@@ -147,12 +173,12 @@ class MyGPT:
             mydocs = base["vstore"].similarity_search_with_score(
                 query, k=self.opt["ask_topk"]
             )
-
+            
             local_text = mydocs[0][0].page_content
             if self.opt["answer_depth"] < 2:  # simple answer
-                ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information for answering user questions, feel free to generate a answer for question based on general knowledge or context:
-        local text:{local_text}
-        user question:{question}"""
+                ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
+local text:{local_text}
+user question:{question}"""
                 answer = self.chatgpt(ask_prompt, context, stream=True)
                 mygpt.temp_result = ''
 
@@ -168,7 +194,13 @@ class MyGPT:
             mydocs = []
             mygpt.temp_result = ''
 
-        #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
+        # question后处理
+        for magictag in use_magictags:
+            try:
+                answer = magictag.after_llm(answer)
+            except Exception as e:
+                logger.error(e)
+
         return answer, mydocs, draft
 
     # prompt 1

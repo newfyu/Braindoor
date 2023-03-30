@@ -38,7 +38,6 @@ conda activate braindoor
 git clone https://github.com/newfyu/Braindoor.git
 cd Braindoor
 pip install -r requirements.txt
-# conda install -c conda-forge faiss-cpu # windows
 ```
 
 3、启动
