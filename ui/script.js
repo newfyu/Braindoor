@@ -12,8 +12,8 @@ document.addEventListener('keydown', function(e) {
 	// }
 
 	if (!addListener){
-		var targetNode = document.querySelector('#chatbot > div.wrap.svelte-byatnx');
-		var targetNode2 = document.querySelector('#reviewbot > div.wrap.svelte-byatnx');
+		var targetNode = document.querySelector('#chatbot > div.wrap.svelte-6roggh');
+		var targetNode2 = document.querySelector('#reviewbot > div.wrap.svelte-6roggh');
 		targetNode.addEventListener('DOMSubtreeModified', () => {
 		  scroll_to_bottom();
 		});
@@ -26,8 +26,8 @@ document.addEventListener('keydown', function(e) {
 
 
 function scroll_to_bottom(x){
-	var chatbot = document.querySelector('#chatbot > div.wrap.svelte-byatnx');
-	var reviewbot = document.querySelector('#reviewbot > div.wrap.svelte-byatnx');
+	var chatbot = document.querySelector('#chatbot > div.wrap.svelte-6roggh');
+	var reviewbot = document.querySelector('#reviewbot > div.wrap.svelte-6roggh');
     chatbot.scrollTop = chatbot.scrollHeight;
     reviewbot.scrollTop = reviewbot.scrollHeight;
     return x;

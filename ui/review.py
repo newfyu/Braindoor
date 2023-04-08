@@ -140,7 +140,7 @@ with gr.Blocks(title="review") as reaview_interface:
     state_current_page = gr.State(0)
 
     reviewbot = gr.Chatbot(elem_id="reviewbot", show_label=False)
-    reviewbot.style(color_map=("Orange", "SteelBlue "))
+    #  reviewbot.style(color_map=("Orange", "SteelBlue "))
     state_chunks = gr.State([])
     state_chat = gr.State([])
 

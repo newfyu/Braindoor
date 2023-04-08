@@ -220,6 +220,11 @@ pre {
 	background: gray;
 	border-radius: 10px;
 	color: white;
+    white-space: pre-wrap;			/* 保留空白符序列，并正常进行换行 */
+    white-space: -moz-pre-wrap;		/* 兼容火狐浏览器 */
+    white-space: -webkit-pre-wrap;	/* 兼容谷歌浏览器 */
+    white-space: -o-pre-wrap;			/* 兼容opera浏览器 */
+    word-wrap: break-word;			/* 允许字母、url地址换行 */
 }
 
 .wrap.svelte-6roggh.svelte-6roggh {

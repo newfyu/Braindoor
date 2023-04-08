@@ -1,6 +1,6 @@
 backoff
 beautifulsoup4
-gradio==3.18.0
+gradio==3.24.1
 html2text
 langchain==0.0.83
 numpy
