@@ -1,6 +1,5 @@
 class MagicTag(object):
     def __init__(self):
-        self.name = "runse"
         self.tag = "润色"
         self.discription = "用于学术文章的润色"
 

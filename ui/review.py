@@ -1,7 +1,7 @@
 import gradio as gr
 from gradio.helpers import plt
 from utils import (
-    save_chat_history,
+    save_page,
     with_proxy,
     logger,
     read_text_file,
@@ -33,7 +33,7 @@ def run_review(question, context, chunks, chat_id):
     answer = mygpt.review(question, chunks)
     answer = txt2html(answer)
     context.append((question, answer))
-    save_chat_history(chat_id, context, dir="review")
+    save_page(chat_id, context, dir="review")
     return context, context, ""
 
 

@@ -40,8 +40,8 @@ input.svelte-2xzfnp, textarea.svelte-2xzfnp {
 #box_result_size {
     padding:15px;
 }
-#component-9 {
-    max-width: 800px;
+#component-111 {
+    max-width: 1200px;
 	margin:auto;
 }
 div.svelte-1dl81bf {
@@ -135,7 +135,7 @@ div.svelte-1dl81bf {
 	/* width: 200px; */
 	min-width: 40px;
 	flex-grow: 0;
-	position: absolute;
+	/* position: absolute; */
 	top: 0;
 	left: 0;
 	gap:5px;
@@ -145,7 +145,7 @@ div.svelte-1dl81bf {
 	flex-grow: 0;
 	min-width: 40px;
 	flex-grow: 0;
-	position: absolute;
+	/* position: absolute; */
 	top: 0;
 	left: 0;
 	gap:5px;
@@ -174,7 +174,7 @@ div.svelte-1dl81bf {
     width: 40px;
     min-width: 40px;
     flex-grow: 0;
-    position: absolute;
+	position: absolute;
     right: 0;
     transform: translate(-100%, -10%);
     /* bottom: 0; */
@@ -212,10 +212,19 @@ label.svelte-1wjs5yr.svelte-1wjs5yr.svelte-1wjs5yr {
     padding: 10px;
     border-radius: 10px;
 }
-.filebox {
+
+pre {
     /* border: 1px solid white; */
     padding: 5px;
 	margin: 10px;
 	background: gray;
 	border-radius: 10px;
+	color: white;
+}
+
+.wrap.svelte-6roggh.svelte-6roggh {
+	max-height: unset; 
+}
+label.svelte-1p9xokt.svelte-1p9xokt.svelte-1p9xokt {
+    background: none
 }

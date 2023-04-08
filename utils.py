@@ -185,12 +185,12 @@ def cutoff_localtext(local_text, max_len=2000):
         local_text = tiktoken_encoder.decode(code)
     return local_text
 
-def save_chat_history(chat_id, history, dir='ask'):
+def save_page(chat_id, context, dir='ask'):
     path = Path(f'history/{dir}')
     if not os.path.exists(path):
         os.makedirs(path)
     with open(Path(f'history/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
-        json.dump(history, f, ensure_ascii=False, indent=4)
+        json.dump(context, f, ensure_ascii=False, indent=4)
 
 def save_review_chunk(chat_id, chunks):
     path = Path('history/review')
@@ -230,3 +230,26 @@ def del_page(chat_id, dir='ask'):
         return True
     else:
         return False
+
+def parse_codeblock(text):
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        if "```" in line:
+            if line != "```":
+                lines[i] = f'<pre><code class="{lines[i][3:]}">'
+            else:
+                lines[i] = '</code></pre>'
+        else:
+            if i > 0:
+                lines[i] = "<br/>" + line.replace("<", "&lt;").replace(">", "&gt;")
+    return "".join(lines)
+
+def format_chat_text(text):
+    if isinstance(text,str):
+        text = parse_codeblock(text)
+        return text
+    elif isinstance(text,list):
+        for i, line in enumerate(text):
+            text[i][0] = format_chat_text(line[0])
+            text[i][1] = format_chat_text(line[1])
+        return text

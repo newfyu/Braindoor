@@ -1,16 +1,16 @@
-from functools import partial
 import gradio as gr
 from utils import (
+    format_chat_text,
+    save_page,
     with_proxy,
     copy_html,
     remove_asklink,
-    html2txt,
-    txt2html,
+    parse_codeblock,
     tiktoken_encoder,
-    save_chat_history,
     get_history_pages,
     load_context,
-    del_page
+    del_page,
+    format_chat_text
 )
 import shutil
 from pathlib import Path
@@ -22,23 +22,22 @@ opt = mygpt.opt
 
 
 @with_proxy(opt["proxy"])
-def run_chat(question, history, base_name, chat_id):
+def run_chat(question, history, context, base_name, chat_id, frontend):
     dir_name = "temp"
     # cutoff context
-    context = []
+    truncated_context = []
     context_len = 0
-    for q, a in reversed(history):
+    for q, a in reversed(context):
         q = str(q)
         a = str(a)
         a = remove_asklink(a)
-        a = html2txt(a)
         qa_len = len(tiktoken_encoder.encode(q + a))
         if qa_len + context_len < mygpt.opt["max_context"]:
             context_len += qa_len
-            context.insert(0, (q, a))
+            truncated_context.insert(0, (q, a))
         else:
             break
-    answer, mydocs, _ = mygpt.ask(question, context, base_name)
+    answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
 
     links = list()
     i = 1
@@ -76,32 +75,40 @@ def run_chat(question, history, base_name, chat_id):
             i += 1
     links = "".join(links)
 
-    answer = txt2html(answer)
-    answer = f"{answer}<br><br>{links}"
-    history.append((question, answer))
-    save_chat_history(chat_id=chat_id, history=history)
+    if frontend == "gradio": # frontend用于判断前端，如果是gradio则处理一下codeblock，如果来自brainshell则另做处理
+        format_answer = format_chat_text(answer)
+    else:
+        format_answer = answer
+    format_answer = f"{format_answer}<br><br>{links}"
+    format_question = format_chat_text(question)
+    history.append((format_question, format_answer))
+    context.append((question, answer))
+    save_page(chat_id=chat_id, context=context)
 
-    return history, history, gr.update(value="")
+    return history, context, gr.update(value="")
 
 def go_page(current_page, offset, pages):
+    pages = get_history_pages()
     current_page += offset
     if current_page >= len(pages) or current_page < 0:
         current_page -= offset
     chat_id = pages[current_page].split(".")[0]
     context = load_context(chat_id)
-    return context, context, chat_id, current_page, f"{current_page+1}/{len(pages)}" 
+    history = format_chat_text(context.copy())
+    return history, context, chat_id, current_page, f"{current_page+1}/{len(pages)}" 
 
-def run_show_answer(question, history):
+def get_stream_answer(question, history):
     if mygpt.temp_result:
-        answer = txt2html(mygpt.temp_result)
+        #  answer = txt2html(mygpt.temp_result)
+        #  answer = parse_codeblock(mygpt.temp_result)
+        answer = mygpt.temp_result
         _history = history.copy()
         _history.append((question, answer))
         return _history
     else:
         return history
 
-
-def run_clear_context():
+def run_new_page():
     new_chat_id = uuid.uuid1()
     pages = get_history_pages()
     pages.insert(0, f"{new_chat_id}.json")
@@ -114,7 +121,7 @@ def run_del_page(chat_id, pages):
     new_chat_id = uuid.uuid1()
     pages = get_history_pages()
     pages.insert(0, f"{new_chat_id}.json")
-    return "", [], new_chat_id, 0, pages, f"1/{len(pages)}",gr.update(value="▶️"), gr.update(visible=False),gr.update(visible=False)
+    return "", [], new_chat_id, 0, pages, f"1/{len(pages)}",gr.update(visible=False),gr.update(visible=False)
 
 def fold_tool(fold):
     if fold == "▶️":
@@ -132,9 +139,16 @@ def change_hyde(i):
 with gr.Blocks(title="ask") as ask_interface:
     base_list_ask = sorted((mygpt.bases.keys()))
     base_list_ask.insert(0, "default")
-    chatbot = gr.Chatbot(elem_id="chatbot", show_label=False)
-    chatbot.style(color_map=("Orange", "SteelBlue "))
-    state_chat = gr.State([])
+    
+    A = """
+    好的,这里是一个简单的Python类,它只有一个属性和一个方法来设置和打印该属性值:\n\n```python\nclass Person:\n    def __init__(self, name):\n        self.name = name\n    \n    def say_hello(self):\n        print(f"Hello, my name is {self.name}")\n```\n\n在这个例子中,我们定义了一个`Person`类,它具有一个`__init__`方法来设置`name`属性,以及一个`say_hello`方法来打印出该属性的值。\n\n我们可以使用以下代码创建一个`Person`对象,并使用`say_hello`方法打印出其名称:\n\n```python\nperson = Person("Alice")\nperson.say_hello()\n```\n\n这将产生以下输出:\n\n```\nHello, my name is Alice\n```\n\n'
+    """
+    A = parse_codeblock(A)
+    greet = [('hello', A)]
+    chatbot = gr.Chatbot(value=greet, elem_id="chatbot", show_label=False)
+    #  chatbot.style(color_map=("Orange", "SteelBlue"))
+    #  state_histroy = gr.State([]) # history储存chatbot的结果，显示的时候经过了html转换
+    state_context = gr.State([]) # context存储未格式化的上下文
 
     # create new chat id
     chat_id = str(uuid.uuid1())
@@ -145,13 +159,11 @@ with gr.Blocks(title="ask") as ask_interface:
     state_current_page = gr.State(0)
 
     with gr.Row(elem_id="ask_toolbar"):
-        btn_clear_context = gr.Button("🆕", elem_id="btn_clear_context")
-        btn_clear_context.style(full_width=False)
-        btn_fold = gr.Button("▶️", elem_id="btn_fold")
-        btn_fold.style(full_width=False)
-        btn_stop = gr.Button("⏹️", elem_id="btn_stop", visible=False)
+        btn_new_page = gr.Button("🆕", elem_id="btn_clear_context")
+        btn_new_page.style(full_width=False)
+        btn_stop = gr.Button("⏹️", elem_id="btn_stop")
         btn_stop.style(full_width=False)
-        btn_del = gr.Button("🗑", elem_id="btn_del", visible=False)
+        btn_del = gr.Button("🗑", elem_id="btn_del")
         btn_del.style(full_width=False)
     with gr.Row(elem_id="page_bar"):
         btn_next = gr.Button("<", elem_id="ask_next")
@@ -189,44 +201,39 @@ with gr.Blocks(title="ask") as ask_interface:
         return inp
 
     box_magictags.click(fn=insert_magictag,inputs=[box_magictags, chat_inp], outputs=[chat_inp])
-    
-    
-
 
     chatting = chat_inp.submit(
         fn=run_chat,
-        inputs=[chat_inp, state_chat, radio_base_name_ask, state_chat_id],
-        outputs=[chatbot, state_chat, chat_inp],
+        inputs=[chat_inp, chatbot, state_context, radio_base_name_ask, state_chat_id, gr.State("gradio")],
+        outputs=[chatbot, state_context, chat_inp],
         api_name="ask",
     )
 
     stream_answer = chat_inp.submit(
-        fn=run_show_answer, inputs=[chat_inp, state_chat], outputs=[chatbot], every=0.1
-    )
+        fn=get_stream_answer, inputs=[chat_inp, chatbot], outputs=[chatbot], every=0.1, api_name="get_ask_stream_answer")
     chat_inp.change(fn=lambda: None, cancels=[stream_answer])
 
     btn_prev.click(
         fn=go_page,
         inputs=[state_current_page, gr.State(1), state_pages],
-        outputs=[chatbot, state_chat, state_chat_id, state_current_page, btn_page],
+        outputs=[chatbot, state_context, state_chat_id, state_current_page, btn_page],
         api_name="ask_prev",
     )
     btn_next.click(
         fn=go_page,
         inputs=[state_current_page, gr.State(-1), state_pages],
-        outputs=[chatbot, state_chat, state_chat_id, state_current_page, btn_page],
+        outputs=[chatbot, state_context, state_chat_id, state_current_page, btn_page],
         api_name="ask_next",
     )
 
-    btn_fold.click(fn=fold_tool,inputs=[btn_fold],outputs=[btn_fold, btn_stop,btn_del])
 
-    btn_del.click(fn=run_del_page,inputs=[state_chat_id, state_pages], outputs=[chatbot, state_chat, state_chat_id, state_current_page, state_pages, btn_page, btn_fold, btn_stop,btn_del])
+    btn_del.click(fn=run_del_page,inputs=[state_chat_id, state_pages], outputs=[chatbot, state_context, state_chat_id, state_current_page, state_pages, btn_page])
 
 
-    btn_clear_context.click(
-        fn=run_clear_context,
-        outputs=[chatbot, state_chat, state_chat_id, state_current_page, state_pages, btn_page],
+    btn_new_page.click(
+        fn=run_new_page,
+        outputs=[chatbot, state_context, state_chat_id, state_current_page, state_pages, btn_page],
         api_name="clear_context",
     )
-    btn_stop.click(fn=lambda: None, cancels=[chatting, stream_answer])
+    btn_stop.click(fn=lambda: None, cancels=[chatting, stream_answer], api_name='ask_stop')
     box_hyde.change(fn=change_hyde, inputs=[box_hyde])
