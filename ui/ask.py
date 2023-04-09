@@ -1,11 +1,13 @@
 import gradio as gr
+from urllib.parse import quote
 from utils import (
     format_chat_text,
+    md2html,
     save_page,
     with_proxy,
     copy_html,
     remove_asklink,
-    parse_codeblock,
+    md2html,
     tiktoken_encoder,
     get_history_pages,
     load_context,
@@ -57,30 +59,54 @@ def run_chat(question, history, context, base_name, chat_id, frontend):
                     copy_html(file_path)
                 else:
                     shutil.copy2(file_path, dir_name)
-                links.append(
-                    f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}] </a> '
-                )
-                links.append(
-                    f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
-                )
+                if frontend == "gradio":
+                    links.append(
+                        f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}] </a> '
+                    )
+                    links.append(
+                        f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
+                    )
+                else:
+                    url = f'http://127.0.0.1:7860/file/temp/reference-{i}.txt'
+                    url = quote(url,safe=':/')
+                    links.append(
+                        f'[[{i}]]({url}) '
+                    )
+                    url = f'http://127.0.0.1:7860/file/temp/{file_path.name}' 
+                    url = quote(url,safe=':/')
+                    links.append(
+                        f'[{file_path.stem}]({url})  \n'
+                    )
+
                 path_list.append(file_path)
             else:
-                index = links.index(
-                    f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
-                )
-                links.insert(
-                    index,
-                    f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}]</a> ',
-                )
+                if frontend == "gradio":
+                    index = links.index(
+                        f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
+                    )
+                    links.insert(
+                        index,
+                        f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}]</a> ',
+                    )
+                else:
+                    url = f'http://127.0.0.1:7860/file/temp/{file_path.name}' 
+                    url = quote(url,safe=':/')
+                    url = f'[{file_path.stem}]({url})  \n' 
+                    index = links.index(url)
+                    url = f'http://127.0.0.1:7860/file/temp/reference-{i}.txt'
+                    url = quote(url,safe=':/')
+                    links.insert(index,f'[[{i}]]({url}) ',
+                    )
             i += 1
     links = "".join(links)
 
     if frontend == "gradio": # frontend用于判断前端，如果是gradio则处理一下codeblock，如果来自brainshell则另做处理
-        format_answer = format_chat_text(answer)
+        #  format_answer = format_chat_text(answer)
+        format_answer = answer
     else:
         format_answer = answer
-    format_answer = f"{format_answer}<br><br>{links}"
-    format_question = format_chat_text(question)
+    format_answer = f"{format_answer}\n\n{links}"
+    format_question = f"{question}"
     history.append((format_question, format_answer))
     context.append((question, answer))
 
@@ -139,15 +165,16 @@ def change_hyde(i):
 
 
 with gr.Blocks(title="ask") as ask_interface:
+    frontend = gr.Textbox(value='gradio',visible=False)
     base_list_ask = sorted((mygpt.bases.keys()))
     base_list_ask.insert(0, "default")
     
-    #  A = """
-    #  好的,这里是一个简单的Python类,它只有一个属性和一个方法来设置和打印该属性值:\n\n```python\nclass Person:\n    def __init__(self, name):\n        self.name = name\n    \n    def say_hello(self):\n        print(f"Hello, my name is {self.name}")\n```\n\n在这个例子中,我们定义了一个`Person`类,它具有一个`__init__`方法来设置`name`属性,以及一个`say_hello`方法来打印出该属性的值。\n\n我们可以使用以下代码创建一个`Person`对象,并使用`say_hello`方法打印出其名称:\n\n```python\nperson = Person("Alice")\nperson.say_hello()\n```\n\n这将产生以下输出:\n\n```\nHello, my name is Alice\n```\n\n'
-    #  """
-    #  A = parse_codeblock(A)
-    #  greet = [('hello', A)]
-    greet = []
+    A = """
+    好的,这里是一个简单的Python类,它只有一个属性和一个方法来设置和打印该属性值:\n\n```python\nclass Person:\n    def __init__(self, name):\n        self.name = name\n    \n    def say_hello(self):\n        print(f"Hello, my name is {self.name}")\n```\n\n在这个例子中,我们定义了一个`Person`类,它具有一个`__init__`方法来设置`name`属性,以及一个`say_hello`方法来打印出该属性的值。\n\n我们可以使用以下代码创建一个`Person`对象,并使用`say_hello`方法打印出其名称:\n\n```python\nperson = Person("Alice")\nperson.say_hello()\n```\n\n这将产生以下输出:\n\n```\nHello, my name is Alice\n```\n\n'
+    """
+    #  A = md2html(A)
+    greet = [('hello', A)]
+    #  greet = []
     chatbot = gr.Chatbot(value=greet, elem_id="chatbot", show_label=False)
     #  chatbot.style(color_map=("Orange", "SteelBlue"))
     state_history = gr.State([]) # history储存chatbot的结果，显示的时候经过了html转换
@@ -207,7 +234,7 @@ with gr.Blocks(title="ask") as ask_interface:
 
     chatting = chat_inp.submit(
         fn=run_chat,
-        inputs=[chat_inp, state_history, state_context, radio_base_name_ask, state_chat_id, gr.State("gradio")],
+        inputs=[chat_inp, state_history, state_context, radio_base_name_ask, state_chat_id, frontend],
         outputs=[chatbot, state_history, state_context, chat_inp, state_current_page, btn_page, state_pages],
         api_name="ask",
     )
