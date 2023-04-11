@@ -10,7 +10,7 @@ from utils import (
     get_history_pages,
     load_context,
     del_page,
-    format_chat_text
+    format_chat_text,
 )
 import shutil
 from pathlib import Path
@@ -65,16 +65,12 @@ def run_chat(question, history, context, base_name, chat_id, frontend):
                         f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
                     )
                 else:
-                    url = f'http://127.0.0.1:7860/file/temp/reference-{i}.txt'
-                    url = quote(url,safe=':/')
-                    links.append(
-                        f'[[{i}]]({url}) '
-                    )
-                    url = f'http://127.0.0.1:7860/file/temp/{file_path.name}' 
-                    url = quote(url,safe=':/')
-                    links.append(
-                        f'[{file_path.stem}]({url})  \n'
-                    )
+                    url = f"http://127.0.0.1:7860/file/temp/reference-{i}.txt"
+                    url = quote(url, safe=":/")
+                    links.append(f"[[{i}]]({url}) ")
+                    url = f"http://127.0.0.1:7860/file/temp/{file_path.name}"
+                    url = quote(url, safe=":/")
+                    links.append(f"[{file_path.stem}]({url})  \n")
 
                 path_list.append(file_path)
             else:
@@ -87,18 +83,22 @@ def run_chat(question, history, context, base_name, chat_id, frontend):
                         f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}]</a> ',
                     )
                 else:
-                    url = f'http://127.0.0.1:7860/file/temp/{file_path.name}' 
-                    url = quote(url,safe=':/')
-                    url = f'[{file_path.stem}]({url})  \n' 
+                    url = f"http://127.0.0.1:7860/file/temp/{file_path.name}"
+                    url = quote(url, safe=":/")
+                    url = f"[{file_path.stem}]({url})  \n"
                     index = links.index(url)
-                    url = f'http://127.0.0.1:7860/file/temp/reference-{i}.txt'
-                    url = quote(url,safe=':/')
-                    links.insert(index,f'[[{i}]]({url}) ',
+                    url = f"http://127.0.0.1:7860/file/temp/reference-{i}.txt"
+                    url = quote(url, safe=":/")
+                    links.insert(
+                        index,
+                        f"[[{i}]]({url}) ",
                     )
             i += 1
     links = "".join(links)
 
-    if frontend == "gradio": # frontend用于判断前端，如果是gradio则处理一下codeblock，如果来自brainshell则另做处理
+    if (
+        frontend == "gradio"
+    ):  # frontend用于判断前端，如果是gradio则处理一下codeblock，如果来自brainshell则另做处理
         #  format_answer = format_chat_text(answer)
         format_answer = answer
         format_answer = f"{format_answer}<br><br>{links}"
@@ -112,7 +112,8 @@ def run_chat(question, history, context, base_name, chat_id, frontend):
     save_page(chat_id=chat_id, context=context)
     pages = get_history_pages()
 
-    return history, history, context, gr.update(value=""),0, f"1/{len(pages)}", pages
+    return history, history, context, gr.update(value=""), 0, f"1/{len(pages)}", pages
+
 
 def go_page(current_page, offset, pages):
     current_page += offset
@@ -120,8 +121,16 @@ def go_page(current_page, offset, pages):
         current_page -= offset
     chat_id = pages[current_page].split(".")[0]
     context = load_context(chat_id)
-    history = format_chat_text(context.copy())
-    return history, history, context, chat_id, current_page, f"{current_page+1}/{len(pages)}" 
+    history = context.copy()
+    return (
+        history,
+        history,
+        context,
+        chat_id,
+        current_page,
+        f"{current_page+1}/{len(pages)}",
+    )
+
 
 def get_stream_answer(question, history):
     if mygpt.temp_result:
@@ -134,21 +143,39 @@ def get_stream_answer(question, history):
         _history.append((question, "..."))
         return _history
 
+
 def run_new_page():
     pages = get_history_pages()
     new_chat_id = uuid.uuid1()
     pages.insert(0, f"{new_chat_id}.json")
     #  save_page(chat_id=new_chat_id,context=[])
-    return "",[],[], new_chat_id, 0, pages, f"1/{len(pages)}" 
+    return "", [], [], new_chat_id, 0, pages, f"1/{len(pages)}"
+
 
 def run_del_page(chat_id, pages, current_page):
     if f"{chat_id}.json" in pages:
         del_page(chat_id)
         pages.remove(f"{chat_id}.json")
-    pages = get_history_pages()
-    new_chat_id = uuid.uuid1()
-    pages.insert(0, f"{new_chat_id}.json")
-    return "",[],[], new_chat_id, 0, pages, f"1/{len(pages)}",gr.update(visible=False),gr.update(visible=False)
+    #  pages = get_history_pages()
+    if len(pages) <= 0:
+        new_chat_id = uuid.uuid1()
+        pages.insert(0, f"{new_chat_id}.json")
+        return "", [], [], new_chat_id, 0, pages, f"1/{len(pages)}"
+    elif current_page >= len(pages):
+        current_page = len(pages) - 1
+    chat_id = pages[current_page].split(".")[0]
+    context = load_context(chat_id)
+    history = context
+    return (
+        history,
+        history,
+        context,
+        chat_id,
+        current_page,
+        pages,
+        f"{current_page+1}/{len(pages)}",
+    )
+
 
 def fold_tool(fold):
     if fold == "▶️":
@@ -157,32 +184,31 @@ def fold_tool(fold):
     else:
         fold = "▶️"
         visible = False
-    return gr.update(value=fold), gr.update(visible=visible),gr.update(visible=visible)
+    return gr.update(value=fold), gr.update(visible=visible), gr.update(visible=visible)
+
 
 def change_hyde(i):
     mygpt.opt["HyDE"] = i
 
 
 with gr.Blocks(title="ask") as ask_interface:
-    frontend = gr.Textbox(value='gradio',visible=False)
+    frontend = gr.Textbox(value="gradio", visible=False)
     base_list_ask = sorted((mygpt.bases.keys()))
     base_list_ask.insert(0, "default")
-    
+
     greet = []
     chatbot = gr.Chatbot(value=greet, elem_id="chatbot", show_label=False)
     #  chatbot.style(color_map=("Orange", "SteelBlue"))
-    state_history = gr.State([]) # history储存chatbot的结果，显示的时候经过了html转换
-    state_context = gr.State([]) # context存储未格式化的上下文
+    state_history = gr.State([])  # history储存chatbot的结果，显示的时候经过了html转换
+    state_context = gr.State([])  # context存储未格式化的上下文
 
     # create new chat id
     chat_id = str(uuid.uuid1())
     state_chat_id = gr.State(chat_id)
     pages = get_history_pages()
     pages.insert(0, f"{chat_id}.json")
-    state_pages = gr.State(pages) # 要用组件储存
-    #  state_pages = gr.Checkboxgroup(choices=pages,value=pages,visible=False) # 要用组件储存
-    state_current_page = gr.State(0) # 要用组件存储
-    #  state_current_page = gr.Number(0,visible=False,precision=0) # 要用组件存储
+    state_pages = gr.State(pages)  # 要用组件储存
+    state_current_page = gr.State(0)  # 要用组件存储
 
     with gr.Row(elem_id="ask_toolbar"):
         btn_new_page = gr.Button("🆕", elem_id="btn_clear_context")
@@ -218,48 +244,105 @@ with gr.Blocks(title="ask") as ask_interface:
     for tag in mygpt.magictags.keys():
         samples.append([tag])
 
-    box_magictags = gr.Dataset(components=[gr.Textbox(visible=False)],
-    label="Magic tag",
-    samples=samples)
+    box_magictags = gr.Dataset(
+        components=[gr.Textbox(visible=False)], label="Magic tag", samples=samples
+    )
 
-    def insert_magictag(value,inp):
+    def insert_magictag(value, inp):
         inp += f" #{str(value[0])} "
         return inp
 
-    box_magictags.click(fn=insert_magictag,inputs=[box_magictags, chat_inp], outputs=[chat_inp])
+    box_magictags.click(
+        fn=insert_magictag, inputs=[box_magictags, chat_inp], outputs=[chat_inp]
+    )
 
     chatting = chat_inp.submit(
         fn=run_chat,
-        inputs=[chat_inp, state_history, state_context, radio_base_name_ask, state_chat_id, frontend],
-        outputs=[chatbot, state_history, state_context, chat_inp, state_current_page, btn_page, state_pages],
+        inputs=[
+            chat_inp,
+            state_history,
+            state_context,
+            radio_base_name_ask,
+            state_chat_id,
+            frontend,
+        ],
+        outputs=[
+            chatbot,
+            state_history,
+            state_context,
+            chat_inp,
+            state_current_page,
+            btn_page,
+            state_pages,
+        ],
         api_name="ask",
     )
 
     stream_answer = chat_inp.submit(
-        fn=get_stream_answer, inputs=[chat_inp, state_history], outputs=[chatbot], every=0.1, api_name="get_ask_stream_answer")
+        fn=get_stream_answer,
+        inputs=[chat_inp, state_history],
+        outputs=[chatbot],
+        every=0.1,
+        api_name="get_ask_stream_answer",
+    )
     chat_inp.change(fn=lambda: None, cancels=[stream_answer])
 
     btn_prev.click(
         fn=go_page,
         inputs=[state_current_page, gr.State(1), state_pages],
-        outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, btn_page],
+        outputs=[
+            chatbot,
+            state_history,
+            state_context,
+            state_chat_id,
+            state_current_page,
+            btn_page,
+        ],
         api_name="prev_page",
     )
     btn_next.click(
         fn=go_page,
         inputs=[state_current_page, gr.State(-1), state_pages],
-        outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, btn_page],
+        outputs=[
+            chatbot,
+            state_history,
+            state_context,
+            state_chat_id,
+            state_current_page,
+            btn_page,
+        ],
         api_name="next_page",
     )
 
-
-    btn_del.click(fn=run_del_page,inputs=[state_chat_id, state_pages, state_current_page], outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, state_pages, btn_page])
-
+    btn_del.click(
+        fn=run_del_page,
+        inputs=[state_chat_id, state_pages, state_current_page],
+        outputs=[
+            chatbot,
+            state_history,
+            state_context,
+            state_chat_id,
+            state_current_page,
+            state_pages,
+            btn_page,
+        ],
+        api_name="del_page",
+    )
 
     btn_new_page.click(
         fn=run_new_page,
-        outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, state_pages, btn_page],
+        outputs=[
+            chatbot,
+            state_history,
+            state_context,
+            state_chat_id,
+            state_current_page,
+            state_pages,
+            btn_page,
+        ],
         api_name="new_page",
     )
-    btn_stop.click(fn=lambda: None, cancels=[chatting, stream_answer], api_name='ask_stop')
+    btn_stop.click(
+        fn=lambda: None, cancels=[chatting, stream_answer], api_name="ask_stop"
+    )
     box_hyde.change(fn=change_hyde, inputs=[box_hyde])
