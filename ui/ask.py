@@ -2,12 +2,10 @@ import gradio as gr
 from urllib.parse import quote
 from utils import (
     format_chat_text,
-    md2html,
     save_page,
     with_proxy,
     copy_html,
     remove_asklink,
-    md2html,
     tiktoken_encoder,
     get_history_pages,
     load_context,
@@ -103,9 +101,10 @@ def run_chat(question, history, context, base_name, chat_id, frontend):
     if frontend == "gradio": # frontend用于判断前端，如果是gradio则处理一下codeblock，如果来自brainshell则另做处理
         #  format_answer = format_chat_text(answer)
         format_answer = answer
+        format_answer = f"{format_answer}<br><br>{links}"
     else:
         format_answer = answer
-    format_answer = f"{format_answer}\n\n{links}"
+        format_answer = f"{format_answer}\n\n{links}"
     format_question = f"{question}"
     history.append((format_question, format_answer))
     context.append((question, answer))
@@ -122,7 +121,7 @@ def go_page(current_page, offset, pages):
     chat_id = pages[current_page].split(".")[0]
     context = load_context(chat_id)
     history = format_chat_text(context.copy())
-    return history,history, context, chat_id, current_page, f"{current_page+1}/{len(pages)}" 
+    return history, history, context, chat_id, current_page, f"{current_page+1}/{len(pages)}" 
 
 def get_stream_answer(question, history):
     if mygpt.temp_result:
@@ -142,12 +141,12 @@ def run_new_page():
     #  save_page(chat_id=new_chat_id,context=[])
     return "",[],[], new_chat_id, 0, pages, f"1/{len(pages)}" 
 
-def run_del_page(chat_id, pages):
+def run_del_page(chat_id, pages, current_page):
     if f"{chat_id}.json" in pages:
         del_page(chat_id)
         pages.remove(f"{chat_id}.json")
-    new_chat_id = uuid.uuid1()
     pages = get_history_pages()
+    new_chat_id = uuid.uuid1()
     pages.insert(0, f"{new_chat_id}.json")
     return "",[],[], new_chat_id, 0, pages, f"1/{len(pages)}",gr.update(visible=False),gr.update(visible=False)
 
@@ -169,12 +168,7 @@ with gr.Blocks(title="ask") as ask_interface:
     base_list_ask = sorted((mygpt.bases.keys()))
     base_list_ask.insert(0, "default")
     
-    A = """
-    好的,这里是一个简单的Python类,它只有一个属性和一个方法来设置和打印该属性值:\n\n```python\nclass Person:\n    def __init__(self, name):\n        self.name = name\n    \n    def say_hello(self):\n        print(f"Hello, my name is {self.name}")\n```\n\n在这个例子中,我们定义了一个`Person`类,它具有一个`__init__`方法来设置`name`属性,以及一个`say_hello`方法来打印出该属性的值。\n\n我们可以使用以下代码创建一个`Person`对象,并使用`say_hello`方法打印出其名称:\n\n```python\nperson = Person("Alice")\nperson.say_hello()\n```\n\n这将产生以下输出:\n\n```\nHello, my name is Alice\n```\n\n'
-    """
-    #  A = md2html(A)
-    greet = [('hello', A)]
-    #  greet = []
+    greet = []
     chatbot = gr.Chatbot(value=greet, elem_id="chatbot", show_label=False)
     #  chatbot.style(color_map=("Orange", "SteelBlue"))
     state_history = gr.State([]) # history储存chatbot的结果，显示的时候经过了html转换
@@ -185,8 +179,10 @@ with gr.Blocks(title="ask") as ask_interface:
     state_chat_id = gr.State(chat_id)
     pages = get_history_pages()
     pages.insert(0, f"{chat_id}.json")
-    state_pages = gr.State(pages)
-    state_current_page = gr.State(0)
+    state_pages = gr.State(pages) # 要用组件储存
+    #  state_pages = gr.Checkboxgroup(choices=pages,value=pages,visible=False) # 要用组件储存
+    state_current_page = gr.State(0) # 要用组件存储
+    #  state_current_page = gr.Number(0,visible=False,precision=0) # 要用组件存储
 
     with gr.Row(elem_id="ask_toolbar"):
         btn_new_page = gr.Button("🆕", elem_id="btn_clear_context")
@@ -247,23 +243,23 @@ with gr.Blocks(title="ask") as ask_interface:
         fn=go_page,
         inputs=[state_current_page, gr.State(1), state_pages],
         outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, btn_page],
-        api_name="ask_prev",
+        api_name="prev_page",
     )
     btn_next.click(
         fn=go_page,
         inputs=[state_current_page, gr.State(-1), state_pages],
-        outputs=[chatbot,state_history, state_context, state_chat_id, state_current_page, btn_page],
-        api_name="ask_next",
+        outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, btn_page],
+        api_name="next_page",
     )
 
 
-    btn_del.click(fn=run_del_page,inputs=[state_chat_id, state_pages], outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, state_pages, btn_page])
+    btn_del.click(fn=run_del_page,inputs=[state_chat_id, state_pages, state_current_page], outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, state_pages, btn_page])
 
 
     btn_new_page.click(
         fn=run_new_page,
         outputs=[chatbot, state_history, state_context, state_chat_id, state_current_page, state_pages, btn_page],
-        api_name="clear_context",
+        api_name="new_page",
     )
     btn_stop.click(fn=lambda: None, cancels=[chatting, stream_answer], api_name='ask_stop')
     box_hyde.change(fn=change_hyde, inputs=[box_hyde])

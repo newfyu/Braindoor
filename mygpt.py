@@ -200,7 +200,7 @@ user question:{question}"""
                 answer = magictag.after_llm(answer)
             except Exception as e:
                 logger.error(e)
-
+        logger.info("[answer]: " + answer + "\n" + "-" * 60)
         return answer, mydocs, draft
 
     # prompt 1
