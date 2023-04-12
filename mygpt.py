@@ -28,6 +28,7 @@ class MyGPT:
         base_paths = list(Path(self.bases_root).glob("*.base"))
         self.load_base(base_paths)
         self.magictags = self.load_magictags()
+        self.abort_msg = False
 
         openai.api_key = self.opt["key"]
         if self.opt["key"]:
@@ -106,6 +107,7 @@ class MyGPT:
         max_tokens=1500,
         stream=False,
     ):
+        self.abort_msg = False
         if sys_msg == "":
             messages = [{"role": "system", "content": "You are a helpful assistant."}]
         else:
@@ -115,6 +117,7 @@ class MyGPT:
                 messages.append({"role": "user", "content": f"{q}"})
                 messages.append({"role": "assistant", "content": f"{a}"})
         messages.append({"role": "user", "content": f"{input}"})
+        logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
 
         if not stream:
             completion = openai.ChatCompletion.create(
@@ -137,10 +140,16 @@ class MyGPT:
             )
             report = []
             for resp in completion:
-                if hasattr(resp['choices'][0].delta, 'content'):
-                    report.append(resp['choices'][0].delta.content)
-                    mygpt.temp_result = "".join(report).strip()
-            logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
+                if not self.abort_msg:
+                    if hasattr(resp['choices'][0].delta, 'content'):
+                        report.append(resp['choices'][0].delta.content)
+                        mygpt.temp_result = "".join(report).strip()
+                else:
+                    mygpt.temp_result += '...abort!'
+                    self.abort_msg = False
+                    logger.info('user abort')
+                    break
+
             return mygpt.temp_result
 
     def ask(self, question, context, base_name):

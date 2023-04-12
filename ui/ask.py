@@ -190,6 +190,9 @@ def fold_tool(fold):
 def change_hyde(i):
     mygpt.opt["HyDE"] = i
 
+def abort():
+    mygpt.abort_msg = True
+
 
 with gr.Blocks(title="ask") as ask_interface:
     frontend = gr.Textbox(value="gradio", visible=False)
@@ -343,6 +346,6 @@ with gr.Blocks(title="ask") as ask_interface:
         api_name="new_page",
     )
     btn_stop.click(
-        fn=lambda: None, cancels=[chatting, stream_answer], api_name="ask_stop"
+        fn=abort, cancels=[chatting, stream_answer], api_name="stop"
     )
     box_hyde.change(fn=change_hyde, inputs=[box_hyde])
