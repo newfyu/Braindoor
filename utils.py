@@ -259,12 +259,12 @@ def format_chat_text(text):
             text[i][1] = format_chat_text(line[1])
         return text
 
-import markdown
-from pygments.formatters import HtmlFormatter
-def md2html(text):
-    md = markdown.Markdown(extensions=['codehilite'], extension_configs={'codehilite': {'css_class': 'highlight', 'guess_lang': False}})
-    html = md.convert(text)
-    css = HtmlFormatter(style='default').get_style_defs('.highlight')
-    final_html = f"<style>{css}</style>\n{html}"
-    return(final_html)
+#  import markdown
+#  from pygments.formatters import HtmlFormatter
+#  def md2html(text):
+    #  md = markdown.Markdown(extensions=['codehilite'], extension_configs={'codehilite': {'css_class': 'highlight', 'guess_lang': False}})
+    #  html = md.convert(text)
+    #  css = HtmlFormatter(style='default').get_style_defs('.highlight')
+    #  final_html = f"<style>{css}</style>\n{html}"
+    #  return(final_html)
 

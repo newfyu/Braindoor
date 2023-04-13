@@ -18,3 +18,5 @@ bases/
 nohup.out
 history/
 config.yaml
+dist/
+build/

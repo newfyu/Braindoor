@@ -124,7 +124,7 @@ class MyGPT:
                 messages.append({"role": "assistant", "content": f"{a}"})
         messages.append({"role": "user", "content": f"{input}"})
         #  logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
-        logger.info("send message")
+        logger.info("Send message")
 
         if not stream:
             completion = openai.ChatCompletion.create(
@@ -135,7 +135,7 @@ class MyGPT:
                 temperature=temperature,
             )
             #  logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
-            logger.info("send message")
+            logger.info("Send message")
             return completion.choices[0].message.content
         else:
             completion = openai.ChatCompletion.create(
