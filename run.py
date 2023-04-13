@@ -2,6 +2,7 @@ import webbrowser
 import time
 import signal
 from utils import logger
+import os
 
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 from PIL import Image

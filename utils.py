@@ -14,8 +14,12 @@ import json
 
 from bs4 import BeautifulSoup
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+log_path = os.path.join(ROOT, "run.log")
+temp_path = os.path.join(ROOT, "temp/")
+HISTORY = os.path.join(ROOT, "history/")
 
-def get_logger(log_path="./run.log"):
+def get_logger(log_path=log_path):
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
     file_handler = logging.FileHandler(log_path)
@@ -53,7 +57,7 @@ def remove_asklink(html):
 
 
 # This tool copies html files to a temporary directory for viewing
-def copy_html(html_path, save_root="temp"):
+def copy_html(html_path, save_root=temp_path):
     try:
         html_path = Path(html_path)
         html_dir = html_path.parent
@@ -171,7 +175,7 @@ def read_text_file(file_path):
     return text
 
 def get_last_log():
-    with open("run.log", "rb") as f:
+    with open(log_path, "rb") as f:
         f.seek(-2, os.SEEK_END)
         while f.read(1) != b"\n":
             f.seek(-2, os.SEEK_CUR)
@@ -186,21 +190,21 @@ def cutoff_localtext(local_text, max_len=2000):
     return local_text
 
 def save_page(chat_id, context, dir='ask'):
-    path = Path(f'history/{dir}')
+    path = Path(f'HISTORY/{dir}')
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(Path(f'history/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
+    with open(Path(f'HISTORY/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
         json.dump(context, f, ensure_ascii=False, indent=4)
 
 def save_review_chunk(chat_id, chunks):
-    path = Path('history/review')
+    path = Path('HISTORY/review')
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(Path(f'history/review/{chat_id}.chunk'), 'w', encoding='utf-8') as f:
+    with open(Path(f'HISTORY/review/{chat_id}.chunk'), 'w', encoding='utf-8') as f:
         json.dump(chunks, f, ensure_ascii=False, indent=4)
 
 def get_history_pages(dir='ask'):
-    history_dir = Path(f'history/{dir}')
+    history_dir = Path(f'HISTORY/{dir}')
     if not os.path.exists(history_dir):
         os.makedirs(history_dir)
     history_jsons = sorted([f for f in os.listdir(history_dir) if f.endswith(".json")], key=lambda x: os.path.getmtime(os.path.join(history_dir, x)), reverse=True)
@@ -208,7 +212,7 @@ def get_history_pages(dir='ask'):
 
 def load_context(chat_id, dir='ask'):
     try:
-        with open(Path(f'history/{dir}/{chat_id}.json'), 'r', encoding='utf-8') as f:
+        with open(Path(f'HISTORY/{dir}/{chat_id}.json'), 'r', encoding='utf-8') as f:
             context = json.load(f)
     except:
         context = []
@@ -216,17 +220,17 @@ def load_context(chat_id, dir='ask'):
 
 def load_review_chunk(chat_id):
     try:
-        with open(Path(f'history/review/{chat_id}.chunk'), 'r', encoding='utf-8') as f:
+        with open(Path(f'HISTORY/review/{chat_id}.chunk'), 'r', encoding='utf-8') as f:
             chunks = json.load(f)
     except:
         chunks = []
     return chunks
 
 def del_page(chat_id, dir='ask'):
-    if os.path.exists(Path(f'history/{dir}/{chat_id}.json')):
-        os.remove(Path(f'history/{dir}/{chat_id}.json'))
-    if os.path.exists(Path(f'history/{dir}/{chat_id}.chunk')):
-        os.remove(Path(f'history/{dir}/{chat_id}.chunk'))
+    if os.path.exists(Path(f'HISTORY/{dir}/{chat_id}.json')):
+        os.remove(Path(f'HISTORY/{dir}/{chat_id}.json'))
+    if os.path.exists(Path(f'HISTORY/{dir}/{chat_id}.chunk')):
+        os.remove(Path(f'HISTORY/{dir}/{chat_id}.chunk'))
         return True
     else:
         return False

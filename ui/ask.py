@@ -18,6 +18,8 @@ from mygpt import mygpt
 import os
 import uuid
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+TEMP = os.path.join(ROOT, "temp")
 opt = mygpt.opt
 
 
@@ -48,9 +50,10 @@ def run_chat(question, history, context, base_name, chat_id, frontend):
         if score < float(mygpt.opt["max_l2"]):
             file_path = Path(doc[0].metadata["file_path"])
 
-            if not os.path.exists("temp"):
-                os.mkdir("temp")
-            with open(f"./temp/reference-{i}.txt", "w") as f:
+            if not os.path.exists(TEMP):
+                os.mkdir(TEMP)
+            reference_path = os.path.join(TEMP, f"reference-{i}.txt")
+            with open(reference_path, "w") as f:
                 f.write(content)
             if not file_path in path_list:
                 if file_path.suffix == ".html":

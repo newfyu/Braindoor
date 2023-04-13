@@ -10,10 +10,12 @@ from mygpt import mygpt
 parser = argparse.ArgumentParser()
 parser.add_argument("--share", action="store_true", default=False)
 app_args = parser.parse_args()
+ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 opt = mygpt.opt
-with open("ui/style.css", "r", encoding="utf8") as file:
+style_path = os.path.join(ROOT, "ui/style.css")
+with open(style_path, "r", encoding="utf8") as file:
     css = file.read()
 
 with gr.Blocks(css=css, title="Braindoor", elem_id="main_block") as demo:
@@ -40,7 +42,8 @@ def load_js():
     GradioTemplateResponseOriginal = gr.routes.templates.TemplateResponse
 
     def template_response(*args, **kwargs):
-        head = f'<script type="text/javascript" src="file={os.path.abspath("ui/script.js")}?{os.path.getmtime("ui/script.js")}"></script>\n'
+        script_path = os.path.join(ROOT, "ui/script.js")
+        head = f'<script type="text/javascript" src="file={script_path}?{os.path.getmtime(script_path)}"></script>\n'
         res = GradioTemplateResponseOriginal(*args, **kwargs)
         res.body = res.body.replace(b"</head>", f"{head}</head>".encode("utf8"))
         res.init_headers()

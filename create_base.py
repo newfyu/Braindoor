@@ -16,8 +16,10 @@ from langchain.vectorstores import FAISS
 from functools import partial
 import argparse
 from utils import logger,with_proxy, tiktoken_encoder, read_text_file
+ROOT = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(ROOT, "config.yaml")
 
-with open("config.yaml") as f:
+with open(config_path) as f:
     opt = yaml.load(f, Loader=SafeLoader)
     openai.api_key = opt["key"]
 
@@ -124,11 +126,11 @@ def create_base(base_name, paths, chunk_size, chunk_overlap, max_chunk_num):
         vstore = create_vstore(df_docs)
         if not ".base" in base_name:
             base_name = base_name + ".base"
-        root = opt["bases_root"]
-        base_path = os.path.join(root, base_name)
+        base_root =os.path.join(ROOT,opt["bases_root"])
+        base_path = os.path.join(base_root, base_name)
 
-        if not os.path.exists(root):
-            os.mkdir(root)
+        if not os.path.exists(base_root):
+            os.mkdir(base_root)
 
         if not os.path.exists(base_path):
             with open(base_path, "wb") as f:

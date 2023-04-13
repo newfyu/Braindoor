@@ -16,9 +16,11 @@ from create_base import create_new_df_docs, get_file_list, make_file_md5
 from utils import logger, with_proxy
 from pathlib import Path
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(ROOT, "config.yaml")
 
 def load_config():
-    with open("config.yaml") as f:
+    with open(config_path) as f:
         opt = yaml.load(f, Loader=SafeLoader)
     openai.api_key = opt["key"]
     logger.info(f"Updata config: {opt}")
@@ -108,7 +110,7 @@ def update_base(base_name):
     opt = load_config()
     if not ".base" in base_name:
         base_name = base_name + ".base"
-    base_path = os.path.join(opt["bases_root"], base_name)
+    base_path = os.path.join(ROOT, opt["bases_root"], base_name)
 
     vstore, df_file_md5, df_docs, metadata = load_base(base_path)
     df_add, df_remove, df_new = check_update(metadata, df_file_md5)

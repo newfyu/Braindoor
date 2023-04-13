@@ -1,5 +1,5 @@
 import gradio as gr
-from gradio.components import Button, Markdown, Number, Textbox
+from gradio.components import Markdown, Textbox
 from utils import with_proxy,copy_html, remove_markdown
 import os
 import shutil

@@ -1,6 +1,7 @@
 from pathlib import Path
 import openai
 import backoff
+import os
 
 import yaml
 from yaml.loader import SafeLoader
@@ -13,6 +14,10 @@ from functools import partial
 from create_base import token_len
 import importlib
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(ROOT, "config.yaml")
+mtag_path = os.path.join(ROOT, "magictags")
+
 class Result:
     def __init__(self, page_content, metadata):
         self.page_content = page_content
@@ -20,10 +25,11 @@ class Result:
 
 
 class MyGPT:
-    def __init__(self, config_path="config.yaml"):
+    def __init__(self, config_path=config_path):
         self.temp_result = ""
         self.load_config(config_path)
         self.bases_root = self.opt["bases_root"]
+        self.bases_root = os.path.join(ROOT, self.bases_root)
         self.bases = dict()
         base_paths = list(Path(self.bases_root).glob("*.base"))
         self.load_base(base_paths)
@@ -42,7 +48,7 @@ class MyGPT:
 
     # load magic tag from tags/
     def load_magictags(self):
-        tag_file = list(Path('magictags').glob("*.py"))
+        tag_file = list(Path(mtag_path).glob("*.py"))
         magictags = dict()
         for tag_file in tag_file:
             tag_name = tag_file.stem
@@ -67,7 +73,7 @@ class MyGPT:
         else:
             logger.info("no base exists")
 
-    def load_config(self, config_path="config.yaml"):
+    def load_config(self, config_path=config_path):
         with open(config_path) as f:
             self.opt = yaml.load(f, Loader=SafeLoader)
         return self.opt
@@ -117,7 +123,8 @@ class MyGPT:
                 messages.append({"role": "user", "content": f"{q}"})
                 messages.append({"role": "assistant", "content": f"{a}"})
         messages.append({"role": "user", "content": f"{input}"})
-        logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
+        #  logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
+        logger.info("send message")
 
         if not stream:
             completion = openai.ChatCompletion.create(
@@ -127,7 +134,8 @@ class MyGPT:
                 messages=messages,
                 temperature=temperature,
             )
-            logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
+            #  logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
+            logger.info("send message")
             return completion.choices[0].message.content
         else:
             completion = openai.ChatCompletion.create(
@@ -147,13 +155,13 @@ class MyGPT:
                 else:
                     mygpt.temp_result += '...abort!'
                     self.abort_msg = False
-                    logger.info('user abort')
+                    logger.info('abort by user')
                     break
 
             return mygpt.temp_result
 
     def ask(self, question, context, base_name):
-        # 解析question中的magic tag，加入use_magictag列表
+        # 解析question中的magictag，加入use_magictag列表
         use_magictags = []
         for key in self.magictags.keys():
             tag = f" #{key} " 
@@ -173,7 +181,8 @@ class MyGPT:
             if self.opt["HyDE"]:
                 draft = self.chatgpt(question, context, stream=True)
                 query = question + "\n" + draft
-                logger.info("[draft]: " + draft + "\n" + "-" * 60)
+                #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
+                logger.info("Received draft")
             else:
                 draft = ""
                 context_str = "\n".join(["\n".join(t) for t in context])
@@ -209,7 +218,8 @@ user question:{question}"""
                 answer = magictag.after_llm(answer)
             except Exception as e:
                 logger.error(e)
-        logger.info("[answer]: " + answer + "\n" + "-" * 60)
+        #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
+        logger.info("Received answer")
         return answer, mydocs, draft
 
     # prompt 1
@@ -231,7 +241,8 @@ user question:{question}"""
                 {question}"""
             answer = mygpt.chatgpt(ask_prompt, temperature=1, stream=True)
             prev_answer = answer
-            logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
+            #  logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
+            logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
         mygpt.temp_result = ''
         return prev_answer
 

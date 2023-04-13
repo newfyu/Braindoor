@@ -11,10 +11,11 @@ from update_base import update_base
 from ui import search, ask
 
 opt = mygpt.opt
-
+ROOT = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(ROOT, "config.yaml")
 
 def load_config():
-    with open("config.yaml") as f:
+    with open(config_path) as f:
         opt = yaml.safe_load(f)
     openai.api_key = opt["key"]
     return opt
@@ -41,7 +42,7 @@ def update_config(key, rate_limit, search_topk, hyde, answer_depth, proxy):
     opt["HyDE"] = hyde
     opt["answer_depth"] = answer_depth
     opt['proxy'] = proxy
-    with open("config.yaml", "w") as f:
+    with open(config_path, "w") as f:
         yaml.dump(opt, f)
     mygpt.__init__()
     return "Save successfully!"
@@ -123,7 +124,7 @@ def save_base_config(base_name, chunk_size, chunk_overlap, max_chunk_num, dir_li
     base["metadata"] = metadata
     if not ".base" in base_name:
         base_name = base_name + ".base"
-    base_path = os.path.join("bases", base_name)
+    base_path = os.path.join(ROOT, "bases", base_name)
     with open(base_path, "wb") as f:
         pickle.dump(base, f)
     info = f"Save {base_name} config successfully! {metadata}"
