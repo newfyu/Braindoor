@@ -2,9 +2,6 @@ import argparse
 import os
 
 import gradio as gr
-import gradio_client
-import tiktoken
-import tiktoken_ext
 
 from ui import search, ask, config, review
 from mygpt import mygpt

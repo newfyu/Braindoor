@@ -3,13 +3,17 @@ import time
 import signal
 from utils import logger
 import os
+from pathlib import Path
 
 from pystray import Icon as icon, Menu as menu, MenuItem as item
 from PIL import Image
 import sys
 import subprocess
 
-p = subprocess.Popen(['python', 'app.py'])
+ROOT = Path(os.path.dirname(os.path.abspath(__file__)))
+
+
+p = subprocess.Popen(['python', 'braindoor.py'])
 running = True
 time.sleep(2)
 run_icon = Image.open('doc/nao.png')

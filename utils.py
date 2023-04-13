@@ -190,21 +190,21 @@ def cutoff_localtext(local_text, max_len=2000):
     return local_text
 
 def save_page(chat_id, context, dir='ask'):
-    path = Path(f'HISTORY/{dir}')
+    path = Path(f'{HISTORY}/{dir}')
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(Path(f'HISTORY/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
+    with open(Path(f'{HISTORY}/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
         json.dump(context, f, ensure_ascii=False, indent=4)
 
 def save_review_chunk(chat_id, chunks):
-    path = Path('HISTORY/review')
+    path = Path('{HISTORY}/review')
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(Path(f'HISTORY/review/{chat_id}.chunk'), 'w', encoding='utf-8') as f:
+    with open(Path(f'{HISTORY}/review/{chat_id}.chunk'), 'w', encoding='utf-8') as f:
         json.dump(chunks, f, ensure_ascii=False, indent=4)
 
 def get_history_pages(dir='ask'):
-    history_dir = Path(f'HISTORY/{dir}')
+    history_dir = Path(f'{HISTORY}/{dir}')
     if not os.path.exists(history_dir):
         os.makedirs(history_dir)
     history_jsons = sorted([f for f in os.listdir(history_dir) if f.endswith(".json")], key=lambda x: os.path.getmtime(os.path.join(history_dir, x)), reverse=True)
@@ -212,7 +212,7 @@ def get_history_pages(dir='ask'):
 
 def load_context(chat_id, dir='ask'):
     try:
-        with open(Path(f'HISTORY/{dir}/{chat_id}.json'), 'r', encoding='utf-8') as f:
+        with open(Path(f'{HISTORY}/{dir}/{chat_id}.json'), 'r', encoding='utf-8') as f:
             context = json.load(f)
     except:
         context = []

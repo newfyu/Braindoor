@@ -5,15 +5,15 @@ block_cipher = None
 
 
 a = Analysis(
-    ['app.py'],
-    pathex=[],
+    ['braindoor.py'],
+    pathex=['./'],
     binaries=[],
     datas=[        
-		('ui/style.css','ui/'),
-        ('ui/script.js','ui/'),
-        ('config.yaml','.')
+	('ui/style.css','ui/'),
+    ('ui/script.js','ui/'),
+    ('config.yaml','.')
 ],
-    hiddenimports=[],
+    hiddenimports=['magictags'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -30,7 +30,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='app',
+    name='braindoor',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -50,5 +50,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='app',
+    name='braindoor',
 )
