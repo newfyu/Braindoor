@@ -5,17 +5,18 @@ import os
 
 import yaml
 from yaml.loader import SafeLoader
+from utils import logger,tiktoken_encoder
 
 from update_base import load_base
 from langchain.embeddings import OpenAIEmbeddings
-from utils import logger, tiktoken_encoder, cutoff_localtext
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from functools import partial
 from create_base import token_len
 import importlib
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(ROOT, "config.yaml")
+USER = os.path.expanduser("~")
+config_path = os.path.join(USER, "config.yaml")
 mtag_path = os.path.join(ROOT, "magictags")
 
 class Result:
@@ -29,7 +30,7 @@ class MyGPT:
         self.temp_result = ""
         self.load_config(config_path)
         self.bases_root = self.opt["bases_root"]
-        self.bases_root = os.path.join(ROOT, self.bases_root)
+        self.bases_root = os.path.join(USER, self.bases_root)
         self.bases = dict()
         base_paths = list(Path(self.bases_root).glob("*.base"))
         self.load_base(base_paths)
@@ -218,8 +219,8 @@ user question:{question}"""
                 answer = magictag.after_llm(answer)
             except Exception as e:
                 logger.error(e)
-        #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
         logger.info("Received answer")
+        #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
         return answer, mydocs, draft
 
     # prompt 1

@@ -16,8 +16,9 @@ from langchain.vectorstores import FAISS
 from functools import partial
 import argparse
 from utils import logger,with_proxy, tiktoken_encoder, read_text_file
-ROOT = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(ROOT, "config.yaml")
+
+USER = os.path.join(os.path.expanduser("~"),'braindoor/')
+config_path = os.path.join(USER, "config.yaml")
 
 with open(config_path) as f:
     opt = yaml.load(f, Loader=SafeLoader)
@@ -126,7 +127,7 @@ def create_base(base_name, paths, chunk_size, chunk_overlap, max_chunk_num):
         vstore = create_vstore(df_docs)
         if not ".base" in base_name:
             base_name = base_name + ".base"
-        base_root =os.path.join(ROOT,opt["bases_root"])
+        base_root =os.path.join(USER, opt["bases_root"])
         base_path = os.path.join(base_root, base_name)
 
         if not os.path.exists(base_root):

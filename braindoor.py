@@ -1,17 +1,23 @@
 import argparse
+
 import os
+import shutil
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+USER = os.path.join(os.path.expanduser("~"),'braindoor/')
+if not os.path.exists(USER):
+    os.makedirs(USER)
+if not os.path.exists(os.path.join(USER, "config.yaml")):
+    shutil.copy2(os.path.join(ROOT, "config.yaml"), os.path.join(USER, "config.yaml"))
 
 import gradio as gr
 
 from ui import search, ask, config, review
 from mygpt import mygpt
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--share", action="store_true", default=False)
 app_args = parser.parse_args()
-ROOT = os.path.dirname(os.path.abspath(__file__))
-
 
 opt = mygpt.opt
 style_path = os.path.join(ROOT, "ui/style.css")
@@ -21,19 +27,19 @@ with open(style_path, "r", encoding="utf8") as file:
 with gr.Blocks(css=css, title="Braindoor", elem_id="main_block") as demo:
     gr.Markdown("## 🧠 Braindoor")
     base_list = sorted((mygpt.bases.keys()))
-    if opt['enable_search']:
+    if opt["enable_search"]:
         with gr.Tab("Search"):
             search.search_interface.render()
 
-    if opt['enable_ask']:
+    if opt["enable_ask"]:
         with gr.Tab("Ask"):
             ask.ask_interface.render()
 
-    if opt['enable_review']:
+    if opt["enable_review"]:
         with gr.Tab("Review"):
             review.reaview_interface.render()
 
-    if opt['enable_config']:
+    if opt["enable_config"]:
         with gr.Tab("Config", elem_id="tabs"):
             config.config_interface.render()
 

@@ -15,9 +15,10 @@ import json
 from bs4 import BeautifulSoup
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-log_path = os.path.join(ROOT, "run.log")
+USER = os.path.join(os.path.expanduser("~"),'braindoor/')
+log_path = os.path.join(USER, "run.log")
 temp_path = os.path.join(ROOT, "temp/")
-HISTORY = os.path.join(ROOT, "history/")
+HISTORY = os.path.join(USER, "history/")
 
 def get_logger(log_path=log_path):
     logger = logging.getLogger(__name__)

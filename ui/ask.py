@@ -1,7 +1,6 @@
 import gradio as gr
 from urllib.parse import quote
 from utils import (
-    format_chat_text,
     save_page,
     with_proxy,
     copy_html,
@@ -10,7 +9,6 @@ from utils import (
     get_history_pages,
     load_context,
     del_page,
-    format_chat_text,
 )
 import shutil
 from pathlib import Path
@@ -19,6 +17,7 @@ import os
 import uuid
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 TEMP = os.path.join(ROOT, "temp")
 opt = mygpt.opt
 
@@ -99,9 +98,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend):
             i += 1
     links = "".join(links)
 
-    if (
-        frontend == "gradio"
-    ):  # frontend用于判断前端，如果是gradio则处理一下codeblock，如果来自brainshell则另做处理
+    if frontend == "gradio":
         #  format_answer = format_chat_text(answer)
         format_answer = answer
         format_answer = f"{format_answer}<br><br>{links}"
