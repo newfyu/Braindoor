@@ -15,7 +15,7 @@ from create_base import token_len
 import importlib
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-USER = os.path.expanduser("~")
+USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 config_path = os.path.join(USER, "config.yaml")
 mtag_path = os.path.join(ROOT, "magictags")
 

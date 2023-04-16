@@ -221,17 +221,17 @@ def load_context(chat_id, dir='ask'):
 
 def load_review_chunk(chat_id):
     try:
-        with open(Path(f'HISTORY/review/{chat_id}.chunk'), 'r', encoding='utf-8') as f:
+        with open(Path(f'{HISTORY}/review/{chat_id}.chunk'), 'r', encoding='utf-8') as f:
             chunks = json.load(f)
     except:
         chunks = []
     return chunks
 
 def del_page(chat_id, dir='ask'):
-    if os.path.exists(Path(f'HISTORY/{dir}/{chat_id}.json')):
-        os.remove(Path(f'HISTORY/{dir}/{chat_id}.json'))
-    if os.path.exists(Path(f'HISTORY/{dir}/{chat_id}.chunk')):
-        os.remove(Path(f'HISTORY/{dir}/{chat_id}.chunk'))
+    if os.path.exists(Path(f'{HISTORY}/{dir}/{chat_id}.json')):
+        os.remove(Path(f'{HISTORY}/{dir}/{chat_id}.json'))
+    if os.path.exists(Path(f'{HISTORY}/{dir}/{chat_id}.chunk')):
+        os.remove(Path(f'{HISTORY}/{dir}/{chat_id}.chunk'))
         return True
     else:
         return False
