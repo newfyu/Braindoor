@@ -9,6 +9,8 @@ if not os.path.exists(USER):
     os.makedirs(USER)
 if not os.path.exists(os.path.join(USER, "config.yaml")):
     shutil.copy2(os.path.join(ROOT, "config.yaml"), os.path.join(USER, "config.yaml"))
+if not os.path.exists(os.path.join(USER, "prompts")):
+    shutil.copytree(os.path.join(ROOT, "prompts"), os.path.join(USER, "prompts"))
 
 import gradio as gr
 

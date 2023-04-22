@@ -12,12 +12,12 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from functools import partial
 from create_base import token_len
-import importlib
+import pandas as pd
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 config_path = os.path.join(USER, "config.yaml")
-mtag_path = os.path.join(ROOT, "magictags")
+prompt_path = os.path.join(USER, "prompts")
 
 class Result:
     def __init__(self, page_content, metadata):
@@ -34,8 +34,9 @@ class MyGPT:
         self.bases = dict()
         base_paths = list(Path(self.bases_root).glob("*.base"))
         self.load_base(base_paths)
-        self.magictags = self.load_magictags()
+        self.prompt_etags = self.load_prompt_etags()
         self.abort_msg = False
+        self.all_etags = self.load_etag_list()
 
         openai.api_key = self.opt["key"]
         if self.opt["key"]:
@@ -47,17 +48,23 @@ class MyGPT:
             length_function=partial(token_len, encoder=tiktoken_encoder),
         )
 
-    # load magic tag from tags/
-    def load_magictags(self):
-        tag_file = list(Path(mtag_path).glob("*.py"))
-        magictags = dict()
-        for tag_file in tag_file:
-            tag_name = tag_file.stem
-            magictag = importlib.import_module(f"magictags.{tag_name}")
-            magictag = magictag.MagicTag()
-            magictags[magictag.tag] = magictag
-        return magictags
+    def load_prompt_etags(self):
+        prompt_files = list(Path(prompt_path).glob("*.yaml"))
+        prompt_etags = dict()
+        for prompt_file in prompt_files:
+            with open(prompt_file, 'r') as file:
+                data = yaml.load(file, Loader=yaml.FullLoader)
+                prompt_etags[data['name']] = data['template']
+        return prompt_etags
 
+    def load_etag_list(self):
+        etags = []
+        for tag_name in self.prompt_etags.keys():
+            etags.append([tag_name, "prompt", "/abbr"])
+        for tag_name in self.bases.keys():
+            etags.append([tag_name, "base", "/abbr"])
+        etags = pd.DataFrame(etags, columns=["name", "type", "abbr"])
+        return etags
 
     def load_base(self, base_paths):
         if len(base_paths) > 0:
@@ -164,18 +171,11 @@ class MyGPT:
     def ask(self, question, context, base_name):
         # 解析question中的magictag，加入use_magictag列表
         use_magictags = []
-        for key in self.magictags.keys():
+        for key in self.prompt_etags.keys():
             tag = f" #{key} " 
             if  tag in question:
                 question = question.replace(tag, "")
-                use_magictags.append(self.magictags[key])
-
-        # qustion前处理
-        for magictag in use_magictags:
-            try:
-                question = magictag.before_llm(question)
-            except Exception as e:
-                logger.error(e)
+                use_magictags.append(self.prompt_etags[key])
 
         if base_name != "default":
             base = self.bases[base_name]
@@ -213,12 +213,6 @@ user question:{question}"""
             mydocs = []
             mygpt.temp_result = ''
 
-        # question后处理
-        for magictag in use_magictags:
-            try:
-                answer = magictag.after_llm(answer)
-            except Exception as e:
-                logger.error(e)
         logger.info("Received answer")
         #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
         return answer, mydocs, draft

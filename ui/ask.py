@@ -1,17 +1,14 @@
 import gradio as gr
-from urllib.parse import quote
 from utils import (
     save_page,
     with_proxy,
-    copy_html,
-    remove_asklink,
-    tiktoken_encoder,
     get_history_pages,
     load_context,
     del_page,
+    cutoff_context,
+    create_links,
+    get_etag_list
 )
-import shutil
-from pathlib import Path
 from mygpt import mygpt
 import os
 import uuid
@@ -25,81 +22,34 @@ opt = mygpt.opt
 @with_proxy(opt["proxy"])
 def run_chat(question, history, context, base_name, chat_id, frontend):
     dir_name = "temp"
-    # cutoff context
-    truncated_context = []
-    context_len = 0
-    for q, a in reversed(context):
-        q = str(q)
-        a = str(a)
-        a = remove_asklink(a)
-        qa_len = len(tiktoken_encoder.encode(q + a))
-        if qa_len + context_len < mygpt.opt["max_context"]:
-            context_len += qa_len
-            truncated_context.insert(0, (q, a))
-        else:
-            break
+    truncated_context = cutoff_context(context,mygpt) # 还移除了link和tag
+    # 解析etag并处理
+    prompt_tags, base_tags, _, _ = get_etag_list(question, mygpt)
+
+    # 处理base_tag
+    if len(base_tags) > 0:
+        base_name = base_tags[-1]
+
+    # 处理prompt_tag
+    
+    def add_prompt(question, prompt_tags, mygpt):
+        all_prompt_etags = list(mygpt.prompt_etags.keys())
+        for tag in prompt_tags:
+            if tag in all_prompt_etags:
+                template = mygpt.prompt_etags[tag]
+                question = template.replace("{text}", question)
+                question.replace(f"#{tag}", "")
+        return question
+
+    if len(prompt_tags) > 0:
+        question = add_prompt(question, prompt_tags, mygpt)
+
+
+    # 进入模型
     answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
-
-    links = list()
-    i = 1
-    path_list = list()
-    for doc in mydocs:
-        score = doc[1]
-        content = doc[0].page_content
-        if score < float(mygpt.opt["max_l2"]):
-            file_path = Path(doc[0].metadata["file_path"])
-
-            if not os.path.exists(TEMP):
-                os.mkdir(TEMP)
-            reference_path = os.path.join(TEMP, f"reference-{i}.txt")
-            with open(reference_path, "w") as f:
-                f.write(content)
-            if not file_path in path_list:
-                if file_path.suffix == ".html":
-                    copy_html(file_path)
-                else:
-                    shutil.copy2(file_path, dir_name)
-                if frontend == "gradio":
-                    links.append(
-                        f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}] </a> '
-                    )
-                    links.append(
-                        f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
-                    )
-                else:
-                    url = f"http://127.0.0.1:7860/file/temp/reference-{i}.txt"
-                    url = quote(url, safe=":/")
-                    links.append(f"[[{i}]]({url}) ")
-                    url = f"http://127.0.0.1:7860/file/temp/{file_path.name}"
-                    url = quote(url, safe=":/")
-                    links.append(f"[{file_path.stem}]({url})  \n")
-
-                path_list.append(file_path)
-            else:
-                if frontend == "gradio":
-                    index = links.index(
-                        f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
-                    )
-                    links.insert(
-                        index,
-                        f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}]</a> ',
-                    )
-                else:
-                    url = f"http://127.0.0.1:7860/file/temp/{file_path.name}"
-                    url = quote(url, safe=":/")
-                    url = f"[{file_path.stem}]({url})  \n"
-                    index = links.index(url)
-                    url = f"http://127.0.0.1:7860/file/temp/reference-{i}.txt"
-                    url = quote(url, safe=":/")
-                    links.insert(
-                        index,
-                        f"[[{i}]]({url}) ",
-                    )
-            i += 1
-    links = "".join(links)
+    links = create_links(mydocs, frontend, dir_name, mygpt)
 
     if frontend == "gradio":
-        #  format_answer = format_chat_text(answer)
         format_answer = answer
         format_answer = f"{format_answer}<br><br>{links}"
     else:
@@ -148,8 +98,9 @@ def run_new_page():
     pages = get_history_pages()
     new_chat_id = uuid.uuid1()
     pages.insert(0, f"{new_chat_id}.json")
+    etag_list = mygpt.all_etags
     #  save_page(chat_id=new_chat_id,context=[])
-    return "", [], [], new_chat_id, 0, pages, f"1/{len(pages)}"
+    return "", [], [], new_chat_id, 0, pages, f"1/{len(pages)}", etag_list
 
 
 def run_del_page(chat_id, pages, current_page):
@@ -204,6 +155,7 @@ with gr.Blocks(title="ask") as ask_interface:
     #  chatbot.style(color_map=("Orange", "SteelBlue"))
     state_history = gr.State([])  # history储存chatbot的结果，显示的时候经过了html转换
     state_context = gr.State([])  # context存储未格式化的上下文
+    etag_list = gr.DataFrame(value=[], visible=False)
 
     # create new chat id
     chat_id = str(uuid.uuid1())
@@ -242,21 +194,21 @@ with gr.Blocks(title="ask") as ask_interface:
         )
         box_hyde.style(container=True)
 
-    # magic tags
+    # etags
     samples = []
-    for tag in mygpt.magictags.keys():
+    for tag in mygpt.all_etags.name:
         samples.append([tag])
 
-    box_magictags = gr.Dataset(
-        components=[gr.Textbox(visible=False)], label="Magic tag", samples=samples
+    box_etags = gr.Dataset(
+        components=[gr.Textbox(visible=False)], label="Extension tags", samples=samples
     )
 
-    def insert_magictag(value, inp):
+    def insert_etag(value, inp):
         inp += f" #{str(value[0])} "
         return inp
 
-    box_magictags.click(
-        fn=insert_magictag, inputs=[box_magictags, chat_inp], outputs=[chat_inp]
+    box_etags.click(
+        fn=insert_etag, inputs=[box_etags, chat_inp], outputs=[chat_inp]
     )
 
     chatting = chat_inp.submit(
@@ -342,6 +294,7 @@ with gr.Blocks(title="ask") as ask_interface:
             state_current_page,
             state_pages,
             btn_page,
+            etag_list,
         ],
         api_name="new_page",
     )
@@ -349,3 +302,4 @@ with gr.Blocks(title="ask") as ask_interface:
         fn=abort, cancels=[chatting, stream_answer], api_name="stop"
     )
     box_hyde.change(fn=change_hyde, inputs=[box_hyde])
+

@@ -11,6 +11,7 @@ import PyPDF2
 import html2text
 import html
 import json
+from urllib.parse import quote
 
 from bs4 import BeautifulSoup
 
@@ -19,6 +20,7 @@ USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 log_path = os.path.join(USER, "run.log")
 temp_path = os.path.join(ROOT, "temp/")
 HISTORY = os.path.join(USER, "history/")
+TEMP = os.path.join(ROOT, "temp")
 
 def get_logger(log_path=log_path):
     logger = logging.getLogger(__name__)
@@ -260,12 +262,102 @@ def format_chat_text(text):
             text[i][1] = format_chat_text(line[1])
         return text
 
-#  import markdown
-#  from pygments.formatters import HtmlFormatter
-#  def md2html(text):
-    #  md = markdown.Markdown(extensions=['codehilite'], extension_configs={'codehilite': {'css_class': 'highlight', 'guess_lang': False}})
-    #  html = md.convert(text)
-    #  css = HtmlFormatter(style='default').get_style_defs('.highlight')
-    #  final_html = f"<style>{css}</style>\n{html}"
-    #  return(final_html)
+
+def cutoff_context(context, mygpt):
+    truncated_context = []
+    context_len = 0
+    for q, a in reversed(context):
+        q = str(q)
+        a = str(a)
+        a = remove_asklink(a)
+        # TODO remove etag
+        qa_len = len(tiktoken_encoder.encode(q + a))
+        if qa_len + context_len < mygpt.opt["max_context"]:
+            context_len += qa_len
+            truncated_context.insert(0, (q, a))
+        else:
+            break
+    return truncated_context
+
+
+
+def create_links(mydocs, frontend, dir_name, mygpt):
+    links = list()
+    i = 1
+    path_list = list()
+    for doc in mydocs:
+        score = doc[1]
+        content = doc[0].page_content
+        if score < float(mygpt.opt["max_l2"]):
+            file_path = Path(doc[0].metadata["file_path"])
+
+            if not os.path.exists(TEMP):
+                os.mkdir(TEMP)
+            reference_path = os.path.join(TEMP, f"reference-{i}.txt")
+            with open(reference_path, "w") as f:
+                f.write(content)
+            if not file_path in path_list:
+                if file_path.suffix == ".html":
+                    copy_html(file_path)
+                else:
+                    shutil.copy2(file_path, dir_name)
+                if frontend == "gradio":
+                    links.append(
+                        f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}] </a> '
+                    )
+                    links.append(
+                        f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
+                    )
+                else:
+                    url = f"http://127.0.0.1:7860/file/temp/reference-{i}.txt"
+                    url = quote(url, safe=":/")
+                    links.append(f"[[{i}]]({url}) ")
+                    url = f"http://127.0.0.1:7860/file/temp/{file_path.name}"
+                    url = quote(url, safe=":/")
+                    links.append(f"[{file_path.stem}]({url})  \n")
+
+                path_list.append(file_path)
+            else:
+                if frontend == "gradio":
+                    index = links.index(
+                        f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
+                    )
+                    links.insert(
+                        index,
+                        f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}]</a> ',
+                    )
+                else:
+                    url = f"http://127.0.0.1:7860/file/temp/{file_path.name}"
+                    url = quote(url, safe=":/")
+                    url = f"[{file_path.stem}]({url})  \n"
+                    index = links.index(url)
+                    url = f"http://127.0.0.1:7860/file/temp/reference-{i}.txt"
+                    url = quote(url, safe=":/")
+                    links.insert(
+                        index,
+                        f"[[{i}]]({url}) ",
+                    )
+            i += 1
+    links = "".join(links)
+    return links
+
+# 获取text中所有的etag 
+def get_etag_list(text, mygpt):
+    prompt_tags = []
+    base_tags = []
+    agent_tags = []
+    engine_tags = []
+    for i in text.split():
+        if i.startswith("#"):
+            etag = i[1:]
+            etype = mygpt.all_etags[mygpt.all_etags["name"]==etag]["type"].values[0]
+            if etype == "prompt":
+                prompt_tags.append(etag)
+            elif etype == "base":
+                base_tags.append(etag)
+            elif etype == "agent":
+                agent_tags.append(etag)
+            elif etype == "engine":
+                engine_tags.append(etag)
+    return prompt_tags, base_tags, agent_tags, engine_tags
 

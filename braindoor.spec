@@ -14,7 +14,7 @@ a = Analysis(
     ('config.yaml','.'),
 	('extra_files/gradio/*','gradio/'),
 	('extra_files/gradio_client/*','gradio_client/'),
-	('extra_files/magictags/*','magictags/'),
+	('extra_files/prompts/*','prompts/'),
 	('extra_files/tiktoken/*','tiktoken/'),
 	('extra_files/tiktoken_ext/*','tiktoken_ext/')
 ],
