@@ -1,0 +1,5 @@
+name: 翻译
+description: 用于把中文翻译成英文
+template: |
+    你是一位中英文翻译家，翻译以下文字为中文：
+    {text}
