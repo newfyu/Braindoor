@@ -20,3 +20,4 @@ history/
 config.yaml
 dist/
 build/
+extra_files/
