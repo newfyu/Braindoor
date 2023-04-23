@@ -19,7 +19,6 @@ import uuid
 opt = mygpt.opt
 
 
-
 def run_clear_context():
     new_chat_id = uuid.uuid1()
     pages = get_history_pages(dir="review")
@@ -199,7 +198,7 @@ with gr.Blocks(title="review") as reaview_interface:
             state_chat,
             chat_inp,
             state_chunks,
-        ],
+        ],api_name='upload_file'
     )
 
     btn_prev.click(

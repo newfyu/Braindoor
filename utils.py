@@ -341,23 +341,4 @@ def create_links(mydocs, frontend, dir_name, mygpt):
     links = "".join(links)
     return links
 
-# 获取text中所有的etag 
-def get_etag_list(text, mygpt):
-    prompt_tags = []
-    base_tags = []
-    agent_tags = []
-    engine_tags = []
-    for i in text.split():
-        if i.startswith("#"):
-            etag = i[1:]
-            etype = mygpt.all_etags[mygpt.all_etags["name"]==etag]["type"].values[0]
-            if etype == "prompt":
-                prompt_tags.append(etag)
-            elif etype == "base":
-                base_tags.append(etag)
-            elif etype == "agent":
-                agent_tags.append(etag)
-            elif etype == "engine":
-                engine_tags.append(etag)
-    return prompt_tags, base_tags, agent_tags, engine_tags
 

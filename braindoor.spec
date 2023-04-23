@@ -14,11 +14,11 @@ a = Analysis(
     ('config.yaml','.'),
 	('extra_files/gradio/*','gradio/'),
 	('extra_files/gradio_client/*','gradio_client/'),
-	('extra_files/prompts/*','prompts/'),
+	('prompts/*','prompts/'),
 	('extra_files/tiktoken/*','tiktoken/'),
 	('extra_files/tiktoken_ext/*','tiktoken_ext/')
 ],
-    hiddenimports=['magictags'],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

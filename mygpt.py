@@ -5,7 +5,7 @@ import os
 
 import yaml
 from yaml.loader import SafeLoader
-from utils import logger,tiktoken_encoder
+from utils import logger, tiktoken_encoder
 
 from update_base import load_base
 from langchain.embeddings import OpenAIEmbeddings
@@ -15,9 +15,10 @@ from create_base import token_len
 import pandas as pd
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-USER = os.path.join(os.path.expanduser("~"),'braindoor/')
+USER = os.path.join(os.path.expanduser("~"), "braindoor/")
 config_path = os.path.join(USER, "config.yaml")
 prompt_path = os.path.join(USER, "prompts")
+
 
 class Result:
     def __init__(self, page_content, metadata):
@@ -52,9 +53,9 @@ class MyGPT:
         prompt_files = list(Path(prompt_path).glob("*.yaml"))
         prompt_etags = dict()
         for prompt_file in prompt_files:
-            with open(prompt_file, 'r') as file:
+            with open(prompt_file, "r") as file:
                 data = yaml.load(file, Loader=yaml.FullLoader)
-                prompt_etags[data['name']] = data['template']
+                prompt_etags[data["name"]] = data["template"]
         return prompt_etags
 
     def load_etag_list(self):
@@ -87,7 +88,6 @@ class MyGPT:
         return self.opt
 
     def search(self, query, base_name, mode="similarity"):
-
         base = self.bases[base_name]
         if mode == "keyword":
             results = []
@@ -103,6 +103,36 @@ class MyGPT:
                 query, k=self.opt["search_topk"]
             )
         return results
+
+    # 获取text中所有的etag
+    def get_etag_list(self, text):
+        prompt_tags = []
+        base_tags = []
+        agent_tags = []
+        engine_tags = []
+        for i in text.split():
+            if i.startswith("#"):
+                etag = i[1:]
+                etype = self.all_etags[self.all_etags["name"] == etag]["type"].values[0]
+                if etype == "prompt":
+                    prompt_tags.append(etag)
+                elif etype == "base":
+                    base_tags.append(etag)
+                elif etype == "agent":
+                    agent_tags.append(etag)
+                elif etype == "engine":
+                    engine_tags.append(etag)
+        return prompt_tags, base_tags, agent_tags, engine_tags
+
+    # 处理prompt_tag
+
+    def inject_prompt(self, question, prompt_tags):
+        all_prompt_etags = list(self.prompt_etags.keys())
+        for tag in prompt_tags:
+            if tag in all_prompt_etags:
+                template = self.prompt_etags[tag]
+                question = template.replace("{text}", question)
+        return question
 
     @backoff.on_exception(
         backoff.expo,
@@ -157,25 +187,28 @@ class MyGPT:
             report = []
             for resp in completion:
                 if not self.abort_msg:
-                    if hasattr(resp['choices'][0].delta, 'content'):
-                        report.append(resp['choices'][0].delta.content)
+                    if hasattr(resp["choices"][0].delta, "content"):
+                        report.append(resp["choices"][0].delta.content)
                         mygpt.temp_result = "".join(report).strip()
                 else:
-                    mygpt.temp_result += '...abort!'
+                    mygpt.temp_result += "...abort!"
                     self.abort_msg = False
-                    logger.info('abort by user')
+                    logger.info("abort by user")
                     break
 
             return mygpt.temp_result
 
     def ask(self, question, context, base_name):
-        # 解析question中的magictag，加入use_magictag列表
-        use_magictags = []
-        for key in self.prompt_etags.keys():
-            tag = f" #{key} " 
-            if  tag in question:
-                question = question.replace(tag, "")
-                use_magictags.append(self.prompt_etags[key])
+        # 解析etag并处理
+        prompt_tags, base_tags, _, _ = self.get_etag_list(question)
+        # 处理base_tag
+        if len(base_tags) > 0:
+            base_name = base_tags[-1]
+        if len(prompt_tags) > 0:
+            question = self.inject_prompt(question, prompt_tags)
+        # 判断question最后一行中的有etag，移除etags
+        for etag in self.all_etags["name"]:
+            question = question.replace(f"#{etag}", "")
 
         if base_name != "default":
             base = self.bases[base_name]
@@ -192,26 +225,28 @@ class MyGPT:
             mydocs = base["vstore"].similarity_search_with_score(
                 query, k=self.opt["ask_topk"]
             )
-            
+
             local_text = mydocs[0][0].page_content
             if self.opt["answer_depth"] < 2:  # simple answer
                 ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
 local text:{local_text}
 user question:{question}"""
                 answer = self.chatgpt(ask_prompt, context, stream=True)
-                mygpt.temp_result = ''
+                mygpt.temp_result = ""
 
             else:  # deep answer
                 answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
-                chunks = [i[0].page_content for i in mydocs[0: int(answer_depth)][::-1]]
+                chunks = [
+                    i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]
+                ]
                 answer = self.review(question, chunks)
-                mygpt.temp_result = ''
+                mygpt.temp_result = ""
 
         else:  # default answer
             draft = self.chatgpt(question, context, stream=True)
             answer = draft
             mydocs = []
-            mygpt.temp_result = ''
+            mygpt.temp_result = ""
 
         logger.info("Received answer")
         #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
@@ -220,9 +255,11 @@ user question:{question}"""
     # prompt 1
     def review(self, question, chunks):
         prev_answer = ""
-        logger.info(f"Start long text reading, estimated to take {len(chunks)*15} seconds")
+        logger.info(
+            f"Start long text reading, estimated to take {len(chunks)*15} seconds"
+        )
         chunk_num = len(chunks)
-        for i,chunk in enumerate(chunks):
+        for i, chunk in enumerate(chunks):
             if i != chunk_num - 1:
                 ask_prompt = f"""known:{prev_answer}
                 Extra text:{chunk}
@@ -238,31 +275,33 @@ user question:{question}"""
             prev_answer = answer
             #  logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
             logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
-        mygpt.temp_result = ''
+        mygpt.temp_result = ""
         return prev_answer
 
     #  def review(self, question, chunks):
-        #  prev_answer = ""
-        #  logger.info(
-            #  f"Start long text reading, estimated to take {len(chunks)*15} seconds"
-        #  )
-        #  chunk_num = len(chunks)
+    #  prev_answer = ""
+    #  logger.info(
+    #  f"Start long text reading, estimated to take {len(chunks)*15} seconds"
+    #  )
+    #  chunk_num = len(chunks)
 
-        #  for i, chunk in enumerate(chunks):
-            #  if i != chunk_num - 1:
-                #  ask_prompt = f"""known:{prev_answer}
+    #  for i, chunk in enumerate(chunks):
+    #  if i != chunk_num - 1:
+    #  ask_prompt = f"""known:{prev_answer}
+
+
 #  Extra text:{chunk}
 #  quesiton:{question}。完全根据前面提供的内容回答，不要自由回答。"""
-            #  else:
-                #  ask_prompt = f"""known:{prev_answer}
+#  else:
+#  ask_prompt = f"""known:{prev_answer}
 #  Extra text:{chunk}
 #  Please answer the following question only according to the text provided above:
 #  {question}"""
-            #  answer = mygpt.chatgpt(ask_prompt, temperature=1, stream=True)
-            #  prev_answer = answer
-            #  logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
-        #  mygpt.temp_result = ''
-        #  return prev_answer
+#  answer = mygpt.chatgpt(ask_prompt, temperature=1, stream=True)
+#  prev_answer = answer
+#  logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
+#  mygpt.temp_result = ''
+#  return prev_answer
 
 
 mygpt = MyGPT()

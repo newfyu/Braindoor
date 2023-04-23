@@ -6,8 +6,7 @@ from utils import (
     load_context,
     del_page,
     cutoff_context,
-    create_links,
-    get_etag_list
+    create_links
 )
 from mygpt import mygpt
 import os
@@ -15,7 +14,6 @@ import uuid
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"),'braindoor/')
-TEMP = os.path.join(ROOT, "temp")
 opt = mygpt.opt
 
 
@@ -23,27 +21,6 @@ opt = mygpt.opt
 def run_chat(question, history, context, base_name, chat_id, frontend):
     dir_name = "temp"
     truncated_context = cutoff_context(context,mygpt) # 还移除了link和tag
-    # 解析etag并处理
-    prompt_tags, base_tags, _, _ = get_etag_list(question, mygpt)
-
-    # 处理base_tag
-    if len(base_tags) > 0:
-        base_name = base_tags[-1]
-
-    # 处理prompt_tag
-    
-    def add_prompt(question, prompt_tags, mygpt):
-        all_prompt_etags = list(mygpt.prompt_etags.keys())
-        for tag in prompt_tags:
-            if tag in all_prompt_etags:
-                template = mygpt.prompt_etags[tag]
-                question = template.replace("{text}", question)
-                question.replace(f"#{tag}", "")
-        return question
-
-    if len(prompt_tags) > 0:
-        question = add_prompt(question, prompt_tags, mygpt)
-
 
     # 进入模型
     answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
