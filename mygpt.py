@@ -64,6 +64,12 @@ class MyGPT:
             etags.append([tag_name, "prompt", "/abbr"])
         for tag_name in self.bases.keys():
             etags.append([tag_name, "base", "/abbr"])
+        
+        # 此处添加engine etag
+        etags.append(["HyDE", "engine", "/abbr"])
+        etags.append(["DeepAnswer3", "engine", "/abbr"])
+        etags.append(["DeepAnswer5", "engine", "/abbr"])
+
         etags = pd.DataFrame(etags, columns=["name", "type", "abbr"])
         return etags
 
@@ -104,12 +110,13 @@ class MyGPT:
             )
         return results
 
-    # 获取text中所有的etag
+    # 解析text中所有的etag
     def get_etag_list(self, text):
         prompt_tags = []
         base_tags = []
         agent_tags = []
         engine_tags = []
+        model_tags = []
         for i in text.split():
             if i.startswith("#"):
                 etag = i[1:]
@@ -122,10 +129,11 @@ class MyGPT:
                     agent_tags.append(etag)
                 elif etype == "engine":
                     engine_tags.append(etag)
-        return prompt_tags, base_tags, agent_tags, engine_tags
+                elif etype == "model":
+                    model_tags.append(etag)
+        return prompt_tags, base_tags, engine_tags, model_tags, agent_tags
 
-    # 处理prompt_tag
-
+    # 应用prompt
     def inject_prompt(self, question, prompt_tags):
         all_prompt_etags = list(self.prompt_etags.keys())
         for tag in prompt_tags:
@@ -200,10 +208,11 @@ class MyGPT:
 
     def ask(self, question, context, base_name):
         # 解析etag并处理
-        prompt_tags, base_tags, _, _ = self.get_etag_list(question)
-        # 处理base_tag
+        prompt_tags, base_tags, engine_tags, _, _ = self.get_etag_list(question)
+        # 应用base_tag
         if len(base_tags) > 0:
             base_name = base_tags[-1]
+        # 应用prompt
         if len(prompt_tags) > 0:
             question = self.inject_prompt(question, prompt_tags)
         # 判断question最后一行中的有etag，移除etags
@@ -212,11 +221,11 @@ class MyGPT:
 
         if base_name != "default":
             base = self.bases[base_name]
-            if self.opt["HyDE"]:
+            if self.opt["HyDE"] or "HyDE" in engine_tags:
                 draft = self.chatgpt(question, context, stream=True)
                 query = question + "\n" + draft
                 #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
-                logger.info("Received draft")
+                logger.info("Generated draft")
             else:
                 draft = ""
                 context_str = "\n".join(["\n".join(t) for t in context])
