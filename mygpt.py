@@ -53,7 +53,7 @@ class MyGPT:
         prompt_files = list(Path(prompt_path).glob("*.yaml"))
         prompt_etags = dict()
         for prompt_file in prompt_files:
-            with open(prompt_file, "r") as file:
+            with open(prompt_file, "r", encoding='utf-8') as file:
                 data = yaml.load(file, Loader=yaml.FullLoader)
                 prompt_etags[data["name"]] = data["template"]
         return prompt_etags
