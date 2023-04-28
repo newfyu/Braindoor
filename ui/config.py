@@ -12,7 +12,8 @@ from ui import search, ask
 
 opt = mygpt.opt
 ROOT = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(ROOT, "config.yaml")
+USER = os.path.join(os.path.expanduser("~"), "braindoor/")
+config_path = os.path.join(USER, "config.yaml")
 
 def load_config():
     with open(config_path) as f:
@@ -47,6 +48,15 @@ def update_config(key, rate_limit, search_topk, hyde, answer_depth, proxy):
     mygpt.__init__()
     return "Save successfully!"
 
+# for brainshell
+def save_config_from_brainshell(key, proxy):
+    opt["key"] = key
+    opt['proxy'] = proxy
+    with open(config_path, "w") as f:
+        yaml.dump(opt, f)
+    mygpt.__init__()
+    logger.info('Save config from brainshell')
+    return "Save config from brainshell successfully!"
 
 def get_base_info(base_name):
     base = mygpt.bases[base_name]
@@ -186,6 +196,7 @@ with gr.Blocks(title="ask") as config_interface:
         with gr.Row():
             btn_load = gr.Button("Reload config", variant="primary")
             btn_save = gr.Button("Save config", variant="primary")
+            btn_save_from_brainshell = gr.Button("Save config from brainshell", visible=False)
     general_configs = [cmpt_key, box_rate_limit, box_topk, ask.box_hyde, box_answer_depth, box_proxy]
 
     with gr.Accordion("Update existing knowledge base", open=False, elem_id="acc"):
@@ -256,8 +267,16 @@ with gr.Blocks(title="ask") as config_interface:
         outputs=box_info,
     )
 
+    # save general_configs from brainshell
+    btn_save_from_brainshell.click(
+        fn=save_config_from_brainshell,
+        inputs=[cmpt_key, box_proxy],
+        outputs=box_info,
+        api_name='save_config_from_brainshell'
+    )
+
     # load general_configs
-    btn_load.click(fn=reload, outputs=general_configs)
+    btn_load.click(fn=reload, outputs=general_configs, api_name="general_config")
 
     # load base for update
     btn_load_base.click(
