@@ -13,6 +13,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from functools import partial
 from create_base import token_len
 import pandas as pd
+import datetime
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"), "braindoor/")
@@ -69,6 +70,7 @@ class MyGPT:
         etags.append(["HyDE", "engine", "/abbr"])
         etags.append(["DeepAnswer3", "engine", "/abbr"])
         etags.append(["DeepAnswer5", "engine", "/abbr"])
+        etags.append(["Memo", "engine", "/abbr"])
 
         etags = pd.DataFrame(etags, columns=["name", "type", "abbr"])
         return etags
@@ -207,6 +209,7 @@ class MyGPT:
             return mygpt.temp_result
 
     def ask(self, question, context, base_name):
+        question_out = question
         # 解析etag并处理
         prompt_tags, base_tags, engine_tags, _, _ = self.get_etag_list(question)
         # 应用base_tag
@@ -219,47 +222,56 @@ class MyGPT:
         for etag in self.all_etags["name"]:
             question = question.replace(f"#{etag}", "")
 
-        if base_name != "default":
-            base = self.bases[base_name]
-            if self.opt["HyDE"] or "HyDE" in engine_tags:
+        if not "Memo" in engine_tags:
+            if base_name != "default":
+                base = self.bases[base_name]
+                if self.opt["HyDE"] or "HyDE" in engine_tags:
+                    draft = self.chatgpt(question, context, stream=True)
+                    query = question + "\n" + draft
+                    #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
+                    logger.info("Generated draft")
+                else:
+                    draft = ""
+                    context_str = "\n".join(["\n".join(t) for t in context])
+                    query = context_str + "\n" + question
+
+                mydocs = base["vstore"].similarity_search_with_score(
+                    query, k=self.opt["ask_topk"]
+                )
+
+                local_text = mydocs[0][0].page_content
+                if self.opt["answer_depth"] < 2:  # simple answer
+                    ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
+    local text:{local_text}
+    user question:{question}"""
+                    answer = self.chatgpt(ask_prompt, context, stream=True)
+                    mygpt.temp_result = ""
+
+                else:  # deep answer
+                    answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
+                    chunks = [
+                        i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]
+                    ]
+                    answer = self.review(question, chunks)
+                    mygpt.temp_result = ""
+
+            else:  # default answer
                 draft = self.chatgpt(question, context, stream=True)
-                query = question + "\n" + draft
-                #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
-                logger.info("Generated draft")
-            else:
-                draft = ""
-                context_str = "\n".join(["\n".join(t) for t in context])
-                query = context_str + "\n" + question
-
-            mydocs = base["vstore"].similarity_search_with_score(
-                query, k=self.opt["ask_topk"]
-            )
-
-            local_text = mydocs[0][0].page_content
-            if self.opt["answer_depth"] < 2:  # simple answer
-                ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
-local text:{local_text}
-user question:{question}"""
-                answer = self.chatgpt(ask_prompt, context, stream=True)
+                answer = draft
+                mydocs = []
                 mygpt.temp_result = ""
 
-            else:  # deep answer
-                answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
-                chunks = [
-                    i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]
-                ]
-                answer = self.review(question, chunks)
-                mygpt.temp_result = ""
-
-        else:  # default answer
-            draft = self.chatgpt(question, context, stream=True)
-            answer = draft
+            logger.info("Received answer")
+            #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
+        else:
+            draft = ""
+            answer = question
             mydocs = []
-            mygpt.temp_result = ""
+            now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            question_out = f"{now_time} 备忘录"
+        return question_out, answer, mydocs, draft
 
-        logger.info("Received answer")
-        #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
-        return answer, mydocs, draft
+
 
     # prompt 1
     def review(self, question, chunks):

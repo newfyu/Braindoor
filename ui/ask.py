@@ -23,7 +23,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend):
     truncated_context = cutoff_context(context,mygpt) # 还移除了link和tag
 
     # 进入模型
-    answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
+    question, answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
     links = create_links(mydocs, frontend, dir_name, mygpt)
 
     if frontend == "gradio":
