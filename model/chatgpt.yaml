@@ -1,0 +1,10 @@
+target: openai.ChatCompletion.create
+params:
+    model: gpt-3.5-turbo,
+    max_tokens: 2000,
+    temperature: 0.8
+    stream: True
+system_message: "you are a help assistant"
+input_format: 
+    key: message
+    type: string
