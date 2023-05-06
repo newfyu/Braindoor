@@ -265,10 +265,10 @@ class MyGPT:
             #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
         else:
             draft = ""
-            answer = question
+            answer = ""
             mydocs = []
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            question_out = f"{now_time} 备忘录"
+            question_out = f"{now_time} 备忘录\n\n{question}"
         return question_out, answer, mydocs, draft
 
 
