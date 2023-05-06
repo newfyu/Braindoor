@@ -54,7 +54,7 @@ class MyGPT:
         prompt_files = list(Path(prompt_path).glob("*.yaml"))
         prompt_etags = dict()
         for prompt_file in prompt_files:
-            with open(prompt_file, "r", encoding='utf-8') as file:
+            with open(prompt_file, "r", encoding="utf-8") as file:
                 data = yaml.load(file, Loader=yaml.FullLoader)
                 prompt_etags[data["name"]] = data["template"]
         return prompt_etags
@@ -65,7 +65,7 @@ class MyGPT:
             etags.append([tag_name, "prompt", "/abbr"])
         for tag_name in self.bases.keys():
             etags.append([tag_name, "base", "/abbr"])
-        
+
         # 此处添加engine etag
         etags.append(["HyDE", "engine", "/abbr"])
         etags.append(["DeepAnswer3", "engine", "/abbr"])
@@ -156,43 +156,29 @@ class MyGPT:
         self,
         input,
         context=[],
-        sys_msg="",
-        temperature=1.0,
-        max_tokens=1500,
-        stream=False,
     ):
         self.abort_msg = False
-        if sys_msg == "":
-            messages = [{"role": "system", "content": "You are a helpful assistant."}]
-        else:
-            messages = [{"role": "system", "content": f"{sys_msg}"}]
-        if len(context) > 0:
-            for q, a in context:
-                messages.append({"role": "user", "content": f"{q}"})
-                messages.append({"role": "assistant", "content": f"{a}"})
-        messages.append({"role": "user", "content": f"{input}"})
-        #  logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
-        logger.info("Send message")
 
-        if not stream:
-            completion = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                api_key=self.opt["key"],
-                max_tokens=max_tokens,
-                messages=messages,
-                temperature=temperature,
-            )
-            #  logger.info("[message]: " + str(messages) + "\n" + "-" * 60)
+        model_config_path = os.path.join(ROOT, "models", "chatgpt.yaml")
+        with open(model_config_path) as f:
+            model_config = yaml.load(f, Loader=SafeLoader)
+
+        # chatgpt
+        if model_config["model"] == "chatgpt":
+            sys_msg = model_config.get("system_message", "You are a helpful assistant")
+            messages = [{"role": "system", "content": sys_msg}]
+            if len(context) > 0:
+                for q, a in context:
+                    messages.append({"role": "user", "content": q})
+                    messages.append({"role": "assistant", "content": a})
+            messages.append({"role": "user", "content": input})
             logger.info("Send message")
-            return completion.choices[0].message.content
-        else:
             completion = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 api_key=self.opt["key"],
-                max_tokens=max_tokens,
                 messages=messages,
-                temperature=temperature,
                 stream=True,
+                **model_config["params"],
             )
             report = []
             for resp in completion:
@@ -205,8 +191,10 @@ class MyGPT:
                     self.abort_msg = False
                     logger.info("abort by user")
                     break
-
             return mygpt.temp_result
+        # gpt3
+        elif model_config["model"] == "gpt3":
+            pass
 
     def ask(self, question, context, base_name):
         question_out = question
@@ -256,7 +244,7 @@ class MyGPT:
                     mygpt.temp_result = ""
 
             else:  # default answer
-                draft = self.chatgpt(question, context, stream=True)
+                draft = self.chatgpt(question, context)
                 answer = draft
                 mydocs = []
                 mygpt.temp_result = ""
@@ -270,8 +258,6 @@ class MyGPT:
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             question_out = f"{now_time} 备忘录\n\n{question}"
         return question_out, answer, mydocs, draft
-
-
 
     # prompt 1
     def review(self, question, chunks):
@@ -292,7 +278,7 @@ class MyGPT:
                 Extra text:{chunk}
                 Please answer the following question only according to the text provided above:
                 {question}"""
-            answer = mygpt.chatgpt(ask_prompt, temperature=1, stream=True)
+            answer = mygpt.chatgpt(ask_prompt, temperature=1)
             prev_answer = answer
             #  logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
             logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
