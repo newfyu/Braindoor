@@ -190,7 +190,7 @@ class MyGPT:
                     messages.append({"role": "user", "content": q})
                     messages.append({"role": "assistant", "content": a})
             messages.append({"role": "user", "content": input})
-            logger.info("Send message")
+            logger.info("Send message to chatgpt")
             completion = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 api_key=self.opt["key"],
@@ -209,10 +209,33 @@ class MyGPT:
                     self.abort_msg = False
                     logger.info("abort by user")
                     break
-            return mygpt.temp_result
         # gpt3
         elif model_config["model"] == "gpt3":
-            pass
+            prompt = ""
+            if len(context) > 0:
+                for q, a in context:
+                    prompt += f"{q}\n\n"
+                    prompt += f"{a}\n\n"
+            prompt += f"{input}"
+            logger.info("Send message to gpt3")
+            openai.api_key = self.opt["key"]
+            completion = openai.Completion.create(
+                engine="text-davinci-003",
+                prompt=prompt,
+                stream=True,
+                **model_config["params"],
+            )
+            report = []
+            for resp in completion:
+                if not self.abort_msg:
+                    report.append(resp["choices"][0]['text'])
+                    mygpt.temp_result = "".join(report).strip()
+                else:
+                    mygpt.temp_result += "...abort!"
+                    self.abort_msg = False
+                    logger.info("abort by user")
+                    break
+        return mygpt.temp_result
 
     def ask(self, question, context, base_name):
         question_out = question
