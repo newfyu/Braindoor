@@ -19,6 +19,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"), "braindoor/")
 config_path = os.path.join(USER, "config.yaml")
 prompt_path = os.path.join(USER, "prompts")
+model_path = os.path.join(USER, "models")
 
 
 class Result:
@@ -37,6 +38,7 @@ class MyGPT:
         base_paths = list(Path(self.bases_root).glob("*.base"))
         self.load_base(base_paths)
         self.prompt_etags = self.load_prompt_etags()
+        self.model_etags = self.load_model_etags()
         self.abort_msg = False
         self.all_etags = self.load_etag_list()
 
@@ -59,12 +61,25 @@ class MyGPT:
                 prompt_etags[data["name"]] = data["template"]
         return prompt_etags
 
+    def load_model_etags(self):
+        model_files = list(Path(model_path).glob("*.yaml"))
+        model_etags = []
+        for model_file in model_files:
+            with open(model_file, "r", encoding="utf-8") as file:
+                data = yaml.load(file, Loader=yaml.FullLoader)
+                model_etags.append(Path(model_file).stem)
+        return model_etags
+
     def load_etag_list(self):
         etags = []
+
+        # 此处添加prompt, base, model etag
         for tag_name in self.prompt_etags.keys():
             etags.append([tag_name, "prompt", "/abbr"])
         for tag_name in self.bases.keys():
             etags.append([tag_name, "base", "/abbr"])
+        for tag_name in self.model_etags:
+            etags.append([tag_name, "model", "/abbr"])
 
         # 此处添加engine etag
         etags.append(["HyDE", "engine", "/abbr"])
@@ -152,16 +167,19 @@ class MyGPT:
             openai.error.APIConnectionError,
         ),
     )
-    def chatgpt(
-        self,
-        input,
-        context=[],
-    ):
+    def llm(self, input, context=[], model_config_yaml=None):
         self.abort_msg = False
 
-        model_config_path = os.path.join(ROOT, "models", "chatgpt.yaml")
+        if model_config_yaml is None:
+            model_config_path = os.path.join(ROOT, "models", "chatgpt.yaml")
+        else:
+            model_config_path = os.path.join(
+                USER, "models", model_config_yaml + ".yaml"
+            )
+
         with open(model_config_path) as f:
             model_config = yaml.load(f, Loader=SafeLoader)
+
 
         # chatgpt
         if model_config["model"] == "chatgpt":
@@ -199,13 +217,23 @@ class MyGPT:
     def ask(self, question, context, base_name):
         question_out = question
         # 解析etag并处理
-        prompt_tags, base_tags, engine_tags, _, _ = self.get_etag_list(question)
+        (
+            prompt_tags,
+            base_tags,
+            engine_tags,
+            model_tags,
+            agent_tags,
+        ) = self.get_etag_list(question)
         # 应用base_tag
         if len(base_tags) > 0:
             base_name = base_tags[-1]
         # 应用prompt
         if len(prompt_tags) > 0:
             question = self.inject_prompt(question, prompt_tags)
+        if len(model_tags) > 0:
+            model_config_yaml = model_tags[-1]
+        else:
+            model_config_yaml = None
         # 判断question最后一行中的有etag，移除etags
         for etag in self.all_etags["name"]:
             question = question.replace(f"#{etag}", "")
@@ -214,7 +242,7 @@ class MyGPT:
             if base_name != "default":
                 base = self.bases[base_name]
                 if self.opt["HyDE"] or "HyDE" in engine_tags:
-                    draft = self.chatgpt(question, context, stream=True)
+                    draft = self.llm(question, context, model_config_yaml)
                     query = question + "\n" + draft
                     #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
                     logger.info("Generated draft")
@@ -232,7 +260,7 @@ class MyGPT:
                     ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
     local text:{local_text}
     user question:{question}"""
-                    answer = self.chatgpt(ask_prompt, context, stream=True)
+                    answer = self.llm(ask_prompt, context, model_config_yaml)
                     mygpt.temp_result = ""
 
                 else:  # deep answer
@@ -244,7 +272,7 @@ class MyGPT:
                     mygpt.temp_result = ""
 
             else:  # default answer
-                draft = self.chatgpt(question, context)
+                draft = self.llm(question, context, model_config_yaml)
                 answer = draft
                 mydocs = []
                 mygpt.temp_result = ""
@@ -278,7 +306,7 @@ class MyGPT:
                 Extra text:{chunk}
                 Please answer the following question only according to the text provided above:
                 {question}"""
-            answer = mygpt.chatgpt(ask_prompt, temperature=1)
+            answer = mygpt.llm(ask_prompt)
             prev_answer = answer
             #  logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
             logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")

@@ -11,6 +11,8 @@ if not os.path.exists(os.path.join(USER, "config.yaml")):
     shutil.copy2(os.path.join(ROOT, "config.yaml"), os.path.join(USER, "config.yaml"))
 if not os.path.exists(os.path.join(USER, "prompts")):
     shutil.copytree(os.path.join(ROOT, "prompts"), os.path.join(USER, "prompts"))
+if not os.path.exists(os.path.join(USER, "models")):
+    shutil.copytree(os.path.join(ROOT, "models"), os.path.join(USER, "models"))
 
 import gradio as gr
 
