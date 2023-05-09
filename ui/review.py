@@ -37,7 +37,10 @@ def run_review(question, context, chunks, chat_id):
 
 
 def handle_upload_file(file, chat_id, context):
-    file_path = file.name
+    if isinstance(file, str):
+        file_path = file
+    else:
+        file_path = file.name
     try:
         text = read_text_file(file_path)
         chunks = mygpt.fulltext_splitter.split_text(text)
@@ -47,6 +50,7 @@ def handle_upload_file(file, chat_id, context):
                 "Yes, you can now ask any questions about the file.")
         
         context.append(info)
+        import ipdb;ipdb.set_trace()
         return (
             context,
             context,
@@ -172,6 +176,7 @@ with gr.Blocks(title="review") as reaview_interface:
             file_types=["file"],
         )
         btn_upload.style(full_width=False)
+        remote_upload_box = gr.Textbox("",visible=False, interactive=False, lines=1)
 
     reviewing = chat_inp.submit(
         fn=run_review,
@@ -198,7 +203,19 @@ with gr.Blocks(title="review") as reaview_interface:
             state_chat,
             chat_inp,
             state_chunks,
+        ]    )
+
+    # 处理brainshell的上传api
+    remote_upload_box.submit(
+        fn=handle_upload_file,
+        inputs=[remote_upload_box, state_chat_id, state_chat],
+        outputs=[
+            reviewbot,
+            state_chat,
+            chat_inp,
+            state_chunks,
         ],api_name='upload_file'
+
     )
 
     btn_prev.click(

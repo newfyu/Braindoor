@@ -137,17 +137,18 @@ class MyGPT:
         for i in text.split():
             if i.startswith("#"):
                 etag = i[1:]
-                etype = self.all_etags[self.all_etags["name"] == etag]["type"].values[0]
-                if etype == "prompt":
-                    prompt_tags.append(etag)
-                elif etype == "base":
-                    base_tags.append(etag)
-                elif etype == "agent":
-                    agent_tags.append(etag)
-                elif etype == "engine":
-                    engine_tags.append(etag)
-                elif etype == "model":
-                    model_tags.append(etag)
+                if not self.all_etags[self.all_etags["name"] == etag].empty:
+                    etype = self.all_etags[self.all_etags["name"] == etag]["type"].values[0]
+                    if etype == "prompt":
+                        prompt_tags.append(etag)
+                    elif etype == "base":
+                        base_tags.append(etag)
+                    elif etype == "agent":
+                        agent_tags.append(etag)
+                    elif etype == "engine":
+                        engine_tags.append(etag)
+                    elif etype == "model":
+                        model_tags.append(etag)
         return prompt_tags, base_tags, engine_tags, model_tags, agent_tags
 
     # 应用prompt
@@ -311,55 +312,51 @@ class MyGPT:
         return question_out, answer, mydocs, draft
 
     # prompt 1
+    #  def review(self, question, chunks):
+        #  prev_answer = ""
+        #  logger.info(
+            #  f"Start long text reading, estimated to take {len(chunks)*15} seconds"
+        #  )
+        #  chunk_num = len(chunks)
+        #  for i, chunk in enumerate(chunks):
+            #  if i != chunk_num - 1:
+                #  ask_prompt = f"""known:```{prev_answer}```
+#  Extra text:```{chunk}```
+#  quesion:```{question}```
+#  The text is incomplete. Don't answer the questions immediately. First record the related text about the question"""
+            #  else:
+                #  ask_prompt = f"""known:{prev_answer}
+                #  Extra text:{chunk}
+                #  Please answer the following question only according to the text provided above, If there is no specific indication, you need answer the following qusting in Chinese:
+                #  ```{question}```"""
+            #  answer = mygpt.llm(ask_prompt,[],'chatgpt_review')
+            #  prev_answer = answer
+            #  logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
+        #  mygpt.temp_result = ""
+        #  return prev_answer
+
+    # prompt 1 modify test
     def review(self, question, chunks):
         prev_answer = ""
         logger.info(
-            f"Start long text reading, estimated to take {len(chunks)*15} seconds"
+            f"Start long text reading"
         )
         chunk_num = len(chunks)
         for i, chunk in enumerate(chunks):
             if i != chunk_num - 1:
-                ask_prompt = f"""known:{prev_answer}
-                Extra text:{chunk}
-                quesion:{question}
-                The text is incomplete. Don't answer the questions immediately. First record the related text about the question
-                """
+                ask_prompt = f"""known:```{prev_answer}```
+Extra text:```{chunk}```
+quesion:```{question}```
+The text is incomplete. Don't answer the questions immediately. Output the related text about the question for delayed answer"""
             else:
                 ask_prompt = f"""known:{prev_answer}
                 Extra text:{chunk}
-                Please answer the following question only according to the text provided above:
-                {question}"""
-            answer = mygpt.llm(ask_prompt)
+                Please answer the following question only according to the text provided above, If there is no specific indication, you need answer the following qusting in Chinese:
+                ```{question}```"""
+            answer = mygpt.llm(ask_prompt,[],'chatgpt_review')
             prev_answer = answer
-            #  logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
             logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
         mygpt.temp_result = ""
         return prev_answer
-
-    #  def review(self, question, chunks):
-    #  prev_answer = ""
-    #  logger.info(
-    #  f"Start long text reading, estimated to take {len(chunks)*15} seconds"
-    #  )
-    #  chunk_num = len(chunks)
-
-    #  for i, chunk in enumerate(chunks):
-    #  if i != chunk_num - 1:
-    #  ask_prompt = f"""known:{prev_answer}
-
-
-#  Extra text:{chunk}
-#  quesiton:{question}。完全根据前面提供的内容回答，不要自由回答。"""
-#  else:
-#  ask_prompt = f"""known:{prev_answer}
-#  Extra text:{chunk}
-#  Please answer the following question only according to the text provided above:
-#  {question}"""
-#  answer = mygpt.chatgpt(ask_prompt, temperature=1, stream=True)
-#  prev_answer = answer
-#  logger.info(f"answer {i}: {answer} \n Reading progress {i+1}/{len(chunks)}")
-#  mygpt.temp_result = ''
-#  return prev_answer
-
 
 mygpt = MyGPT()
