@@ -46,11 +46,10 @@ def handle_upload_file(file, chat_id, context):
         chunks = mygpt.fulltext_splitter.split_text(text)
         # chunk save
         save_review_chunk(chat_id, chunks)
-        info = (f'Can you see this file: <b><div class="filebox">{Path(file_path).name}<br>{len(chunks)} chunk </div>',
-                "Yes, you can now ask any questions about the file.")
+        info = (f'请接收一个文件: 《{Path(file_path).name}》',
+                f"我接受到了这个文件，文件被切分为{len(chunks)}块。你可以询问关于该文件的任何问题了。")
         
         context.append(info)
-        import ipdb;ipdb.set_trace()
         return (
             context,
             context,
@@ -65,7 +64,7 @@ def handle_upload_file(file, chat_id, context):
         return str(e), "", "", []
 
 
-def run_show_answer(question, history):
+def get_stream_answer(question, history):
     if mygpt.temp_result:
         answer = txt2html(mygpt.temp_result)
         _history = history.copy()
@@ -185,13 +184,15 @@ with gr.Blocks(title="review") as reaview_interface:
         api_name="review",
     )
 
-    show_answer = chat_inp.submit(
-        fn=run_show_answer,
+    stream_answer = chat_inp.submit(
+        fn=get_stream_answer,
         inputs=[chat_inp, state_chat],
         outputs=[reviewbot],
         every=0.1,
+        api_name="get_review_stream_answer",
     )
-    chat_inp.change(fn=lambda: None, cancels=[show_answer])
+
+    chat_inp.change(fn=lambda: None, cancels=[stream_answer])
 
     btn_clear_context.click(fn=run_clear_context, outputs=[reviewbot, state_chat, state_chat_id, state_current_page, state_pages, btn_page, chat_inp])
 
@@ -266,4 +267,4 @@ with gr.Blocks(title="review") as reaview_interface:
             state_chunks,
         ],
     )
-    btn_stop.click(fn=lambda: None, cancels=[reviewing, show_answer])
+    btn_stop.click(fn=lambda: None, cancels=[reviewing, stream_answer])
