@@ -193,11 +193,17 @@ def cutoff_localtext(local_text, max_len=2000):
     return local_text
 
 def save_page(chat_id, context, dir='ask'):
-    path = Path(f'{HISTORY}/{dir}')
+    path = Path(f'{HISTORY}/ask')
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(Path(f'{HISTORY}/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
+    with open(Path(f'{HISTORY}/ask/{chat_id}.json'), 'w', encoding='utf-8') as f:
         json.dump(context, f, ensure_ascii=False, indent=4)
+    if dir == 'review':
+        path = Path(f'{HISTORY}/{dir}')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        with open(Path(f'{HISTORY}/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
+            json.dump(context, f, ensure_ascii=False, indent=4)
 
 def save_review_chunk(chat_id, chunks):
     path = Path('{HISTORY}/review')
@@ -230,10 +236,12 @@ def load_review_chunk(chat_id):
     return chunks
 
 def del_page(chat_id, dir='ask'):
-    if os.path.exists(Path(f'{HISTORY}/{dir}/{chat_id}.json')):
-        os.remove(Path(f'{HISTORY}/{dir}/{chat_id}.json'))
-    if os.path.exists(Path(f'{HISTORY}/{dir}/{chat_id}.chunk')):
-        os.remove(Path(f'{HISTORY}/{dir}/{chat_id}.chunk'))
+    if os.path.exists(Path(f'{HISTORY}/ask/{chat_id}.json')):
+        os.remove(Path(f'{HISTORY}/ask/{chat_id}.json'))
+    if os.path.exists(Path(f'{HISTORY}/review/{chat_id}.json')):
+        os.remove(Path(f'{HISTORY}/review/{chat_id}.json'))
+    if os.path.exists(Path(f'{HISTORY}/review/{chat_id}.chunk')):
+        os.remove(Path(f'{HISTORY}/review/{chat_id}.chunk'))
         return True
     else:
         return False

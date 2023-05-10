@@ -1,5 +1,6 @@
 import gradio as gr
 from gradio.helpers import plt
+from pandas.core import api
 from utils import (
     save_page,
     with_proxy,
@@ -19,7 +20,7 @@ import uuid
 opt = mygpt.opt
 
 
-def run_clear_context():
+def run_new_page():
     new_chat_id = uuid.uuid1()
     pages = get_history_pages(dir="review")
     pages.insert(0, f"{new_chat_id}.json")
@@ -63,6 +64,34 @@ def handle_upload_file(file, chat_id, context):
         logger.error("read or split text error:" + str(e))
         return str(e), "", "", []
 
+def handle_upload_file_from_brainshell(file):
+    file_path = file
+    try:
+        text = read_text_file(file_path)
+        chunks = mygpt.fulltext_splitter.split_text(text)
+        # chunk save
+        save_review_chunk(chat_id, chunks)
+        info = (f'请接收一个文件: 《{Path(file_path).name}》',
+                f"我接受到了这个文件，文件被切分为{len(chunks)}块。你可以询问关于该文件的任何问题了。")
+        
+        context = [info]
+        # new page
+        new_chat_id = uuid.uuid1()
+        pages = get_history_pages()
+        pages.insert(0, f"{new_chat_id}.json")
+        return (
+            context,
+            context,
+            chunks,
+            new_chat_id,
+            0,
+            pages,
+            f"1/{len(pages)}",
+        )
+    except Exception as e:
+        logger.error(file_path)
+        logger.error("read or split text error:" + str(e))
+        return str(e), "", "", []
 
 def get_stream_answer(question, history):
     if mygpt.temp_result:
@@ -144,7 +173,7 @@ with gr.Blocks(title="review") as reaview_interface:
     reviewbot = gr.Chatbot(elem_id="reviewbot", show_label=False)
     #  reviewbot.style(color_map=("Orange", "SteelBlue "))
     state_chunks = gr.State([])
-    state_chat = gr.State([])
+    state_context = gr.State([])
 
     with gr.Row(elem_id="review_toolbar"):
         btn_clear_context = gr.Button("🆕", elem_id="btn_clear_context_review")
@@ -179,14 +208,14 @@ with gr.Blocks(title="review") as reaview_interface:
 
     reviewing = chat_inp.submit(
         fn=run_review,
-        inputs=[chat_inp, state_chat, state_chunks, state_chat_id],
-        outputs=[reviewbot, state_chat, chat_inp],
+        inputs=[chat_inp, state_context, state_chunks, state_chat_id],
+        outputs=[reviewbot, state_context, chat_inp],
         api_name="review",
     )
 
     stream_answer = chat_inp.submit(
         fn=get_stream_answer,
-        inputs=[chat_inp, state_chat],
+        inputs=[chat_inp, state_context],
         outputs=[reviewbot],
         every=0.1,
         api_name="get_review_stream_answer",
@@ -194,29 +223,31 @@ with gr.Blocks(title="review") as reaview_interface:
 
     chat_inp.change(fn=lambda: None, cancels=[stream_answer])
 
-    btn_clear_context.click(fn=run_clear_context, outputs=[reviewbot, state_chat, state_chat_id, state_current_page, state_pages, btn_page, chat_inp])
+    btn_clear_context.click(fn=run_new_page, outputs=[reviewbot, state_context, state_chat_id, state_current_page, state_pages, btn_page, chat_inp])
 
     btn_upload.upload(
         fn=handle_upload_file,
-        inputs=[btn_upload, state_chat_id, state_chat],
+        inputs=[btn_upload, state_chat_id, state_context],
         outputs=[
             reviewbot,
-            state_chat,
+            state_context,
             chat_inp,
             state_chunks,
-        ]    )
+        ])
 
     # 处理brainshell的上传api
     remote_upload_box.submit(
-        fn=handle_upload_file,
-        inputs=[remote_upload_box, state_chat_id, state_chat],
+        fn=handle_upload_file_from_brainshell,
+        inputs=[remote_upload_box],
         outputs=[
             reviewbot,
-            state_chat,
-            chat_inp,
+            state_context,
             state_chunks,
-        ],api_name='upload_file'
-
+            state_chat_id,
+            state_current_page,
+            state_pages,
+            btn_page,
+        ]
     )
 
     btn_prev.click(
@@ -224,7 +255,7 @@ with gr.Blocks(title="review") as reaview_interface:
         inputs=[state_current_page, gr.State(1), state_pages],
         outputs=[
             reviewbot,
-            state_chat,
+            state_context,
             state_chat_id,
             state_current_page,
             btn_page,
@@ -238,7 +269,7 @@ with gr.Blocks(title="review") as reaview_interface:
         inputs=[state_current_page, gr.State(-1), state_pages],
         outputs=[
             reviewbot,
-            state_chat,
+            state_context,
             state_chat_id,
             state_current_page,
             btn_page,
@@ -256,7 +287,7 @@ with gr.Blocks(title="review") as reaview_interface:
         inputs=[state_chat_id, state_pages],
         outputs=[
             reviewbot,
-            state_chat,
+            state_context,
             state_chat_id,
             state_current_page,
             state_pages,
@@ -267,4 +298,4 @@ with gr.Blocks(title="review") as reaview_interface:
             state_chunks,
         ],
     )
-    btn_stop.click(fn=lambda: None, cancels=[reviewing, stream_answer])
+    btn_stop.click(fn=lambda: None, cancels=[reviewing, stream_answer],api_name='stop_review')

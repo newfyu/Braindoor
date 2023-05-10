@@ -73,6 +73,9 @@ div.svelte-1dl81bf {
 #btn_stop_review {
 	min-width: 40px;
 }
+#btn_upload {
+	min-width: 40px;
+}
 
 #btn_del {
 	min-width: 40px;

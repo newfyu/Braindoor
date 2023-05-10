@@ -39,9 +39,9 @@ with gr.Blocks(css=css, title="Braindoor", elem_id="main_block") as demo:
         with gr.Tab("Ask"):
             ask.ask_interface.render()
 
-    if opt["enable_review"]:
-        with gr.Tab("Review"):
-            review.reaview_interface.render()
+    #  if opt["enable_review"]:
+        #  with gr.Tab("Review"):
+            #  review.reaview_interface.render()
 
     if opt["enable_config"]:
         with gr.Tab("Config", elem_id="tabs"):
