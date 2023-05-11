@@ -1,5 +1,5 @@
 model: chatgpt
 params:
-    max_tokens: 2000
-    temperature: 0.3
+    max_tokens: 1500
+    temperature: 0.8
 system_message: "you are a help assistant"
