@@ -206,7 +206,7 @@ def save_page(chat_id, context, dir='ask'):
             json.dump(context, f, ensure_ascii=False, indent=4)
 
 def save_review_chunk(chat_id, chunks):
-    path = Path('{HISTORY}/review')
+    path = Path(f'{HISTORY}/review')
     if not os.path.exists(path):
         os.makedirs(path)
     with open(Path(f'{HISTORY}/review/{chat_id}.chunk'), 'w', encoding='utf-8') as f:
