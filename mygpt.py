@@ -1,7 +1,9 @@
 from pathlib import Path
+from numpy import mod
 import openai
 import backoff
 import os
+from pandas.core.series import base
 
 import yaml
 from yaml.loader import SafeLoader
@@ -138,7 +140,9 @@ class MyGPT:
             if i.startswith("#"):
                 etag = i[1:]
                 if not self.all_etags[self.all_etags["name"] == etag].empty:
-                    etype = self.all_etags[self.all_etags["name"] == etag]["type"].values[0]
+                    etype = self.all_etags[self.all_etags["name"] == etag][
+                        "type"
+                    ].values[0]
                     if etype == "prompt":
                         prompt_tags.append(etag)
                     elif etype == "base":
@@ -180,7 +184,6 @@ class MyGPT:
 
         with open(model_config_path) as f:
             model_config = yaml.load(f, Loader=SafeLoader)
-
 
         # chatgpt
         if model_config["model"] == "chatgpt":
@@ -229,7 +232,7 @@ class MyGPT:
             report = []
             for resp in completion:
                 if not self.abort_msg:
-                    report.append(resp["choices"][0]['text'])
+                    report.append(resp["choices"][0]["text"])
                     mygpt.temp_result = "".join(report).strip()
                 else:
                     mygpt.temp_result += "...abort!"
@@ -238,9 +241,7 @@ class MyGPT:
                     break
         return mygpt.temp_result
 
-    def ask(self, question, context, base_name):
-        question_out = question
-        # 解析etag并处理
+    def preprocess_question(self, question):
         (
             prompt_tags,
             base_tags,
@@ -251,6 +252,8 @@ class MyGPT:
         # 应用base_tag
         if len(base_tags) > 0:
             base_name = base_tags[-1]
+        else:
+            base_name = "default"
         # 应用prompt
         if len(prompt_tags) > 0:
             question = self.inject_prompt(question, prompt_tags)
@@ -261,6 +264,18 @@ class MyGPT:
         # 判断question最后一行中的有etag，移除etags
         for etag in self.all_etags["name"]:
             question = question.replace(f"#{etag}", "")
+        return question, model_config_yaml, base_name, engine_tags, agent_tags
+
+    def ask(self, question, context, base_name):
+        question_out = question
+        # 解析etag并处理
+        (
+            question,
+            model_config_yaml,
+            base_name,
+            engine_tags,
+            agent_tags,
+        ) = self.preprocess_question(question)
 
         if not "Memo" in engine_tags:
             if base_name != "default":
@@ -282,12 +297,12 @@ class MyGPT:
                 local_text = mydocs[0][0].page_content
                 if self.opt["answer_depth"] < 2:  # simple answer
                     ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
-    local text:{local_text}
-    user question:{question}"""
+local text:```{local_text}```
+user question:```{question}```"""
                     answer = self.llm(ask_prompt, context, model_config_yaml)
                     mygpt.temp_result = ""
 
-                else:  # deep answer
+                else:  # deep reading
                     answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
                     chunks = [
                         i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]
@@ -313,34 +328,37 @@ class MyGPT:
 
     # prompt 1
     #  def review(self, question, chunks):
-        #  prev_answer = ""
-        #  logger.info(
-            #  f"Start long text reading, estimated to take {len(chunks)*15} seconds"
-        #  )
-        #  chunk_num = len(chunks)
-        #  for i, chunk in enumerate(chunks):
-            #  if i != chunk_num - 1:
-                #  ask_prompt = f"""known:```{prev_answer}```
-#  Extra text:```{chunk}```
-#  quesion:```{question}```
-#  The text is incomplete. Don't answer the questions immediately. First record the related text about the question"""
-            #  else:
-                #  ask_prompt = f"""known:{prev_answer}
-                #  Extra text:{chunk}
-                #  Please answer the following question only according to the text provided above, If there is no specific indication, you need answer the following qusting in Chinese:
-                #  ```{question}```"""
-            #  answer = mygpt.llm(ask_prompt,[],'chatgpt_review')
-            #  prev_answer = answer
-            #  logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
-        #  mygpt.temp_result = ""
-        #  return prev_answer
+    #  prev_answer = ""
+    #  logger.info(
+    #  f"Start long text reading, estimated to take {len(chunks)*15} seconds"
+    #  )
+    #  chunk_num = len(chunks)
+    #  for i, chunk in enumerate(chunks):
+    #  if i != chunk_num - 1:
+    #  ask_prompt = f"""known:```{prev_answer}```
+    #  Extra text:```{chunk}```
+    #  quesion:```{question}```
+    #  The text is incomplete. Don't answer the questions immediately. First record the related text about the question"""
+    #  else:
+    #  ask_prompt = f"""known:{prev_answer}
+    #  Extra text:{chunk}
+    #  Please answer the following question only according to the text provided above, If there is no specific indication, you need answer the following qusting in Chinese:
+    #  ```{question}```"""
+    #  answer = mygpt.llm(ask_prompt,[],'chatgpt_review')
+    #  prev_answer = answer
+    #  logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
+    #  mygpt.temp_result = ""
+    #  return prev_answer
 
-    # prompt 1 modify test
+    # prompt 2
     def review(self, question, chunks):
+        # 预处理
+        question, model_config_yaml, _, _, _, = self.preprocess_question(question)
+        if model_config_yaml is None:
+            model_config_yaml = "chatgpt_review"
+
         prev_answer = ""
-        logger.info(
-            f"Start long text reading"
-        )
+        logger.info(f"Start full text reading")
         chunk_num = len(chunks)
         for i, chunk in enumerate(chunks):
             if i != chunk_num - 1:
@@ -353,10 +371,11 @@ The text is incomplete. Don't answer the questions immediately. Output the relat
                 Extra text:{chunk}
                 Please answer the following question only according to the text provided above, If there is no specific indication, you need answer the following qusting in Chinese:
                 ```{question}```"""
-            answer = mygpt.llm(ask_prompt,[],'chatgpt_review')
+            answer = mygpt.llm(ask_prompt, [], model_config_yaml)
             prev_answer = answer
             logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
         mygpt.temp_result = ""
         return prev_answer
+
 
 mygpt = MyGPT()

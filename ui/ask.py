@@ -31,7 +31,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
         save_page(chat_id, context, dir="review")
     else:
         dir_name = "temp"
-        truncated_context = cutoff_context(context,mygpt) # 还移除了link和tag
+        truncated_context = cutoff_context(context, mygpt) # 截断并移除了local link和etag
 
         # 进入模型
         question, answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
@@ -72,6 +72,7 @@ def handle_upload_file(file):
         context = [info]
         # save page
         save_page(new_chat_id, context, dir="review")
+        logger.info(f"upload file: {file_path}")
         return (
             context, # chatbot
             context, # context
@@ -102,7 +103,6 @@ def go_page(current_page, offset, pages):
         placeholder = "当前对话中有一个上传的文档，你可以对该文档进行问答。"
     else:
         placeholder = "请输入内容"
-    print(bool(chunks))
     return (
         history,
         history,
