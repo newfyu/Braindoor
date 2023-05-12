@@ -85,8 +85,8 @@ class MyGPT:
 
         # 此处添加engine etag
         etags.append(["HyDE", "engine", "/abbr"])
-        etags.append(["DeepAnswer3", "engine", "/abbr"])
-        etags.append(["DeepAnswer5", "engine", "/abbr"])
+        etags.append(["ReadTop3", "engine", "/abbr"])
+        etags.append(["ReadTop5", "engine", "/abbr"])
         etags.append(["Memo", "engine", "/abbr"])
 
         etags = pd.DataFrame(etags, columns=["name", "type", "abbr"])
@@ -295,7 +295,7 @@ class MyGPT:
                 )
 
                 local_text = mydocs[0][0].page_content
-                if self.opt["answer_depth"] < 2:  # simple answer
+                if self.opt["answer_depth"] < 2 and (not "ReadTop3" in engine_tags) and (not "ReadTop5" in engine_tags):  # simple answer
                     ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
 local text:```{local_text}```
 user question:```{question}```"""
@@ -303,7 +303,12 @@ user question:```{question}```"""
                     mygpt.temp_result = ""
 
                 else:  # deep reading
-                    answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
+                    if "ReadTop3" in engine_tags:
+                        answer_depth = 3
+                    elif "ReadTop5" in engine_tags:
+                        answer_depth = 5
+                    else:
+                        answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
                     chunks = [
                         i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]
                     ]

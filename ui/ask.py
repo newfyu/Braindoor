@@ -204,7 +204,7 @@ with gr.Blocks(title="ask") as ask_interface:
     state_pages = gr.State(pages)  # 要用组件储存
     state_current_page = gr.State(0)  # 要用组件存储
     state_chunks = gr.State([])
-    state_review_mode = gr.State(True)
+    state_review_mode = gr.State(False)
 
     with gr.Row(elem_id="ask_toolbar"):
         btn_new_page = gr.Button("🆕", elem_id="btn_clear_context")
@@ -228,7 +228,7 @@ with gr.Blocks(title="ask") as ask_interface:
         show_label=False, placeholder="请输入内容", lines=1
     )
     chat_inp.style(container=False)
-    with gr.Row():
+    with gr.Row(visible=False):
         radio_base_name_ask = gr.Radio(
             base_list_ask, show_label=False, value=base_list_ask[0], interactive=True
         )
@@ -245,7 +245,7 @@ with gr.Blocks(title="ask") as ask_interface:
         samples.append([tag])
 
     box_etags = gr.Dataset(
-        components=[gr.Textbox(visible=False)], label="Extension tags", samples=samples
+        components=[gr.Textbox(visible=False)], label="扩展标签", samples=samples
     )
 
     def insert_etag(value, inp):
