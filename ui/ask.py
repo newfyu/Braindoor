@@ -24,7 +24,18 @@ opt = mygpt.opt
 
 @with_proxy(opt["proxy"])
 def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[], review_mode=False):
-    if review_mode:
+    
+    # 如果question的长度超过限制，自动使用review模式
+    if len(question) > mygpt.opt['localtext_cutoff']: 
+        chunks = mygpt.fulltext_splitter.split_text(question)
+        question = f'"{question[:100]}……"\n这段文字超过了长度限制，将转换为长文档阅读模式。'
+        answer = f'好的，这段文字已经被拆分为{len(chunks)}块，你可以对文档进行问答了。'
+        review_mode = True
+        chat_id = uuid.uuid1()
+        context = [(question, answer)]
+        history = context.copy()
+        save_review_chunk(chat_id, chunks)
+    elif review_mode:
         answer = mygpt.review(question, chunks)
         context.append((question, answer)) # context是raw的
         history = context.copy()# history是格式化的
@@ -49,7 +60,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
         save_page(chat_id=chat_id, context=context)
 
     pages = get_history_pages()
-    return history, history, context, gr.update(value=""), 0, f"1/{len(pages)}", pages
+    return history, history, context, gr.update(value=""), 0, f"1/{len(pages)}", pages, chat_id, chunks, review_mode
 
 def handle_upload_file(file):
     if isinstance(file, str):
@@ -276,6 +287,9 @@ with gr.Blocks(title="ask") as ask_interface:
             state_current_page,
             btn_page,
             state_pages,
+            state_chat_id,
+            state_chunks,
+            state_review_mode,
         ],
         api_name="ask",
     )
