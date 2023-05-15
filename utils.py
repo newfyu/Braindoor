@@ -308,10 +308,13 @@ def create_links(mydocs, frontend, dir_name, mygpt):
             with open(reference_path, "w") as f:
                 f.write(content)
             if not file_path in path_list:
-                if file_path.suffix == ".html":
-                    copy_html(file_path)
-                else:
-                    shutil.copy2(file_path, dir_name)
+                try:
+                    if file_path.suffix == ".html":
+                        copy_html(file_path)
+                    else:
+                        shutil.copy2(file_path, dir_name)
+                except Exception as e:
+                    logger.error(e)
                 if frontend == "gradio":
                     links.append(
                         f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}] </a> '

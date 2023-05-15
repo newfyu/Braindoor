@@ -28,7 +28,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
     # 如果question的长度超过限制，自动使用review模式
     if len(question) > mygpt.opt['localtext_cutoff']: 
         chunks = mygpt.fulltext_splitter.split_text(question)
-        question = f'"{question[:100]}……"\n这段文字超过了长度限制，将转换为长文档阅读模式。'
+        question = f'"{question[:100]}……"\n这段文字超过了长度限制，将转换为全文阅读模式。'
         answer = f'好的，这段文字已经被拆分为{len(chunks)}块，你可以对文档进行问答了。'
         review_mode = True
         chat_id = uuid.uuid1()
