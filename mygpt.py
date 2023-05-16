@@ -108,7 +108,7 @@ class MyGPT:
             logger.info("no base exists")
 
     def load_config(self, config_path=config_path):
-        with open(config_path) as f:
+        with open(config_path, encoding='utf-8') as f:
             self.opt = yaml.load(f, Loader=SafeLoader)
         return self.opt
 
@@ -182,7 +182,7 @@ class MyGPT:
                 USER, "models", model_config_yaml + ".yaml"
             )
 
-        with open(model_config_path) as f:
+        with open(model_config_path, encoding='utf-8') as f:
             model_config = yaml.load(f, Loader=SafeLoader)
 
         # chatgpt

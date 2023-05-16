@@ -16,7 +16,7 @@ USER = os.path.join(os.path.expanduser("~"), "braindoor/")
 config_path = os.path.join(USER, "config.yaml")
 
 def load_config():
-    with open(config_path) as f:
+    with open(config_path, encoding='utf-8') as f:
         opt = yaml.safe_load(f)
     openai.api_key = opt["key"]
     return opt
@@ -43,7 +43,7 @@ def update_config(key, rate_limit, search_topk, hyde, answer_depth, proxy):
     opt["HyDE"] = hyde
     opt["answer_depth"] = answer_depth
     opt['proxy'] = proxy
-    with open(config_path, "w") as f:
+    with open(config_path, "w", encoding='utf-8') as f:
         yaml.dump(opt, f)
     mygpt.__init__()
     return "Save successfully!"
@@ -52,7 +52,7 @@ def update_config(key, rate_limit, search_topk, hyde, answer_depth, proxy):
 def save_config_from_brainshell(key, proxy):
     opt["key"] = key
     opt['proxy'] = proxy
-    with open(config_path, "w") as f:
+    with open(config_path, "w", encoding='utf-8') as f:
         yaml.dump(opt, f)
     mygpt.__init__()
     logger.info('Save config from brainshell')
