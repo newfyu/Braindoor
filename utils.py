@@ -157,7 +157,7 @@ def read_pdf(filename):
 
 
 def read_html(filename):
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding='utf-8') as f:
         html = f.read()
         text = html2text.HTML2Text().handle(html)
     return text
@@ -178,7 +178,7 @@ def read_text_file(file_path):
     return text
 
 def get_last_log():
-    with open(log_path, "rb") as f:
+    with open(log_path, "rb", encoding='utf-8') as f:
         f.seek(-2, os.SEEK_END)
         while f.read(1) != b"\n":
             f.seek(-2, os.SEEK_CUR)
@@ -305,7 +305,7 @@ def create_links(mydocs, frontend, dir_name, mygpt):
             if not os.path.exists(TEMP):
                 os.mkdir(TEMP)
             reference_path = os.path.join(TEMP, f"reference-{i}.txt")
-            with open(reference_path, "w") as f:
+            with open(reference_path, "w", encoding='utf-8') as f:
                 f.write(content)
             if not file_path in path_list:
                 try:
