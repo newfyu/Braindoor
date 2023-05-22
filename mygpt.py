@@ -365,6 +365,7 @@ user question:```{question}```"""
         prev_answer = ""
         logger.info(f"Start full text reading")
         chunk_num = len(chunks)
+        answer_list = []
         for i, chunk in enumerate(chunks):
             if i != chunk_num - 1:
                 ask_prompt = f"""known:```{prev_answer}```
@@ -379,8 +380,15 @@ The text is incomplete. Don't answer the questions immediately. Output the relat
             answer = mygpt.llm(ask_prompt, [], model_config_yaml)
             prev_answer = answer
             logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
+
+            if i != chunk_num - 1:
+                answer_list.append(answer)
+
         mygpt.temp_result = ""
-        return prev_answer
+        frontslot = "<hr>".join(answer_list)
+        frontslot = f"""<frontslot><details><summary>中间回答</summary>{frontslot}</details><hr></frontslot>"""
+        final_answer = frontslot + prev_answer
+        return final_answer
 
 
 mygpt = MyGPT()

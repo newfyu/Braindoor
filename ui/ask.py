@@ -42,7 +42,8 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
         save_page(chat_id, context, dir="review")
     else:
         dir_name = "temp"
-        truncated_context = cutoff_context(context, mygpt) # 截断并移除了local link和etag
+        truncated_context = cutoff_context(context, mygpt) # 截断并移除了local link和etag,TODO是否移除前插槽
+
 
         # 进入模型
         question, answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
@@ -57,7 +58,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
         format_question = f"{question}"
         history.append((format_question, format_answer))
         context.append((question, answer))
-        save_page(chat_id=chat_id, context=context)
+        save_page(chat_id=chat_id, context=context) # 只save了context，没有save history,后面考虑save histroy
 
     pages = get_history_pages()
     return history, history, context, gr.update(value=""), 0, f"1/{len(pages)}", pages, chat_id, chunks, review_mode
@@ -203,6 +204,7 @@ with gr.Blocks(title="ask") as ask_interface:
     greet = []
     chatbot = gr.Chatbot(value=greet, elem_id="chatbot", show_label=False)
     #  chatbot.style(color_map=("Orange", "SteelBlue"))
+    slot = gr.Chatbot(visible=False, show_label=False)
     state_history = gr.State([])  # history储存chatbot的结果，显示的时候经过了html转换
     state_context = gr.State([])  # context存储未格式化的上下文
     etag_list = gr.DataFrame(value=[], visible=False)
