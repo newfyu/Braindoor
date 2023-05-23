@@ -251,7 +251,7 @@ class MyGPT:
         ) = self.get_etag_list(question)
         # 应用base_tag
         if len(base_tags) > 0:
-            base_name = base_tags[-1]
+            base_name = base_tags
         else:
             base_name = "default"
         # 应用prompt
@@ -279,20 +279,25 @@ class MyGPT:
 
         if not "Memo" in engine_tags:
             if base_name != "default":
-                base = self.bases[base_name]
-                if self.opt["HyDE"] or "HyDE" in engine_tags:
-                    draft = self.llm(question, context, model_config_yaml)
-                    query = question + "\n" + draft
-                    #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
-                    logger.info("Generated draft")
-                else:
-                    draft = ""
-                    context_str = "\n".join(["\n".join(t) for t in context])
-                    query = context_str + "\n" + question
+                mydocs_list = []
+                for base_name in base_name:
+                    base = self.bases[base_name]
+                    if self.opt["HyDE"] or "HyDE" in engine_tags:
+                        draft = self.llm(question, context, model_config_yaml)
+                        query = question + "\n" + draft
+                        #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
+                        logger.info("Generated draft")
+                    else:
+                        draft = ""
+                        context_str = "\n".join(["\n".join(t) for t in context])
+                        query = context_str + "\n" + question
 
-                mydocs = base["vstore"].similarity_search_with_score(
-                    query, k=self.opt["ask_topk"]
-                )
+                    mydocs = base["vstore"].similarity_search_with_score(
+                        query, k=self.opt["ask_topk"]
+                    )
+                    mydocs_list.extend(mydocs)
+
+                mydocs = sorted(mydocs_list, key=lambda x: x[1])
 
                 local_text = mydocs[0][0].page_content
                 if self.opt["answer_depth"] < 2 and (not "ReadTop3" in engine_tags) and (not "ReadTop5" in engine_tags):  # simple answer
