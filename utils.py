@@ -282,6 +282,9 @@ def cutoff_context(context, mygpt):
         # remove etag
         for etag in mygpt.all_etags["name"]:
             q = q.replace(f"#{etag}", "")
+        # remove frontslot
+        a = re.sub(r"<frontslot>.*?</frontslot>", "", a)
+
         qa_len = len(tiktoken_encoder.encode(q + a))
         if qa_len + context_len < mygpt.opt["max_context"]:
             context_len += qa_len
