@@ -42,11 +42,14 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
         save_page(chat_id, context, dir="review")
     else:
         dir_name = "temp"
-        truncated_context = cutoff_context(context, mygpt) # 截断并移除了local link和etag,TODO是否移除前插槽
-
-
+        truncated_context = cutoff_context(context, mygpt) # 截断并移除了local link和etag
         # 进入模型
-        question, answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
+        try:
+            question, answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
+        except Exception as e:
+            answer = f"发生了一些错误：<rearslot>{e}</rearslot>"
+            mydocs = []
+
         links = create_links(mydocs, frontend, dir_name, mygpt)
 
         if frontend == "gradio":

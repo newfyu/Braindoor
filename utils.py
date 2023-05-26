@@ -284,6 +284,8 @@ def cutoff_context(context, mygpt):
             q = q.replace(f"#{etag}", "")
         # remove frontslot
         a = re.sub(r"<frontslot>.*?</frontslot>", "", a)
+        # remove rearslot
+        a = re.sub(r"<rearslot>.*?</rearslot>", "", a)
 
         qa_len = len(tiktoken_encoder.encode(q + a))
         if qa_len + context_len < mygpt.opt["max_context"]:
@@ -357,5 +359,4 @@ def create_links(mydocs, frontend, dir_name, mygpt):
             i += 1
     links = "".join(links)
     return links
-
 

@@ -1,9 +1,9 @@
 from pathlib import Path
-from numpy import mod
 import openai
 import backoff
 import os
-from pandas.core.series import base
+import sys
+import importlib
 
 import yaml
 from yaml.loader import SafeLoader
@@ -22,6 +22,7 @@ USER = os.path.join(os.path.expanduser("~"), "braindoor/")
 config_path = os.path.join(USER, "config.yaml")
 prompt_path = os.path.join(USER, "prompts")
 model_path = os.path.join(USER, "models")
+agent_path = os.path.join(USER, "agents")
 
 
 class Result:
@@ -41,6 +42,7 @@ class MyGPT:
         self.load_base(base_paths)
         self.prompt_etags = self.load_prompt_etags()
         self.model_etags = self.load_model_etags()
+        self.agent_etags = self.load_agent_etags()
         self.abort_msg = False
         self.all_etags = self.load_etag_list()
 
@@ -67,10 +69,17 @@ class MyGPT:
         model_files = list(Path(model_path).glob("*.yaml"))
         model_etags = []
         for model_file in model_files:
-            with open(model_file, "r", encoding="utf-8") as file:
-                data = yaml.load(file, Loader=yaml.FullLoader)
-                model_etags.append(Path(model_file).stem)
+            #  with open(model_file, "r", encoding="utf-8") as file:
+                #  data = yaml.load(file, Loader=yaml.FullLoader)
+            model_etags.append(Path(model_file).stem)
         return model_etags
+
+    def load_agent_etags(self):
+        agent_files = list(Path(agent_path).rglob("agent.py"))
+        agent_etags = []
+        for agent_file in agent_files:
+            agent_etags.append(Path(agent_file).parts[-2])
+        return agent_etags
 
     def load_etag_list(self):
         etags = []
@@ -82,6 +91,8 @@ class MyGPT:
             etags.append([tag_name, "base", "/abbr"])
         for tag_name in self.model_etags:
             etags.append([tag_name, "model", "/abbr"])
+        for tag_name in self.agent_etags:
+            etags.append([tag_name, "agent", "/abbr"])
 
         # 此处添加engine etag
         etags.append(["HyDE", "engine", "/abbr"])
@@ -172,7 +183,7 @@ class MyGPT:
             openai.error.APIConnectionError,
         ),
     )
-    def llm(self, input, context=[], model_config_yaml=None):
+    def llm(self, input, context=[], model_config_yaml=None, format_fn=None):
         self.abort_msg = False
 
         if model_config_yaml is None:
@@ -207,7 +218,11 @@ class MyGPT:
                 if not self.abort_msg:
                     if hasattr(resp["choices"][0].delta, "content"):
                         report.append(resp["choices"][0].delta.content)
-                        mygpt.temp_result = "".join(report).strip()
+                        out = "".join(report).strip()
+                        if format_fn is not None:
+                            mygpt.temp_result = format_fn(out)
+                        else:
+                            mygpt.temp_result = out
                 else:
                     mygpt.temp_result += "...abort!"
                     self.abort_msg = False
@@ -276,64 +291,73 @@ class MyGPT:
             engine_tags,
             agent_tags,
         ) = self.preprocess_question(question)
-
-        if not "Memo" in engine_tags:
-            if base_name != "default":
-                mydocs_list = []
-                for base_name in base_name:
-                    base = self.bases[base_name]
-                    if self.opt["HyDE"] or "HyDE" in engine_tags:
-                        draft = self.llm(question, context, model_config_yaml)
-                        query = question + "\n" + draft
-                        #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
-                        logger.info("Generated draft")
-                    else:
-                        draft = ""
-                        context_str = "\n".join(["\n".join(t) for t in context])
-                        query = context_str + "\n" + question
-
-                    mydocs = base["vstore"].similarity_search_with_score(
-                        query, k=self.opt["ask_topk"]
-                    )
-                    mydocs_list.extend(mydocs)
-
-                mydocs = sorted(mydocs_list, key=lambda x: x[1])
-
-                local_text = mydocs[0][0].page_content
-                if self.opt["answer_depth"] < 2 and (not "ReadTop3" in engine_tags) and (not "ReadTop5" in engine_tags):  # simple answer
-                    ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
-local text:```{local_text}```
-user question:```{question}```"""
-                    answer = self.llm(ask_prompt, context, model_config_yaml)
-                    mygpt.temp_result = ""
-
-                else:  # deep reading
-                    if "ReadTop3" in engine_tags:
-                        answer_depth = 3
-                    elif "ReadTop5" in engine_tags:
-                        answer_depth = 5
-                    else:
-                        answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
-                    chunks = [
-                        i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]
-                    ]
-                    answer = self.review(question, chunks)
-                    mygpt.temp_result = ""
-
-            else:  # default answer
-                draft = self.llm(question, context, model_config_yaml)
-                answer = draft
-                mydocs = []
-                mygpt.temp_result = ""
-
-            logger.info("Received answer")
-            #  logger.info("[answer]: " + answer + "\n" + "-" * 60)
-        else:
-            draft = ""
-            answer = ""
-            mydocs = []
+        
+        # 备忘录
+        if "Memo" in engine_tags:
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             question_out = f"{now_time} 备忘录\n\n{question}"
+            return question_out, "",[],""
+
+        # run agent 
+        if len(agent_tags) > 0:
+            sys.path.append(agent_path)
+            #  exec(f"from {agent_tags[-1]} import agent as agent")
+            agent = importlib.import_module(f"{agent_tags[-1]}.agent")
+            importlib.reload(agent)
+            _agent = agent.Agent()
+            mygpt.temp_result = ""
+            logger.info("Received answer")
+            return _agent.run(question_out, context, self, model_config_yaml)
+
+        # default base
+        if base_name == "default":
+            draft = self.llm(question, context, model_config_yaml)
+            mygpt.temp_result = ""
+            logger.info("Received answer")
+            return question_out, draft, [], draft
+
+        mydocs_list = []
+        for base_name in base_name:
+            base = self.bases[base_name]
+            if self.opt["HyDE"] or "HyDE" in engine_tags:
+                draft = self.llm(question, context, model_config_yaml)
+                query = question + "\n" + draft
+                #  logger.info("[draft]: " + draft + "\n" + "-" * 60)
+                logger.info("Generated draft")
+            else:
+                draft = ""
+                context_str = "\n".join(["\n".join(t) for t in context])
+                query = context_str + "\n" + question
+
+            mydocs = base["vstore"].similarity_search_with_score(
+                query, k=self.opt["ask_topk"]
+            )
+            mydocs_list.extend(mydocs)
+
+        mydocs = sorted(mydocs_list, key=lambda x: x[1])
+
+        local_text = mydocs[0][0].page_content
+        if self.opt["answer_depth"] < 2 and (not "ReadTop3" in engine_tags) and (not "ReadTop5" in engine_tags):  # simple answer
+            ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
+local text:```{local_text}```
+user question:```{question}```"""
+            answer = self.llm(ask_prompt, context, model_config_yaml)
+            mygpt.temp_result = ""
+
+        else:  # deep reading
+            if "ReadTop3" in engine_tags:
+                answer_depth = 3
+            elif "ReadTop5" in engine_tags:
+                answer_depth = 5
+            else:
+                answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
+            chunks = [
+                i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]
+            ]
+            answer = self.review(question, chunks)
+            mygpt.temp_result = ""
+
+        logger.info("Received answer")
         return question_out, answer, mydocs, draft
 
     # prompt 1
