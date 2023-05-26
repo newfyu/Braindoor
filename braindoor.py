@@ -2,21 +2,23 @@ import argparse
 
 import os
 import shutil
+from utils import update_folder
 
+
+# copy default files to user folder
 ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 if not os.path.exists(USER):
     os.makedirs(USER)
 if not os.path.exists(os.path.join(USER, "config.yaml")):
     shutil.copy2(os.path.join(ROOT, "config.yaml"), os.path.join(USER, "config.yaml"))
-if not os.path.exists(os.path.join(USER, "prompts")):
-    shutil.copytree(os.path.join(ROOT, "prompts"), os.path.join(USER, "prompts"))
-if not os.path.exists(os.path.join(USER, "models")):
-    shutil.copytree(os.path.join(ROOT, "models"), os.path.join(USER, "models"))
+update_folder(os.path.join(ROOT, "prompts"), os.path.join(USER, "prompts"))
+update_folder(os.path.join(ROOT, "models"), os.path.join(USER, "models"))
+update_folder(os.path.join(ROOT, "agents"), os.path.join(USER, "agents"))
 
 import gradio as gr
 
-from ui import search, ask, config, review
+from ui import search, ask, config
 from mygpt import mygpt
 
 parser = argparse.ArgumentParser()

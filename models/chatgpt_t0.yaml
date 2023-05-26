@@ -1,0 +1,5 @@
+model: chatgpt
+params:
+    max_tokens: 2000
+    temperature: 0.
+system_message: ""

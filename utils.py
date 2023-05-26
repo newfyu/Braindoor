@@ -22,6 +22,25 @@ temp_path = os.path.join(ROOT, "temp/")
 HISTORY = os.path.join(USER, "history/")
 TEMP = os.path.join(ROOT, "temp")
 
+
+# 把根目录下的默认配置文件复制到用户目录下
+def update_folder(src_dir, dst_dir):
+    filelist = Path(src_dir).rglob('*.*')
+    for file in filelist:
+        if file.name == '.DS_Store' or '.ipynb_checkpoints' in str(file) or '__pycache__' in str(file):
+            continue
+        
+        src_file = file
+        dst_file = str(src_file).replace(src_dir, dst_dir)
+        dst_file = Path(dst_file)
+        os.makedirs(str(dst_file.parent), exist_ok=True)
+        try:
+            if not os.path.exists(dst_file):
+                shutil.copy2(src_file, dst_file)
+        except:
+            pass
+
+
 def get_logger(log_path=log_path):
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
@@ -358,5 +377,6 @@ def create_links(mydocs, frontend, dir_name, mygpt):
                     )
             i += 1
     links = "".join(links)
+    #  links = f"<rearslot>{links}</rearslot>"
     return links
 

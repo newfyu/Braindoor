@@ -70,7 +70,7 @@ class MyGPT:
         model_etags = []
         for model_file in model_files:
             #  with open(model_file, "r", encoding="utf-8") as file:
-                #  data = yaml.load(file, Loader=yaml.FullLoader)
+            #  data = yaml.load(file, Loader=yaml.FullLoader)
             model_etags.append(Path(model_file).stem)
         return model_etags
 
@@ -119,7 +119,7 @@ class MyGPT:
             logger.info("no base exists")
 
     def load_config(self, config_path=config_path):
-        with open(config_path, encoding='utf-8') as f:
+        with open(config_path, encoding="utf-8") as f:
             self.opt = yaml.load(f, Loader=SafeLoader)
         return self.opt
 
@@ -193,7 +193,7 @@ class MyGPT:
                 USER, "models", model_config_yaml + ".yaml"
             )
 
-        with open(model_config_path, encoding='utf-8') as f:
+        with open(model_config_path, encoding="utf-8") as f:
             model_config = yaml.load(f, Loader=SafeLoader)
 
         # chatgpt
@@ -291,23 +291,25 @@ class MyGPT:
             engine_tags,
             agent_tags,
         ) = self.preprocess_question(question)
-        
+
         # 备忘录
         if "Memo" in engine_tags:
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             question_out = f"{now_time} 备忘录\n\n{question}"
-            return question_out, "",[],""
+            return question_out, "", [], ""
 
-        # run agent 
+        # run agent
         if len(agent_tags) > 0:
             sys.path.append(agent_path)
-            #  exec(f"from {agent_tags[-1]} import agent as agent")
             agent = importlib.import_module(f"{agent_tags[-1]}.agent")
             importlib.reload(agent)
             _agent = agent.Agent()
             mygpt.temp_result = ""
             logger.info("Received answer")
-            return _agent.run(question_out, context, self, model_config_yaml)
+            question, answer, mydocs, draft = _agent.run(
+                question, context, self, model_config_yaml
+            )
+            return question_out, answer, mydocs, draft
 
         # default base
         if base_name == "default":
@@ -337,7 +339,11 @@ class MyGPT:
         mydocs = sorted(mydocs_list, key=lambda x: x[1])
 
         local_text = mydocs[0][0].page_content
-        if self.opt["answer_depth"] < 2 and (not "ReadTop3" in engine_tags) and (not "ReadTop5" in engine_tags):  # simple answer
+        if (
+            self.opt["answer_depth"] < 2
+            and (not "ReadTop3" in engine_tags)
+            and (not "ReadTop5" in engine_tags)
+        ):  # simple answer
             ask_prompt = f"""You can refer to given local text and your own knowledge to answer users' questions. If local text does not provide relevant information, feel free to generate a answer for question based on general knowledge and context:
 local text:```{local_text}```
 user question:```{question}```"""
@@ -351,9 +357,7 @@ user question:```{question}```"""
                 answer_depth = 5
             else:
                 answer_depth = min(self.opt["answer_depth"], self.opt["ask_topk"])
-            chunks = [
-                i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]
-            ]
+            chunks = [i[0].page_content for i in mydocs[0 : int(answer_depth)][::-1]]
             answer = self.review(question, chunks)
             mygpt.temp_result = ""
 
@@ -387,7 +391,13 @@ user question:```{question}```"""
     # prompt 2
     def review(self, question, chunks):
         # 预处理
-        question, model_config_yaml, _, _, _, = self.preprocess_question(question)
+        (
+            question,
+            model_config_yaml,
+            _,
+            _,
+            _,
+        ) = self.preprocess_question(question)
         if model_config_yaml is None:
             model_config_yaml = "chatgpt_review"
 
