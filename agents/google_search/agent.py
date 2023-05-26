@@ -71,7 +71,7 @@ Output all result in JSON format with the following keys: :
                 _title = s['title']
                 if len(_title)>20:
                     _title = _title[:20]
-            links.append(f'<a href="{_link} title="{_link}">{[i]} {_title}...</a><br>')
+            links.append(f'<a href="{_link}">{[i+1]} {_title}...</a><br>')
         
         links = "".join(links)
         
