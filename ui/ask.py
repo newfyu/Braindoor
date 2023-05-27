@@ -26,8 +26,12 @@ opt = mygpt.opt
 def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[], review_mode=False, start_index=99999):
 
     # 问题插入的位置,默认是最后，但也可以从中间编辑
-    history = history[:int(start_index)]
-    context = context[:int(start_index)]
+    if start_index < len(history):
+        history = history[:int(start_index)]
+        context = context[:int(start_index)]
+        if opt['save_edit']:
+            chat_id = uuid.uuid1()
+
     
     # 如果question的长度超过限制，自动使用review模式
     if len(question) > mygpt.opt['localtext_cutoff']: 
@@ -139,13 +143,13 @@ def go_page(current_page, offset, pages):
 def get_stream_answer(question, history, start_index=9999):
     if mygpt.temp_result:
         answer = mygpt.temp_result
-        print(answer)
         _history = history.copy()
         _history = _history[:int(start_index)]
         _history.append((question, answer))
         return _history
     else:
         _history = history.copy()
+        _history = _history[:int(start_index)]
         _history.append((question, "..."))
         return _history
 

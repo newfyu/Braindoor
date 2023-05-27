@@ -1,8 +1,7 @@
 import argparse
 
 import os
-import shutil
-from utils import update_folder
+from utils import update_etag, update_config
 
 
 # copy default files to user folder
@@ -10,11 +9,10 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 if not os.path.exists(USER):
     os.makedirs(USER)
-if not os.path.exists(os.path.join(USER, "config.yaml")):
-    shutil.copy2(os.path.join(ROOT, "config.yaml"), os.path.join(USER, "config.yaml"))
-update_folder(os.path.join(ROOT, "prompts"), os.path.join(USER, "prompts"))
-update_folder(os.path.join(ROOT, "models"), os.path.join(USER, "models"))
-update_folder(os.path.join(ROOT, "agents"), os.path.join(USER, "agents"))
+update_config(ROOT,USER)
+update_etag(os.path.join(ROOT, "prompts"), os.path.join(USER, "prompts"))
+update_etag(os.path.join(ROOT, "models"), os.path.join(USER, "models"))
+update_etag(os.path.join(ROOT, "agents"), os.path.join(USER, "agents"))
 
 import gradio as gr
 

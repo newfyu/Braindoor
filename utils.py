@@ -1,4 +1,5 @@
 import logging
+import yaml
 import os
 from pathlib import Path
 import re
@@ -23,22 +24,6 @@ HISTORY = os.path.join(USER, "history/")
 TEMP = os.path.join(ROOT, "temp")
 
 
-# 把根目录下的默认配置文件复制到用户目录下
-def update_folder(src_dir, dst_dir):
-    filelist = Path(src_dir).rglob('*.*')
-    for file in filelist:
-        if file.name == '.DS_Store' or '.ipynb_checkpoints' in str(file) or '__pycache__' in str(file):
-            continue
-        
-        src_file = file
-        dst_file = str(src_file).replace(src_dir, dst_dir)
-        dst_file = Path(dst_file)
-        os.makedirs(str(dst_file.parent), exist_ok=True)
-        try:
-            if not os.path.exists(dst_file):
-                shutil.copy2(src_file, dst_file)
-        except:
-            pass
 
 
 def get_logger(log_path=log_path):
@@ -376,7 +361,52 @@ def create_links(mydocs, frontend, dir_name, mygpt):
                         f"[[{i}]]({url}) ",
                     )
             i += 1
-    links = "".join(links)
-    #  links = f"<rearslot>{links}</rearslot>"
+    if len(links) > 0:
+        links = "".join(links)
+        links = f"<rearslot>{links}</rearslot>"
+    else:
+        links = ""
     return links
 
+# 更新新版本的配置文件
+def update_config(dir_a, dir_b, filename='config.yaml'):
+    path_a = os.path.join(dir_a, filename)
+    path_b = os.path.join(dir_b, filename)
+    
+    if not os.path.exists(path_a):
+        print(f"{path_a} does not exist.")
+        return
+
+    if not os.path.exists(path_b):
+        shutil.copy(path_a, path_b)
+    else:
+        with open(path_a, 'r') as f:
+            config_a = yaml.safe_load(f)
+        with open(path_b, 'r') as f:
+            config_b = yaml.safe_load(f)
+
+        # 如果b中存在和a相同的字段，保持不变
+        # 如果a中存在b中不存在的字段，那么给b添加该字段和值
+        for key, value in config_a.items():
+            if key not in config_b:
+                config_b[key] = value
+
+        with open(path_b, 'w') as f:
+            yaml.safe_dump(config_b, f)
+
+# 把根目录下的默认etag文件复制到用户目录下
+def update_etag(src_dir, dst_dir):
+    filelist = Path(src_dir).rglob('*.*')
+    for file in filelist:
+        if file.name == '.DS_Store' or '.ipynb_checkpoints' in str(file) or '__pycache__' in str(file):
+            continue
+        
+        src_file = file
+        dst_file = str(src_file).replace(src_dir, dst_dir)
+        dst_file = Path(dst_file)
+        os.makedirs(str(dst_file.parent), exist_ok=True)
+        try:
+            if not os.path.exists(dst_file):
+                shutil.copy2(src_file, dst_file)
+        except:
+            pass
