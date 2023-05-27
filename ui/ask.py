@@ -23,7 +23,11 @@ opt = mygpt.opt
 
 
 @with_proxy(opt["proxy"])
-def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[], review_mode=False):
+def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[], review_mode=False, start_index=99999):
+
+    # 问题插入的位置,默认是最后，但也可以从中间编辑
+    history = history[:int(start_index)]
+    context = context[:int(start_index)]
     
     # 如果question的长度超过限制，自动使用review模式
     if len(question) > mygpt.opt['localtext_cutoff']: 
@@ -132,10 +136,12 @@ def go_page(current_page, offset, pages):
     )
 
 
-def get_stream_answer(question, history):
+def get_stream_answer(question, history, start_index=9999):
     if mygpt.temp_result:
         answer = mygpt.temp_result
+        print(answer)
         _history = history.copy()
+        _history = _history[:int(start_index)]
         _history.append((question, answer))
         return _history
     else:
@@ -211,6 +217,7 @@ with gr.Blocks(title="ask") as ask_interface:
     state_history = gr.State([])  # history储存chatbot的结果，显示的时候经过了html转换
     state_context = gr.State([])  # context存储未格式化的上下文
     etag_list = gr.DataFrame(value=[], visible=False)
+    start_index = gr.Number(value=99999,visible=False)
 
     # create new chat id
     chat_id = str(uuid.uuid1())
@@ -282,7 +289,8 @@ with gr.Blocks(title="ask") as ask_interface:
             state_chat_id,
             frontend,
             state_chunks,
-            state_review_mode
+            state_review_mode,
+            start_index,
         ],
         outputs=[
             chatbot,
@@ -301,7 +309,7 @@ with gr.Blocks(title="ask") as ask_interface:
 
     stream_answer = chat_inp.submit(
         fn=get_stream_answer,
-        inputs=[chat_inp, state_history],
+        inputs=[chat_inp, state_history, start_index],
         outputs=[chatbot],
         every=0.1,
         api_name="get_ask_stream_answer",

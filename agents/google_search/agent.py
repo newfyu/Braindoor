@@ -35,24 +35,24 @@ Provide the output in JSON format with the following keys: "q"
         # 分析搜索结果，回答用户问题
         
         prompt_link = f"""
-first analysis what language is used in the user question delimited with triple backticks. Then use the same language or the language requested by the user question to answer the following two questions
+first analysis what language is used in the user question delimited with triple backticks. Then use the same language or the language requested by the user question to answer the following three questions
 Output all result in JSON format
 
 search results:```{search_result_text}```
 user question: ```{question}```
 
-1. Read the search results, answer the user question as detailed as possible. json key: 'answer'
-2. Which search results were used to answer user questions, represented by corresponding positions. json key: 'position'
-2. If you are unable to answer the question based on the search results, output the new keyword you suggest. json key: 'new key'
+1. Read the search results, answer the user question as detailed as possible. json key: 'answer'; value type: string
+2. Which search results were used to answer user questions, represented by corresponding positions. json key: 'position', value type:int
+2. If you are unable to answer the question based on the search results, output the new keyword you suggest. json key: 'newkey'
 
-Output all result in JSON format with the following keys: :
+Output all result in JSON format with the following keys: 
 "answer","position", "newkey"
 """     
         
         out = mygpt.llm(prompt_link, model_config_yaml = "chatgpt_t0", format_fn=lambda x:f"正在生成答案：{x}")
 
         # 后处理
-        out_obj = eval(re.findall(r'\{[\s\S]*?\}', out)[0])
+        out_obj = eval(re.findall(r'\{[\s\S]*\}', out)[0])
         position = out_obj['position']
         answer = out_obj['answer']
         search_result = eval(search_result)
@@ -69,8 +69,8 @@ Output all result in JSON format with the following keys: :
                 _link= s['link']
             if 'title' in s.keys():
                 _title = s['title']
-                if len(_title)>20:
-                    _title = _title[:20]
+                #  if len(_title)>20:
+                    #  _title = _title[:20]
             links.append(f'<a href="{_link}">{[i+1]} {_title}...</a><br>')
         
         links = "".join(links)
