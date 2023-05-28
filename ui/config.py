@@ -189,7 +189,7 @@ def run_create_base(base_name, path, types, chunk_size, chunk_overlap, max_chunk
         base_list = sorted((mygpt.bases.keys()))
         base_list_ask = base_list.copy()
         base_list_ask.insert(0, "default")
-        info = f"Succeed!"
+        info = f"创建成功!"
         return (
             info,
             gr.update(choices=base_list),
