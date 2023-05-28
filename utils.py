@@ -182,7 +182,7 @@ def read_text_file(file_path):
     return text
 
 def get_last_log():
-    with open(log_path, "rb", encoding='utf-8') as f:
+    with open(log_path, "rb") as f:
         f.seek(-2, os.SEEK_END)
         while f.read(1) != b"\n":
             f.seek(-2, os.SEEK_CUR)

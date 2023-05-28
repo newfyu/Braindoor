@@ -1,5 +1,4 @@
 import gradio as gr
-from pandas.core.arrays.categorical import contains
 from mygpt import mygpt
 import os
 import yaml
@@ -15,8 +14,9 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"), "braindoor/")
 config_path = os.path.join(USER, "config.yaml")
 
+
 def load_config():
-    with open(config_path, encoding='utf-8') as f:
+    with open(config_path, encoding="utf-8") as f:
         opt = yaml.safe_load(f)
     openai.api_key = opt["key"]
     return opt
@@ -30,33 +30,54 @@ def reload():
         opt["search_topk"],
         opt["HyDE"],
         opt["answer_depth"],
-        opt['proxy']
+        opt["proxy"],
+        opt["input_limit"],
+        opt["max_context"],
+        opt["save_edit"],
     )
     mygpt.load_config()
     return output
 
 
-def update_config(key, rate_limit, search_topk, hyde, answer_depth, proxy):
+def update_config(
+    key,
+    rate_limit,
+    search_topk,
+    hyde,
+    answer_depth,
+    proxy,
+    input_limit,
+    max_context,
+    save_edit,
+):
     opt["key"] = key
     opt["rate_limit"] = rate_limit
     opt["search_topk"] = search_topk
     opt["HyDE"] = hyde
     opt["answer_depth"] = answer_depth
-    opt['proxy'] = proxy
-    with open(config_path, "w", encoding='utf-8') as f:
+    opt["proxy"] = proxy
+    opt["input_limit"] = input_limit
+    opt["max_context"] = max_context
+    opt["save_edit"] = save_edit
+    with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(opt, f)
     mygpt.__init__()
     return "Save successfully!"
 
+
 # for brainshell
-def save_config_from_brainshell(key, proxy):
+def save_config_from_brainshell(key, proxy, input_limit, max_context, save_edit):
     opt["key"] = key
-    opt['proxy'] = proxy
-    with open(config_path, "w", encoding='utf-8') as f:
+    opt["proxy"] = proxy
+    opt["input_limit"] = input_limit
+    opt["max_context"] = max_context
+    opt["save_edit"] = save_edit
+    with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(opt, f)
     mygpt.__init__()
-    logger.info('Save config from brainshell')
+    logger.info("Save config from brainshell")
     return "Save config from brainshell successfully!"
+
 
 def get_base_info(base_name):
     base = mygpt.bases[base_name]
@@ -159,6 +180,9 @@ def run_create_base(base_name, path, types, chunk_size, chunk_overlap, max_chunk
     try:
         types = "|".join(types)
         path = {path: types}
+        chunk_size = int(chunk_size)
+        chunk_overlap = int(chunk_overlap)
+        max_chunk_num = int(max_chunk_num)
         create_base(base_name, path, chunk_size, chunk_overlap, max_chunk_num)
         update_base(base_name)
         mygpt.__init__()
@@ -171,7 +195,7 @@ def run_create_base(base_name, path, types, chunk_size, chunk_overlap, max_chunk
             gr.update(choices=base_list),
             gr.update(choices=base_list),
             gr.update(choices=base_list_ask),
-            gr.update(visible=True)
+            gr.update(visible=True),
         )
     except Exception as e:
         info = f"Failed to create {base_name}! Error:{e}"
@@ -190,24 +214,45 @@ with gr.Blocks(title="ask") as config_interface:
                 value=opt["search_topk"], label="Search topk", precision=0
             )
         with gr.Row().style(equal_height=True):
-            box_proxy = gr.Textbox(opt['proxy'], label='Proxy')
-            box_answer_depth = gr.Number(opt['answer_depth'], label="Answer depth")
-            #  box_hyde = gr.Checkbox(False, label="HyDE")
+            box_proxy = gr.Textbox(opt["proxy"], label="Proxy")
+            box_answer_depth = gr.Number(opt["answer_depth"], label="Answer depth")
+        with gr.Row().style(equal_height=True):
+            box_input_limit = gr.Number(
+                opt["input_limit"], label="input limit", precision=0
+            )
+            box_max_context = gr.Number(
+                opt["max_context"], label="max_context limit", precision=0
+            )
+            box_save_edit = gr.Checkbox(opt["save_edit"], label="save edit")
         with gr.Row():
             btn_load = gr.Button("Reload config", variant="primary")
             btn_save = gr.Button("Save config", variant="primary")
-            btn_save_from_brainshell = gr.Button("Save config from brainshell", visible=False)
-    general_configs = [cmpt_key, box_rate_limit, box_topk, ask.box_hyde, box_answer_depth, box_proxy]
+            btn_save_from_brainshell = gr.Button(
+                "Save config from brainshell", visible=False
+            )
+    general_configs = [
+        cmpt_key,
+        box_rate_limit,
+        box_topk,
+        ask.box_hyde,
+        box_answer_depth,
+        box_proxy,
+        box_input_limit,
+        box_max_context,
+        box_save_edit,
+    ]
 
     with gr.Accordion("Update existing knowledge base", open=False, elem_id="acc"):
         with gr.Row().style(equal_height=True):
-            if len(base_list)>0:
-                box_base_name = gr.Dropdown(base_list,label="Select a knowledge base")
+            if len(base_list) > 0:
+                box_base_name = gr.Dropdown(base_list, label="Select a knowledge base")
                 btn_load_base = gr.Button("Load", elem_id="low_btn1", variant="primary")
                 btn_load_base.style(full_width=False)
             else:
-                box_base_name = gr.Dropdown(base_list,label="Select a knowledge base")
-                btn_load_base = gr.Button("Load", elem_id="low_btn1", variant="primary",visible=False)
+                box_base_name = gr.Dropdown(base_list, label="Select a knowledge base")
+                btn_load_base = gr.Button(
+                    "Load", elem_id="low_btn1", variant="primary", visible=False
+                )
                 btn_load_base.style(full_width=False)
 
         with gr.Row():
@@ -232,8 +277,10 @@ with gr.Blocks(title="ask") as config_interface:
             btn_add_dir = gr.Button("Add directory", visible=False)
             btn_add_dir.style(full_width=False)
         with gr.Row():
-            btn_save_base_config = gr.Button("Save base config", visible=False, variant='primary')
-            btn_update_base = gr.Button("Update", visible=False,variant='primary')
+            btn_save_base_config = gr.Button(
+                "Save base config", visible=False, variant="primary"
+            )
+            btn_update_base = gr.Button("Update", visible=False, variant="primary")
     with gr.Accordion("Create a new knowledge base", open=False):
         with gr.Row():
             box_base_name_new = gr.Textbox(
@@ -270,9 +317,9 @@ with gr.Blocks(title="ask") as config_interface:
     # save general_configs from brainshell
     btn_save_from_brainshell.click(
         fn=save_config_from_brainshell,
-        inputs=[cmpt_key, box_proxy],
+        inputs=[cmpt_key, box_proxy, box_input_limit, box_max_context, box_save_edit],
         outputs=box_info,
-        api_name='save_config_from_brainshell'
+        api_name="save_config_from_brainshell",
     )
 
     # load general_configs
@@ -295,21 +342,6 @@ with gr.Blocks(title="ask") as config_interface:
         ],
     )
 
-    #  box_base_name.change(
-        #  fn=get_base_info,
-        #  inputs=box_base_name,
-        #  outputs=[
-            #  box_chunk_size,
-            #  box_chunk_overlap,
-            #  box_max_chunk_num,
-            #  menu_dir,
-            #  state_dir_list,
-            #  btn_remove_dir,
-            #  btn_add_dir,
-            #  btn_update_base,
-            #  btn_save_base_config,
-        #  ],
-    #  )
 
     btn_remove_dir.click(
         fn=remove_dir,
@@ -353,8 +385,11 @@ with gr.Blocks(title="ask") as config_interface:
             box_base_name,
             search.radio_base_name,
             ask.radio_base_name_ask,
-            btn_load_base
+            btn_load_base,
         ],
+        api_name="create_base",
     )
-    show_log_create = btn_create_base.click(fn=get_last_log, outputs=box_log, every=1)
+    show_log_create = btn_create_base.click(
+        fn=get_last_log, outputs=box_log, every=1, api_name="get_log"
+    )
     box_info.change(fn=lambda: "", outputs=box_log, cancels=[show_log_create, show_log])

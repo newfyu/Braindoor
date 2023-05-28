@@ -2,10 +2,12 @@ import requests
 import json
 import re
 
+SERPER_API_KEY = "7f69a023e4f07552f4f4179c0fd1061a1f812908"
 
 class Agent:
     def __init__(self):
-        pass
+        self.name = "google_search"
+        self.description = "轻量级google搜索插件，调用google搜索引擎，回答用户问题。仅读取搜索的摘要，不深入获取网页内容"
         
     def run(self, question, context, mygpt, model_config_yaml, **kwarg):
         
@@ -25,7 +27,7 @@ Provide the output in JSON format with the following keys: "q"
         url = "https://google.serper.dev/search"
         payload = json.dumps(search_obj)
         headers = {
-          'X-API-KEY': '7f69a023e4f07552f4f4179c0fd1061a1f812908',
+          'X-API-KEY': SERPER_API_KEY,
           'Content-Type': 'application/json'
         }
         search_result = requests.request("POST", url, headers=headers, data=payload).text
@@ -33,7 +35,6 @@ Provide the output in JSON format with the following keys: "q"
         search_result_text = [{k:v for k,v in dic.items() if (k != 'link') and (k != 'sitelinks')} for dic in search_result_dict]
         
         # 分析搜索结果，回答用户问题
-        
         prompt_link = f"""
 first analysis what language is used in the user question delimited with triple backticks. Then use the same language or the language requested by the user question to answer the following three questions
 Output all result in JSON format
@@ -51,7 +52,7 @@ Output all result in JSON format with the following keys:
         
         out = mygpt.llm(prompt_link, model_config_yaml = "chatgpt_t0", format_fn=lambda x:f"正在生成答案：{x}")
 
-        # 后处理
+        # 后处理,格式化输出
         out_obj = eval(re.findall(r'\{[\s\S]*\}', out)[0])
         position = out_obj['position']
         answer = out_obj['answer']
