@@ -294,8 +294,8 @@ class MyGPT:
         # 备忘录
         if "Memo" in engine_tags:
             now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            question_out = f"{now_time} 备忘录\n\n{question}"
-            return question_out, "", [], ""
+            answer = f"{question}\n\n{now_time} 备忘录"
+            return question_out, answer, [], ""
 
         # run agent
         if len(agent_tags) > 0:
