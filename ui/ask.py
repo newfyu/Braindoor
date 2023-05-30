@@ -14,14 +14,10 @@ from utils import (
     tiktoken_encoder
 )
 from mygpt import mygpt
-import os
 import uuid
 from pathlib import Path
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 opt = mygpt.opt
-
 
 @with_proxy(opt["proxy"])
 def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[], review_mode=False, start_index=99999):

@@ -10,7 +10,6 @@ from update_base import update_base
 from ui import search, ask
 
 opt = mygpt.opt
-ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"), "braindoor/")
 config_path = os.path.join(USER, "config.yaml")
 
@@ -158,7 +157,7 @@ def save_base_config(base_name, chunk_size, chunk_overlap, max_chunk_num, dir_li
     base["metadata"] = metadata
     if not ".base" in base_name:
         base_name = base_name + ".base"
-    base_path = os.path.join(ROOT, "bases", base_name)
+    base_path = os.path.join(USER, "bases", base_name)
     with open(base_path, "wb") as f:
         pickle.dump(base, f)
     info = f"Save {base_name} config successfully! {metadata}"
@@ -352,12 +351,12 @@ with gr.Blocks(title="ask") as config_interface:
     btn_remove_dir.click(
         fn=remove_dir,
         inputs=[state_dir_list, menu_dir],
-        outputs=[state_dir_list, menu_dir, box_info, btn_save_base_config],
+        outputs=[state_dir_list, menu_dir, box_info, btn_save_base_config], api_name="remove_dir"
     )
     btn_add_dir.click(
         fn=add_dir,
         inputs=[state_dir_list, box_add_dir_path, box_types],
-        outputs=[state_dir_list, menu_dir, box_info, btn_save_base_config],
+        outputs=[state_dir_list, menu_dir, box_info, btn_save_base_config], api_name="add_dir" 
     )
     btn_save_base_config.click(
         fn=save_base_config,
@@ -368,7 +367,7 @@ with gr.Blocks(title="ask") as config_interface:
             box_max_chunk_num,
             state_dir_list,
         ],
-        outputs=[box_info, btn_save_base_config],
+        outputs=[box_info, btn_save_base_config], api_name="save_base_config"
     )
     # update base
     btn_update_base.click(fn=run_update_base, inputs=box_base_name, outputs=box_info, api_name="update_base")
