@@ -7,11 +7,10 @@ import importlib
 
 import yaml
 from yaml.loader import SafeLoader
-from utils import logger, tiktoken_encoder
+from utils import logger, tiktoken_encoder, TokenSplitter
 
 from update_base import load_base
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from functools import partial
 from create_base import token_len
 import pandas as pd
@@ -50,10 +49,10 @@ class MyGPT:
         if self.opt["key"]:
             self.base_embedding = OpenAIEmbeddings(openai_api_key=self.opt["key"])
 
-        self.fulltext_splitter = RecursiveCharacterTextSplitter(
+        self.fulltext_splitter = TokenSplitter(
             chunk_size=self.opt["review_chunk_size"],
             chunk_overlap=self.opt["review_chunk_overlap"],
-            length_function=partial(token_len, encoder=tiktoken_encoder),
+            len_fn=partial(token_len, encoder=tiktoken_encoder),
         )
 
     def load_prompt_etags(self):

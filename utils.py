@@ -410,3 +410,41 @@ def update_etag(src_dir, dst_dir):
                 shutil.copy2(src_file, dst_file)
         except:
             pass
+
+
+class TokenSplitter():
+    def __init__(self, chunk_size, chunk_overlap, len_fn):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.len_fn = len_fn
+
+    def split_string(self, string, n):
+        size = len(string) // n
+        pieces = [string[i:i+size] for i in range(0, len(string), size)]
+        if len(pieces) > n:
+            pieces[-2] += pieces[-1]
+            pieces = pieces[:-1]
+        return pieces
+
+    def split_text(self, text):
+        token_len = self.len_fn(text)
+        n_chunk = int(token_len/self.chunk_size) + 1
+        n_piece = n_chunk * 10
+        pieces = self.split_string(text, n_piece)
+        chunks = []
+        _chunk = ""
+        for i,p in enumerate(pieces):
+            if len(tiktoken_encoder.encode(_chunk + p)) > self.chunk_size:
+                chunks.append(_chunk)
+                _chunk = p
+                if self.chunk_overlap>0:
+                    while len(tiktoken_encoder.encode(pieces[i-1] + _chunk)) < self.chunk_overlap:
+                        _chunk = pieces[i-1] + _chunk
+                        i = i-1
+            else:
+                _chunk += p
+        chunks.append(_chunk)
+        return chunks
+
+
+

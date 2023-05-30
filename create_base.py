@@ -11,11 +11,10 @@ import pickle
 
 import pandas as pd
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from functools import partial
 import argparse
-from utils import logger,with_proxy, tiktoken_encoder, read_text_file
+from utils import logger,with_proxy, tiktoken_encoder, read_text_file, TokenSplitter
 
 USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 config_path = os.path.join(USER, "config.yaml")
@@ -59,14 +58,12 @@ def create_new_df_docs(
     df_file_md5, start_len, chunk_size, chunk_overlap, max_chunk_num
 ):
     docs = []
-    #  text_splitter = CharacterTextSplitter.from_tiktoken_encoder(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-
-    text_splitter = RecursiveCharacterTextSplitter(
-        #  separator="\n",
+    text_splitter = TokenSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
-        length_function=partial(token_len, encoder=tiktoken_encoder),
+        len_fn=partial(token_len, encoder=tiktoken_encoder),
     )
+    
 
     for _, file_path, md5 in df_file_md5.itertuples():
         try:

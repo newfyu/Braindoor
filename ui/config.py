@@ -78,6 +78,9 @@ def save_config_from_brainshell(key, proxy, input_limit, max_context, save_edit)
     logger.info("Save config from brainshell")
     return "Save config from brainshell successfully!"
 
+def get_base_list():
+    base_list =sorted((mygpt.bases.keys()))
+    return gr.update(choices=base_list)
 
 def get_base_info(base_name):
     base = mygpt.bases[base_name]
@@ -244,6 +247,7 @@ with gr.Blocks(title="ask") as config_interface:
 
     with gr.Accordion("Update existing knowledge base", open=False, elem_id="acc"):
         with gr.Row().style(equal_height=True):
+            btn_get_base_list = gr.Button("Get base list", visible=False)
             if len(base_list) > 0:
                 box_base_name = gr.Dropdown(base_list, label="Select a knowledge base")
                 btn_load_base = gr.Button("Load", elem_id="low_btn1", variant="primary")
@@ -307,6 +311,8 @@ with gr.Blocks(title="ask") as config_interface:
     box_info = gr.Markdown("")
     box_log = gr.Markdown("")
 
+    btn_get_base_list.click(fn=get_base_list, outputs=box_base_name,api_name="get_base_list")
+
     # save general_configs
     btn_save.click(
         fn=update_config,
@@ -339,7 +345,7 @@ with gr.Blocks(title="ask") as config_interface:
             btn_add_dir,
             btn_update_base,
             btn_save_base_config,
-        ],
+        ],api_name="get_base_info"
     )
 
 
@@ -365,7 +371,7 @@ with gr.Blocks(title="ask") as config_interface:
         outputs=[box_info, btn_save_base_config],
     )
     # update base
-    btn_update_base.click(fn=run_update_base, inputs=box_base_name, outputs=box_info)
+    btn_update_base.click(fn=run_update_base, inputs=box_base_name, outputs=box_info, api_name="update_base")
     show_log = btn_update_base.click(fn=get_last_log, outputs=box_log, every=1)
     box_info.change(fn=lambda: "", outputs=box_log, cancels=[show_log, show_log])
 
