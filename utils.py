@@ -17,13 +17,12 @@ from urllib.parse import quote
 from bs4 import BeautifulSoup
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-USER = os.path.join(os.path.expanduser("~"),'braindoor/')
+USER = os.path.join(os.path.expanduser("~"), "braindoor/")
 log_path = os.path.join(USER, "run.log")
 temp_path = os.path.join(ROOT, "temp/")
 HISTORY = os.path.join(USER, "history/")
 TEMP = os.path.join(ROOT, "temp")
-
-
+HOST = "http://127.0.0.1:7860"
 
 
 def get_logger(log_path=log_path):
@@ -40,7 +39,7 @@ def get_logger(log_path=log_path):
 
 
 logger = get_logger()
-tiktoken_encoder = tiktoken.get_encoding('cl100k_base')
+tiktoken_encoder = tiktoken.get_encoding("cl100k_base")
 
 
 def remove_markdown(text):
@@ -60,7 +59,6 @@ def remove_markdown(text):
 def remove_asklink(html):
     html = re.sub(r'<a[^>]*class="asklink"[^>]*>.*?</a>', "", html)
     return html
-
 
 
 # This tool copies html files to a temporary directory for viewing
@@ -100,6 +98,7 @@ def copy_html(html_path, save_root=temp_path):
     except Exception as e:
         print(f"copy html error: {e}")
 
+
 def with_proxy(proxy_address):
     def wrapper(fn):
         def inner_wrapper(*args, **kwargs):
@@ -111,8 +110,11 @@ def with_proxy(proxy_address):
                 del os.environ["http_proxy"]
                 del os.environ["https_proxy"]
             return result
+
         return inner_wrapper
+
     return wrapper
+
 
 def html_escape(text):
     text = html.escape(text)
@@ -121,12 +123,17 @@ def html_escape(text):
 
 
 def txt2html(text):
-    p = re.compile(r"(```)(.*?)(```)",re.DOTALL)
+    p = re.compile(r"(```)(.*?)(```)", re.DOTALL)
     #  text = p.sub(lambda m: m.group(1) + html.escape(m.group(2)) + m.group(3), text)
     text = p.sub(lambda m: m.group(1) + html_escape(m.group(2)) + m.group(3), text)
     #  text = text.replace(" ", "&nbsp;")
     text = text.replace("\n", "<br>")
-    text = re.sub(r"```(.+?)```", r"<code><div class='codebox'>\1</div></code>", text, flags=re.DOTALL)
+    text = re.sub(
+        r"```(.+?)```",
+        r"<code><div class='codebox'>\1</div></code>",
+        text,
+        flags=re.DOTALL,
+    )
     #  text = re.sub(r"`(.+?)`", r"<code>\1</code>", text, flags=re.DOTALL)
     return text
 
@@ -161,15 +168,16 @@ def read_pdf(filename):
 
 
 def read_html(filename):
-    with open(filename, "r", encoding='utf-8') as f:
+    with open(filename, "r", encoding="utf-8") as f:
         html = f.read()
         text = html2text.HTML2Text().handle(html)
     return text
 
+
 def read_text_file(file_path):
     file_type = (Path(file_path).suffix).lower()
     if file_type in [".md", ".txt"]:
-        with open(file_path, "r", encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             text = f.read()
     elif file_type in [".docx"]:
         text = read_docx(file_path)
@@ -181,6 +189,7 @@ def read_text_file(file_path):
         raise TypeError("Expected a md,txt,docx,pdf or html file")
     return text
 
+
 def get_last_log():
     with open(log_path, "rb") as f:
         f.seek(-2, os.SEEK_END)
@@ -189,6 +198,7 @@ def get_last_log():
         last_line = f.readline().decode()
     return last_line
 
+
 def cutoff_localtext(local_text, max_len=2000):
     code = tiktoken_encoder.encode(local_text)
     if len(code) > max_len:
@@ -196,59 +206,72 @@ def cutoff_localtext(local_text, max_len=2000):
         local_text = tiktoken_encoder.decode(code)
     return local_text
 
-def save_page(chat_id, context, dir='ask'):
-    path = Path(f'{HISTORY}/ask')
+
+def save_page(chat_id, context, dir="ask"):
+    path = Path(f"{HISTORY}/ask")
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(Path(f'{HISTORY}/ask/{chat_id}.json'), 'w', encoding='utf-8') as f:
+    with open(Path(f"{HISTORY}/ask/{chat_id}.json"), "w", encoding="utf-8") as f:
         json.dump(context, f, ensure_ascii=False, indent=4)
-    if dir == 'review':
-        path = Path(f'{HISTORY}/{dir}')
+    if dir == "review":
+        path = Path(f"{HISTORY}/{dir}")
         if not os.path.exists(path):
             os.makedirs(path)
-        with open(Path(f'{HISTORY}/{dir}/{chat_id}.json'), 'w', encoding='utf-8') as f:
+        with open(Path(f"{HISTORY}/{dir}/{chat_id}.json"), "w", encoding="utf-8") as f:
             json.dump(context, f, ensure_ascii=False, indent=4)
 
+
 def save_review_chunk(chat_id, chunks):
-    path = Path(f'{HISTORY}/review')
+    path = Path(f"{HISTORY}/review")
     if not os.path.exists(path):
         os.makedirs(path)
-    with open(Path(f'{HISTORY}/review/{chat_id}.chunk'), 'w', encoding='utf-8') as f:
+    with open(Path(f"{HISTORY}/review/{chat_id}.chunk"), "w", encoding="utf-8") as f:
         json.dump(chunks, f, ensure_ascii=False, indent=4)
 
-def get_history_pages(dir='ask'):
-    history_dir = Path(f'{HISTORY}/{dir}')
+
+def get_history_pages(dir="ask"):
+    history_dir = Path(f"{HISTORY}/{dir}")
     if not os.path.exists(history_dir):
         os.makedirs(history_dir)
-    history_jsons = sorted([f for f in os.listdir(history_dir) if f.endswith(".json")], key=lambda x: os.path.getmtime(os.path.join(history_dir, x)), reverse=True)
+    history_jsons = sorted(
+        [f for f in os.listdir(history_dir) if f.endswith(".json")],
+        key=lambda x: os.path.getmtime(os.path.join(history_dir, x)),
+        reverse=True,
+    )
     return history_jsons
 
-def load_context(chat_id, dir='ask'):
+
+def load_context(chat_id, dir="ask"):
     try:
-        with open(Path(f'{HISTORY}/{dir}/{chat_id}.json'), 'r', encoding='utf-8') as f:
+        with open(Path(f"{HISTORY}/{dir}/{chat_id}.json"), "r", encoding="utf-8") as f:
             context = json.load(f)
     except:
         context = []
     return context
 
+
 def load_review_chunk(chat_id):
     try:
-        with open(Path(f'{HISTORY}/review/{chat_id}.chunk'), 'r', encoding='utf-8') as f:
+        with open(
+            Path(f"{HISTORY}/review/{chat_id}.chunk"), "r", encoding="utf-8"
+        ) as f:
             chunks = json.load(f)
     except:
         chunks = []
     return chunks
 
-def del_page(chat_id, dir='ask'):
-    if os.path.exists(Path(f'{HISTORY}/ask/{chat_id}.json')):
-        os.remove(Path(f'{HISTORY}/ask/{chat_id}.json'))
-    if os.path.exists(Path(f'{HISTORY}/review/{chat_id}.json')):
-        os.remove(Path(f'{HISTORY}/review/{chat_id}.json'))
-    if os.path.exists(Path(f'{HISTORY}/review/{chat_id}.chunk')):
-        os.remove(Path(f'{HISTORY}/review/{chat_id}.chunk'))
+
+def del_page(chat_id, dir="ask"):
+    if os.path.exists(Path(f"{HISTORY}/ask/{chat_id}.json")):
+        os.remove(Path(f"{HISTORY}/ask/{chat_id}.json"))
+    if os.path.exists(Path(f"{HISTORY}/review/{chat_id}.json")):
+        os.remove(Path(f"{HISTORY}/review/{chat_id}.json"))
+    if os.path.exists(Path(f"{HISTORY}/review/{chat_id}.chunk")):
+        os.remove(Path(f"{HISTORY}/review/{chat_id}.chunk"))
         return True
     else:
         return False
+
 
 def parse_codeblock(text):
     lines = text.split("\n")
@@ -257,18 +280,19 @@ def parse_codeblock(text):
             if line != "```":
                 lines[i] = f'<pre><code class="{lines[i][3:]}">'
             else:
-                lines[i] = '</code></pre>'
+                lines[i] = "</code></pre>"
         else:
             if i > 0:
                 lines[i] = "<br/>" + line.replace("<", "&lt;").replace(">", "&gt;")
     return "".join(lines)
 
+
 def format_chat_text(text):
-    if isinstance(text,str):
+    if isinstance(text, str):
         text = parse_codeblock(text)
         #  text = md2html(text)
         return text
-    elif isinstance(text,list):
+    elif isinstance(text, list):
         for i, line in enumerate(text):
             text[i][0] = format_chat_text(line[0])
             text[i][1] = format_chat_text(line[1])
@@ -300,7 +324,6 @@ def cutoff_context(context, mygpt):
     return truncated_context
 
 
-
 def create_links(mydocs, frontend, dir_name, mygpt):
     links = list()
     i = 1
@@ -314,7 +337,7 @@ def create_links(mydocs, frontend, dir_name, mygpt):
             if not os.path.exists(TEMP):
                 os.mkdir(TEMP)
             reference_path = os.path.join(TEMP, f"reference-{i}.txt")
-            with open(reference_path, "w", encoding='utf-8') as f:
+            with open(reference_path, "w", encoding="utf-8") as f:
                 f.write(content)
             if not file_path in path_list:
                 try:
@@ -324,42 +347,22 @@ def create_links(mydocs, frontend, dir_name, mygpt):
                         shutil.copy2(file_path, dir_name)
                 except Exception as e:
                     logger.error(e)
-                if frontend == "gradio":
-                    links.append(
-                        f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}] </a> '
-                    )
-                    links.append(
-                        f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
-                    )
-                else:
-                    url = f"http://127.0.0.1:7860/file/temp/reference-{i}.txt"
-                    url = quote(url, safe=":/")
-                    links.append(f"[[{i}]]({url}) ")
-                    url = f"http://127.0.0.1:7860/file/temp/{file_path.name}"
-                    url = quote(url, safe=":/")
-                    links.append(f"[{file_path.stem}]({url})  \n")
+                links.append(
+                    f'<a href="{HOST}/file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}] </a> '
+                )
+                links.append(
+                    f'<a href="{HOST}/file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
+                )
 
                 path_list.append(file_path)
             else:
-                if frontend == "gradio":
-                    index = links.index(
-                        f'<a href="file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
-                    )
-                    links.insert(
-                        index,
-                        f'<a href="file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}]</a> ',
-                    )
-                else:
-                    url = f"http://127.0.0.1:7860/file/temp/{file_path.name}"
-                    url = quote(url, safe=":/")
-                    url = f"[{file_path.stem}]({url})  \n"
-                    index = links.index(url)
-                    url = f"http://127.0.0.1:7860/file/temp/reference-{i}.txt"
-                    url = quote(url, safe=":/")
-                    links.insert(
-                        index,
-                        f"[[{i}]]({url}) ",
-                    )
+                index = links.index(
+                    f'<a href="{HOST}/file/temp/{file_path.name}" class="asklink" title="Open full text">{file_path.stem}</a><br>'
+                )
+                links.insert(
+                    index,
+                    f'<a href="{HOST}/file/temp/reference-{i}.txt" class="asklink" title="Open text snippet {score:.3}">[{i}]</a> ',
+                )
             i += 1
     if len(links) > 0:
         links = "".join(links)
@@ -368,11 +371,12 @@ def create_links(mydocs, frontend, dir_name, mygpt):
         links = ""
     return links
 
+
 # 更新新版本的配置文件
-def update_config(dir_a, dir_b, filename='config.yaml'):
+def update_config(dir_a, dir_b, filename="config.yaml"):
     path_a = os.path.join(dir_a, filename)
     path_b = os.path.join(dir_b, filename)
-    
+
     if not os.path.exists(path_a):
         print(f"{path_a} does not exist.")
         return
@@ -380,9 +384,9 @@ def update_config(dir_a, dir_b, filename='config.yaml'):
     if not os.path.exists(path_b):
         shutil.copy(path_a, path_b)
     else:
-        with open(path_a, 'r') as f:
+        with open(path_a, "r") as f:
             config_a = yaml.safe_load(f)
-        with open(path_b, 'r') as f:
+        with open(path_b, "r") as f:
             config_b = yaml.safe_load(f)
 
         # 如果b中存在和a相同的字段，保持不变
@@ -391,16 +395,21 @@ def update_config(dir_a, dir_b, filename='config.yaml'):
             if key not in config_b:
                 config_b[key] = value
 
-        with open(path_b, 'w') as f:
+        with open(path_b, "w") as f:
             yaml.safe_dump(config_b, f)
+
 
 # 把根目录下的默认etag文件复制到用户目录下
 def update_etag(src_dir, dst_dir):
-    filelist = Path(src_dir).rglob('*.*')
+    filelist = Path(src_dir).rglob("*.*")
     for file in filelist:
-        if file.name == '.DS_Store' or '.ipynb_checkpoints' in str(file) or '__pycache__' in str(file):
+        if (
+            file.name == ".DS_Store"
+            or ".ipynb_checkpoints" in str(file)
+            or "__pycache__" in str(file)
+        ):
             continue
-        
+
         src_file = file
         dst_file = str(src_file).replace(src_dir, dst_dir)
         dst_file = Path(dst_file)
@@ -412,7 +421,7 @@ def update_etag(src_dir, dst_dir):
             pass
 
 
-class TokenSplitter():
+class TokenSplitter:
     def __init__(self, chunk_size, chunk_overlap, len_fn):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -420,7 +429,7 @@ class TokenSplitter():
 
     def split_string(self, string, n):
         size = len(string) // n
-        pieces = [string[i:i+size] for i in range(0, len(string), size)]
+        pieces = [string[i : i + size] for i in range(0, len(string), size)]
         if len(pieces) > n:
             pieces[-2] += pieces[-1]
             pieces = pieces[:-1]
@@ -428,23 +437,23 @@ class TokenSplitter():
 
     def split_text(self, text):
         token_len = self.len_fn(text)
-        n_chunk = int(token_len/self.chunk_size) + 1
+        n_chunk = int(token_len / self.chunk_size) + 1
         n_piece = n_chunk * 10
         pieces = self.split_string(text, n_piece)
         chunks = []
         _chunk = ""
-        for i,p in enumerate(pieces):
+        for i, p in enumerate(pieces):
             if len(tiktoken_encoder.encode(_chunk + p)) > self.chunk_size:
                 chunks.append(_chunk)
                 _chunk = p
-                if self.chunk_overlap>0:
-                    while len(tiktoken_encoder.encode(pieces[i-1] + _chunk)) < self.chunk_overlap:
-                        _chunk = pieces[i-1] + _chunk
-                        i = i-1
+                if self.chunk_overlap > 0:
+                    while (
+                        len(tiktoken_encoder.encode(pieces[i - 1] + _chunk))
+                        < self.chunk_overlap
+                    ):
+                        _chunk = pieces[i - 1] + _chunk
+                        i = i - 1
             else:
                 _chunk += p
         chunks.append(_chunk)
         return chunks
-
-
-

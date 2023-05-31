@@ -182,7 +182,14 @@ class MyGPT:
             openai.error.APIConnectionError,
         ),
     )
-    def llm(self, input, context=[], model_config_yaml=None, format_fn=None):
+    def llm(
+        self, input, context=[], model_config_yaml=None, format_fn=None, max_tokens=None
+    ):
+        # input: 输入的字符串
+        # context: 上下文
+        # model_config_yaml: 模型的配置文件名
+        # format_fn: 流式输出中间过程显示的格式化函数
+        # max_tokens: 最大生成长度, 不指定则使用模型配置文件自动计算
         self.abort_msg = False
 
         if model_config_yaml is None:
@@ -195,8 +202,13 @@ class MyGPT:
         with open(model_config_path, encoding="utf-8") as f:
             model_config = yaml.load(f, Loader=SafeLoader)
 
+        if isinstance(max_tokens, int) and max_tokens > 0:
+            model_config["params"]["max_tokens"] = max_tokens
+
+        out = ""
         # chatgpt
         if model_config["model"] == "chatgpt":
+            model_max_token = 4000
             sys_msg = model_config.get("system_message", "You are a helpful assistant")
             messages = [{"role": "system", "content": sys_msg}]
             if len(context) > 0:
@@ -204,6 +216,13 @@ class MyGPT:
                     messages.append({"role": "user", "content": q})
                     messages.append({"role": "assistant", "content": a})
             messages.append({"role": "user", "content": input})
+
+            free_tokens = model_max_token - len(tiktoken_encoder.encode(str(messages)))
+            if max_tokens:
+                free_tokens = min(free_tokens, max_tokens)
+                model_config["params"]["max_tokens"] = free_tokens
+
+
             logger.info("Send message to chatgpt")
             completion = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
@@ -226,15 +245,20 @@ class MyGPT:
                     mygpt.temp_result += "...abort!"
                     self.abort_msg = False
                     logger.info("abort by user")
+                    out = mygpt.temp_result
                     break
         # gpt3
         elif model_config["model"] == "gpt3":
+            model_max_token = 3900
             prompt = ""
             if len(context) > 0:
                 for q, a in context:
                     prompt += f"{q}\n\n"
                     prompt += f"{a}\n\n"
             prompt += f"{input}"
+            if not max_tokens:
+                free_tokens = model_max_token - len(tiktoken_encoder.encode(prompt))
+                model_config["params"]["max_tokens"] = free_tokens
             logger.info("Send message to gpt3")
             openai.api_key = self.opt["key"]
             completion = openai.Completion.create(
@@ -247,13 +271,18 @@ class MyGPT:
             for resp in completion:
                 if not self.abort_msg:
                     report.append(resp["choices"][0]["text"])
-                    mygpt.temp_result = "".join(report).strip()
+                    out = "".join(report).strip()
+                    if format_fn is not None:
+                        mygpt.temp_result = format_fn(out)
+                    else:
+                        mygpt.temp_result = out
                 else:
                     mygpt.temp_result += "...abort!"
                     self.abort_msg = False
                     logger.info("abort by user")
+                    out = mygpt.temp_result
                     break
-        return mygpt.temp_result
+        return out
 
     def preprocess_question(self, question):
         (
@@ -363,33 +392,7 @@ user question:```{question}```"""
         logger.info("Received answer")
         return question_out, answer, mydocs, draft
 
-    # prompt 1
-    #  def review(self, question, chunks):
-    #  prev_answer = ""
-    #  logger.info(
-    #  f"Start long text reading, estimated to take {len(chunks)*15} seconds"
-    #  )
-    #  chunk_num = len(chunks)
-    #  for i, chunk in enumerate(chunks):
-    #  if i != chunk_num - 1:
-    #  ask_prompt = f"""known:```{prev_answer}```
-    #  Extra text:```{chunk}```
-    #  quesion:```{question}```
-    #  The text is incomplete. Don't answer the questions immediately. First record the related text about the question"""
-    #  else:
-    #  ask_prompt = f"""known:{prev_answer}
-    #  Extra text:{chunk}
-    #  Please answer the following question only according to the text provided above, If there is no specific indication, you need answer the following qusting in Chinese:
-    #  ```{question}```"""
-    #  answer = mygpt.llm(ask_prompt,[],'chatgpt_review')
-    #  prev_answer = answer
-    #  logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
-    #  mygpt.temp_result = ""
-    #  return prev_answer
-
-    # prompt 2
     def review(self, question, chunks):
-        # 预处理
         (
             question,
             model_config_yaml,
@@ -400,32 +403,46 @@ user question:```{question}```"""
         if model_config_yaml is None:
             model_config_yaml = "chatgpt_review"
 
-        prev_answer = ""
         logger.info(f"Start full text reading")
-        chunk_num = len(chunks)
+        answer = ""
         answer_list = []
+        memory = 3000  # 为最终回答分配的上下文长度
+        chunk_memory = memory // len(chunks)  # 每个片段分配的上下文长度
         for i, chunk in enumerate(chunks):
-            if i != chunk_num - 1:
-                ask_prompt = f"""known:```{prev_answer}```
-Extra text:```{chunk}```
-quesion:```{question}```
-The text is incomplete. Don't answer the questions immediately. Output the related text about the question for delayed answer"""
-            else:
-                ask_prompt = f"""known:{prev_answer}
-                Extra text:{chunk}
-                Please answer the following question only according to the text provided above, If there is no specific indication, you need answer the following qusting in Chinese:
-                ```{question}```"""
-            answer = mygpt.llm(ask_prompt, [], model_config_yaml)
-            prev_answer = answer
-            logger.info(f"Received answer {i}: \n Reading progress {i+1}/{len(chunks)}")
+            print(f'memory:{memory},chunk_memory:{chunk_memory}')
+            ask_prompt = f"""local text:{chunk}
+Based on above text，【{question}】
+You need to use the same language or requested language as the content wrapped in 【】 in the previous sentence
+Answer only based on above local text and user requests, do not answer irrelevant content. If the local text is unrelated to the user's request, only output 'no relevant information'
+"""
+            answer = mygpt.llm(
+                ask_prompt,
+                [],
+                model_config_yaml,
+                format_fn=lambda x: f"正在分析片段{i+1}:\n\n{x}",
+                max_tokens=chunk_memory,
+            )
+            answer_list.append(answer)
+            chunk_memory = chunk_memory * 2 - len(tiktoken_encoder.encode(answer))
+            logger.info(
+                f"Received answer {i+1}: \n Reading progress {i+1}/{len(chunks)}"
+            )
 
-            if i != chunk_num - 1:
-                answer_list.append(answer)
+        ask_prompt = ""
+        for j in range(len(answer_list)):
+            ask_prompt += f"{answer_list[j]}\n"
+        ask_prompt += f"""Based on above text，【{question}】
+You need to use the same language or requested language as the content wrapped in 【】 in the previous sentence
+"""
+        answer = mygpt.llm(
+            ask_prompt, [], model_config_yaml, format_fn=lambda x: f"生成最终答案:\n\n{x}"
+        )
+        logger.info(f"Received final answer")
 
-        mygpt.temp_result = ""
         frontslot = "<hr>".join(answer_list)
         frontslot = f"""<frontslot><details><summary>中间回答</summary>{frontslot}</details><hr></frontslot>"""
-        final_answer = frontslot + prev_answer
+        final_answer = frontslot + answer
+        mygpt.temp_result = ""
         return final_answer
 
 
