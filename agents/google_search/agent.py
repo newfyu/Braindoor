@@ -13,6 +13,7 @@ class Agent:
         
         prompt_search_key = f"""
 Convert the following question into relevant search keywords for Google
+Keywords should be concise and representative, usually consisting of 1-3 nouns
 question：```{question}```
 Provide the output in JSON format with the following keys: "q"
 """
