@@ -28,7 +28,7 @@ HOST = "http://127.0.0.1:7860"
 def get_logger(log_path=log_path):
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
-    file_handler = logging.FileHandler(log_path)
+    file_handler = logging.FileHandler(log_path,encoding='utf-8')
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     file_handler.setFormatter(formatter)
     console_handler = logging.StreamHandler()
@@ -191,11 +191,12 @@ def read_text_file(file_path):
 
 
 def get_last_log():
-    with open(log_path, "rb") as f:
-        f.seek(-2, os.SEEK_END)
-        while f.read(1) != b"\n":
-            f.seek(-2, os.SEEK_CUR)
-        last_line = f.readline().decode('utf-8', errors='ignore')
+    try:
+        with open(log_path, "r", encoding='utf-8') as f:
+            lines = f.readlines()
+            last_line = lines[-1]
+    except Exception as e:
+        last_line = f"get log error: {e}"
     return last_line
 
 
