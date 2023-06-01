@@ -12,7 +12,6 @@ a = Analysis(
 	('ui/style.css','ui/'),
     ('ui/script.js','ui/'),
     ('config.yaml','.'),
-	('extra_files/gradio/*','gradio/'),
 	('extra_files/gradio_client/*','gradio_client/'),
 	('prompts/*','prompts/'),
 	('models/*','models/'),

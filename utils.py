@@ -195,7 +195,7 @@ def get_last_log():
         f.seek(-2, os.SEEK_END)
         while f.read(1) != b"\n":
             f.seek(-2, os.SEEK_CUR)
-        last_line = f.readline().decode()
+        last_line = f.readline().decode('utf-8', errors='ignore')
     return last_line
 
 
