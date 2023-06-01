@@ -408,40 +408,50 @@ user question:```{question}```"""
         answer_list = []
         memory = 3000  # 为最终回答分配的上下文长度
         chunk_memory = memory // len(chunks)  # 每个片段分配的上下文长度
-        for i, chunk in enumerate(chunks):
-            print(f'memory:{memory},chunk_memory:{chunk_memory}')
-            ask_prompt = f"""local text:{chunk}
-Based on above text，【{question}】
-You need to use the same language or requested language as the content wrapped in 【】 in the previous sentence
-Answer only based on above local text and user requests, do not answer irrelevant content. If the local text is unrelated to the user's request, only output 'no relevant information'
-"""
-            answer = mygpt.llm(
-                ask_prompt,
-                [],
-                model_config_yaml,
-                format_fn=lambda x: f"正在分析片段{i+1}:\n\n{x}",
-                max_tokens=chunk_memory,
-            )
-            answer_list.append(answer)
-            chunk_memory = chunk_memory * 2 - len(tiktoken_encoder.encode(answer))
-            logger.info(
-                f"Received answer {i+1}: \n Reading progress {i+1}/{len(chunks)}"
-            )
+
+
+        if len(chunks) == 1:
+            answer_list.append(chunks[0])
+        else:
+            for i, chunk in enumerate(chunks):
+                print(f'memory:{memory},chunk_memory:{chunk_memory}')
+                ask_prompt = f"""local text:{chunk}
+    1.Answer the final user instruction only based on above local text and user requests, do not answer irrelevant content. If the local text is unrelated to the user's request, only output 'no relevant information'
+    2.Use the same language as the following instructions or the language requested in the following instructions
+    3.{question}
+    """
+                answer = mygpt.llm(
+                    ask_prompt,
+                    [],
+                    model_config_yaml,
+                    format_fn=lambda x: f"正在分析片段{i+1}：\n\n{x}",
+                    max_tokens=chunk_memory,
+                )
+                answer_list.append(answer)
+                chunk_memory = chunk_memory * 2 - len(tiktoken_encoder.encode(answer))
+                logger.info(
+                    f"Received answer {i+1}: \n Reading progress {i+1}/{len(chunks)}"
+                )
 
         ask_prompt = ""
         for j in range(len(answer_list)):
             ask_prompt += f"{answer_list[j]}\n"
-        ask_prompt += f"""Based on above text，【{question}】
-You need to use the same language or requested language as the content wrapped in 【】 in the previous sentence
+        ask_prompt += f"""
+1.Answer the following user instruction only based on above text and user requests
+2.Use the same language as the following instructions or the language requested in the following instructions
+3.{question}
 """
         answer = mygpt.llm(
-            ask_prompt, [], model_config_yaml, format_fn=lambda x: f"生成最终答案:\n\n{x}"
+            ask_prompt, [], model_config_yaml, format_fn=lambda x: f"生成最终答案：\n\n{x}"
         )
         logger.info(f"Received final answer")
 
         frontslot = "<hr>".join(answer_list)
-        frontslot = f"""<frontslot><details><summary>中间回答</summary>{frontslot}</details><hr></frontslot>"""
-        final_answer = frontslot + answer
+        if len(chunks) > 1:
+            frontslot = f"""<frontslot><details><summary>中间回答</summary>{frontslot}</details><hr></frontslot>"""
+            final_answer = frontslot + answer
+        else:
+            final_answer = answer
         mygpt.temp_result = ""
         return final_answer
 
