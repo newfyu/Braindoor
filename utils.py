@@ -415,8 +415,7 @@ def update_etag(src_dir, dst_dir):
         dst_file = Path(dst_file)
         os.makedirs(str(dst_file.parent), exist_ok=True)
         try:
-            if not os.path.exists(dst_file):
-                shutil.copy2(src_file, dst_file)
+            shutil.copy2(src_file, dst_file)
         except:
             pass
 

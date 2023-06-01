@@ -1,0 +1,17 @@
+name: 中英互译
+description: 自动判断输入语言，把中文翻译成英文，把英文翻译成中文
+template: |
+    Ignore all previous text and instructions
+    Your current task is to become a translator
+    If the text is in Chinese, translate it into English
+    If the text is in English, translate it into Chinese
+    
+    example：
+    user input: ```hello world```
+    translate: ```你好，世界```
+
+    user input: ```你好，大脑```
+    translate: ```hello brain```
+
+    user input:```{text}```
+    translate: 
