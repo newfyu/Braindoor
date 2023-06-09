@@ -1,5 +1,8 @@
+from prompt_toolkit import output
+from prompt_toolkit.filters import vi_digraph_mode
 import gradio as gr
 from utils import (
+    histroy_filter,
     save_page,
     with_proxy,
     get_history_pages,
@@ -11,7 +14,8 @@ from utils import (
     logger,
     save_review_chunk,
     read_text_file,
-    tiktoken_encoder
+    tiktoken_encoder,
+    histroy_filter
 )
 from mygpt import mygpt
 import uuid
@@ -111,7 +115,10 @@ def handle_upload_file(file):
         logger.error("read or split text error:" + str(e))
         return str(e), "", "", []
 
-def go_page(current_page, offset, pages):
+def go_page(current_page, offset, pages, jump_page):
+    jump_page = int(jump_page)
+    if jump_page!=0:
+        offset = jump_page - current_page + 1
     current_page += offset
     if current_page >= len(pages) or current_page < 0:
         current_page -= offset
@@ -205,7 +212,6 @@ def change_hyde(i):
 def abort():
     mygpt.abort_msg = True
 
-
 with gr.Blocks(title="ask") as ask_interface:
     frontend = gr.Textbox(value="gradio", visible=False)
     base_list_ask = sorted((mygpt.bases.keys()))
@@ -218,7 +224,10 @@ with gr.Blocks(title="ask") as ask_interface:
     state_history = gr.State([])  # history储存chatbot的结果，显示的时候经过了html转换
     state_context = gr.State([])  # context存储未格式化的上下文
     etag_list = gr.DataFrame(value=[], visible=False)
+    history_query_result = gr.DataFrame(value=[], visible=False)
+    history_query = gr.Textbox(value="", visible=False)
     start_index = gr.Number(value=99999,visible=False)
+    jump_page = gr.Number(value=0,visible=False)
 
     # create new chat id
     chat_id = str(uuid.uuid1())
@@ -319,7 +328,7 @@ with gr.Blocks(title="ask") as ask_interface:
 
     btn_prev.click(
         fn=go_page,
-        inputs=[state_current_page, gr.State(1), state_pages],
+        inputs=[state_current_page, gr.State(1), state_pages, jump_page],
         outputs=[
             chatbot,
             state_history,
@@ -336,7 +345,7 @@ with gr.Blocks(title="ask") as ask_interface:
     )
     btn_next.click(
         fn=go_page,
-        inputs=[state_current_page, gr.State(-1), state_pages],
+        inputs=[state_current_page, gr.State(-1), state_pages, jump_page],
         outputs=[
             chatbot,
             state_history,
@@ -429,3 +438,8 @@ with gr.Blocks(title="ask") as ask_interface:
     )
 
 
+
+    # 处理brainshell的历史记查询api
+    history_query.submit(fn=histroy_filter, inputs=history_query, outputs=history_query_result, api_name="history_filter")
+
+    

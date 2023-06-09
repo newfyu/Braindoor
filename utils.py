@@ -1,4 +1,5 @@
 import logging
+from pydantic import main
 import yaml
 import os
 from pathlib import Path
@@ -13,6 +14,7 @@ import html2text
 import html
 import json
 from urllib.parse import quote
+import pandas as pd
 
 from bs4 import BeautifulSoup
 
@@ -457,3 +459,16 @@ class TokenSplitter:
                 _chunk += p
         chunks.append(_chunk)
         return chunks
+
+# 历史记录查询,从所有历史记录中过滤出包含query的记录
+def histroy_filter(query):
+    pages = get_history_pages()
+    result = []
+    for page in pages:
+        json_path = os.path.join(HISTORY, 'ask',page)
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if query in str(data):
+            result.append((page, data[0][0], pages.index(page)))
+    result = pd.DataFrame(result, columns=["page", "title", "index"])
+    return result
