@@ -1,5 +1,3 @@
-from prompt_toolkit import output
-from prompt_toolkit.filters import vi_digraph_mode
 import gradio as gr
 from utils import (
     histroy_filter,

@@ -1,5 +1,4 @@
 import logging
-from pydantic import main
 import yaml
 import os
 from pathlib import Path
@@ -13,7 +12,6 @@ import PyPDF2
 import html2text
 import html
 import json
-from urllib.parse import quote
 import pandas as pd
 
 from bs4 import BeautifulSoup
