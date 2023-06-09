@@ -1,3 +1,4 @@
+from os.path import split
 import gradio as gr
 from utils import (
     histroy_filter,
@@ -114,12 +115,12 @@ def handle_upload_file(file):
         return str(e), "", "", []
 
 def go_page(current_page, offset, pages, jump_page):
-    jump_page = int(jump_page)
-    if jump_page!=0:
-        offset = jump_page - current_page
-    current_page += offset
-    if current_page >= len(pages) or current_page < 0:
-        current_page -= offset
+    if jump_page in pages:
+        current_page = pages.index(jump_page)
+    else:
+        current_page += offset
+        if current_page >= len(pages) or current_page < 0:
+            current_page -= offset
     chat_id = pages[current_page].split(".")[0]
     context = load_context(chat_id)
     history = context.copy()
@@ -225,7 +226,7 @@ with gr.Blocks(title="ask") as ask_interface:
     history_query_result = gr.DataFrame(value=[], visible=False)
     history_query = gr.Textbox(value="", visible=False)
     start_index = gr.Number(value=99999,visible=False)
-    jump_page = gr.Number(value=0,visible=False)
+    jump_page = gr.Textbox(value="",visible=False)
 
     # create new chat id
     chat_id = str(uuid.uuid1())
