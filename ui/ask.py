@@ -116,7 +116,7 @@ def handle_upload_file(file):
 def go_page(current_page, offset, pages, jump_page):
     jump_page = int(jump_page)
     if jump_page!=0:
-        offset = jump_page - current_page + 1
+        offset = jump_page - current_page
     current_page += offset
     if current_page >= len(pages) or current_page < 0:
         current_page -= offset
