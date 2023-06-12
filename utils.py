@@ -18,6 +18,8 @@ from bs4 import BeautifulSoup
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"), "braindoor/")
+if not os.path.exists(USER):
+    os.makedirs(USER)
 log_path = os.path.join(USER, "run.log")
 temp_path = os.path.join(ROOT, "temp/")
 HISTORY = os.path.join(USER, "history/")
