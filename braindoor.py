@@ -1,14 +1,12 @@
 import argparse
 
 import os
-from utils import update_etag, update_config
-
-
-# copy default files to user folder
 ROOT = os.path.dirname(os.path.abspath(__file__))
 USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 if not os.path.exists(USER):
     os.makedirs(USER)
+from utils import update_etag, update_config
+# copy default files to user folder
 update_config(ROOT,USER)
 update_etag(os.path.join(ROOT, "prompts"), os.path.join(USER, "prompts"))
 update_etag(os.path.join(ROOT, "models"), os.path.join(USER, "models"))
