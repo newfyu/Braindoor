@@ -14,7 +14,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from functools import partial
 import argparse
-from utils import logger,with_proxy, tiktoken_encoder, read_text_file, TokenSplitter
+from utils import logger,set_proxy, del_proxy,tiktoken_encoder, read_text_file, TokenSplitter
 
 USER = os.path.join(os.path.expanduser("~"),'braindoor/')
 config_path = os.path.join(USER, "config.yaml")
@@ -88,8 +88,8 @@ def create_new_df_docs(
     return df_docs
 
 
-@with_proxy(opt['proxy'])
 def create_vstore(df_docs):
+    set_proxy()
     with open(config_path) as f:
         opt = yaml.load(f, Loader=SafeLoader)
         openai.api_key = opt["key"]
@@ -98,6 +98,7 @@ def create_vstore(df_docs):
     for file_path in df_docs.file_path:
         metadatas.append({"file_path": file_path})
     vstore = FAISS.from_texts(list(df_docs["doc"]), embeddings, metadatas=metadatas)
+    del_proxy()
     return vstore
 
 

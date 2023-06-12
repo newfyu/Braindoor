@@ -3,7 +3,8 @@ from gradio.helpers import plt
 from pandas.core import api
 from utils import (
     save_page,
-    with_proxy,
+    set_proxy,
+    del_proxy,
     logger,
     read_text_file,
     txt2html,
@@ -28,12 +29,13 @@ def run_new_page():
     return "", [], new_chat_id, 0, pages, f"1/{len(pages)}", gr.update(interactive=False, placeholder=placeholder)
 
 
-@with_proxy(opt["proxy"])
 def run_review(question, context, chunks, chat_id):
+    set_proxy()
     answer = mygpt.review(question, chunks)
     answer = txt2html(answer)
     context.append((question, answer))
     save_page(chat_id, context, dir="review")
+    del_proxy()
     return context, context, ""
 
 

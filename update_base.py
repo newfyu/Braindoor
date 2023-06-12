@@ -13,7 +13,7 @@ import yaml
 from yaml.loader import SafeLoader
 
 from create_base import create_new_df_docs, get_file_list, make_file_md5
-from utils import logger, with_proxy
+from utils import logger, set_proxy,del_proxy
 from pathlib import Path
 
 USER = os.path.join(os.path.expanduser("~"),'braindoor/')
@@ -64,12 +64,13 @@ def check_update(metadata, df_file_md5):
     return df_add, df_remove, df_new
 
 
-@with_proxy(opt["proxy"])
 @backoff.on_exception(
     backoff.expo, (openai.error.RateLimitError, openai.error.ServiceUnavailableError)
 )
 def add_texts_to_vstore_with_backoff(vstore, doc, metadata):
+    set_proxy()
     vstore.add_texts([doc], metadatas=[metadata])
+    del_proxy()
 
 
 def add_vstore(df_docs_add, vstore, opt):

@@ -3,7 +3,8 @@ import gradio as gr
 from utils import (
     histroy_filter,
     save_page,
-    with_proxy,
+    set_proxy,
+    del_proxy,
     get_history_pages,
     load_context,
     del_page,
@@ -22,8 +23,8 @@ from pathlib import Path
 
 opt = mygpt.opt
 
-@with_proxy(opt["proxy"])
 def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[], review_mode=False, start_index=99999):
+    set_proxy()
 
     # 问题插入的位置,默认是最后，但也可以从中间编辑
     if start_index < len(history):
@@ -72,6 +73,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
         save_page(chat_id=chat_id, context=context) # 只save了context，没有save history,后面考虑save histroy
 
     pages = get_history_pages()
+    del_proxy()
     return history, history, context, gr.update(value=""), 0, f"1/{len(pages)}", pages, chat_id, chunks, review_mode
 
 def handle_upload_file(file):
@@ -210,6 +212,7 @@ def change_hyde(i):
 
 def abort():
     mygpt.abort_msg = True
+    mygpt.stop_retry = True
 
 with gr.Blocks(title="ask") as ask_interface:
     frontend = gr.Textbox(value="gradio", visible=False)

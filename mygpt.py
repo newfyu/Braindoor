@@ -29,6 +29,8 @@ class Result:
         self.page_content = page_content
         self.metadata = metadata
 
+class AbortRetryException(Exception):
+    pass
 
 class MyGPT:
     def __init__(self, config_path=config_path):
@@ -43,6 +45,7 @@ class MyGPT:
         self.model_etags = self.load_model_etags()
         self.agent_etags = self.load_agent_etags()
         self.abort_msg = False
+        self.stop_retry = False
         self.all_etags = self.load_etag_list()
 
         openai.api_key = self.opt["key"]
@@ -190,6 +193,10 @@ class MyGPT:
         # model_config_yaml: 模型的配置文件名
         # format_fn: 流式输出中间过程显示的格式化函数
         # max_tokens: 最大生成长度, 不指定则使用模型配置文件自动计算
+        if self.stop_retry:
+            self.stop_retry = False
+            logger.info("Stop retry")
+            raise AbortRetryException("Stop retry")
         self.abort_msg = False
 
         if model_config_yaml is None:

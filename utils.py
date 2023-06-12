@@ -102,26 +102,19 @@ def copy_html(html_path, save_root=temp_path):
     except Exception as e:
         print(f"copy html error: {e}")
 
-
-def with_proxy(proxy_address):
-    with open(config_path) as f:
+def set_proxy():
+    with open(config_path, "r", encoding="utf-8") as f:
         opt = yaml.load(f, Loader=SafeLoader)
-        proxy_address = opt.get("proxy", None)
-    def wrapper(fn):
-        def inner_wrapper(*args, **kwargs):
-            if proxy_address:
-                os.environ["http_proxy"] = f"{proxy_address}"
-                os.environ["https_proxy"] = f"{proxy_address}"
-            result = fn(*args, **kwargs)
-            if proxy_address:
-                del os.environ["http_proxy"]
-                del os.environ["https_proxy"]
-            return result
+    proxy_address = opt.get("proxy", None)
+    print(proxy_address)
+    if proxy_address:
+        os.environ["http_proxy"] = f"{proxy_address}"
+        os.environ["https_proxy"] = f"{proxy_address}"
 
-        return inner_wrapper
-
-    return wrapper
-
+def del_proxy():
+    if os.environ.get("http_proxy"):
+        del os.environ["http_proxy"]
+        del os.environ["https_proxy"]
 
 def html_escape(text):
     text = html.escape(text)

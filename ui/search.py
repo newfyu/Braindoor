@@ -1,6 +1,6 @@
 import gradio as gr
 from gradio.components import Markdown, Textbox
-from utils import with_proxy,copy_html, remove_markdown
+from utils import set_proxy, del_proxy, copy_html, remove_markdown
 import os
 import shutil
 from pathlib import Path
@@ -20,8 +20,8 @@ def change_search_mode(search_mode):
             box_results_keyword: gr.update(visible=False),
         }
 
-@with_proxy(opt['proxy'])
 def run_search(query, base_name):
+    set_proxy()
     dir_name = "temp"
     if os.path.isdir(dir_name):
         shutil.rmtree(dir_name)
@@ -65,6 +65,7 @@ def run_search(query, base_name):
                     file_paths.add(file_path)
                     num_result += 1
         outputs.append(output)
+    del_proxy()
     return outputs[0], outputs[1]
 
 with gr.Blocks(title="search") as search_interface:
