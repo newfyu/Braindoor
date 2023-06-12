@@ -1,5 +1,6 @@
 import logging
 import yaml
+from yaml.loader import SafeLoader
 import os
 from pathlib import Path
 import re
@@ -22,6 +23,7 @@ if not os.path.exists(USER):
     os.makedirs(USER)
 log_path = os.path.join(USER, "run.log")
 temp_path = os.path.join(ROOT, "temp/")
+config_path = os.path.join(USER, "config.yaml")
 HISTORY = os.path.join(USER, "history/")
 TEMP = os.path.join(ROOT, "temp")
 HOST = "http://127.0.0.1:7860"
@@ -102,6 +104,9 @@ def copy_html(html_path, save_root=temp_path):
 
 
 def with_proxy(proxy_address):
+    with open(config_path) as f:
+        opt = yaml.load(f, Loader=SafeLoader)
+        proxy_address = opt.get("proxy", None)
     def wrapper(fn):
         def inner_wrapper(*args, **kwargs):
             if proxy_address:

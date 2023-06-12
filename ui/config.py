@@ -8,6 +8,7 @@ from utils import logger, get_last_log
 from create_base import create_base
 from update_base import update_base
 from ui import search, ask
+import importlib
 
 opt = mygpt.opt
 USER = os.path.join(os.path.expanduser("~"), "braindoor/")
@@ -74,6 +75,7 @@ def save_config_from_brainshell(key, proxy, input_limit, max_context, save_edit)
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(opt, f)
     mygpt.__init__()
+    load_config()
     logger.info("Save config from brainshell")
     return "Save config from brainshell successfully!"
 

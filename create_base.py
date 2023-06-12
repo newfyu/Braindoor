@@ -90,6 +90,9 @@ def create_new_df_docs(
 
 @with_proxy(opt['proxy'])
 def create_vstore(df_docs):
+    with open(config_path) as f:
+        opt = yaml.load(f, Loader=SafeLoader)
+        openai.api_key = opt["key"]
     embeddings = OpenAIEmbeddings(openai_api_key=opt["key"])
     metadatas = []
     for file_path in df_docs.file_path:
