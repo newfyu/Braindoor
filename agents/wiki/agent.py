@@ -9,11 +9,11 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 # 同时还要把这个包复制到agent目录下
 import wikipedia
 
-
 class Agent: # 实现这个类，类名必须是Agent
     def __init__(self):
         self.name = 'wikipedia' # agent的名字，任意
         self.description = "根据问题在wikipedia上查找合适的词条后回答用户问题，只从summary中获取上下文，不深入wiki页面内部" # agent的描述，以后会用于模型自动选择agent
+        self.model_config = "../agents/wiki/chatgpt-t0" # 可以在agent的目录下放一个该agent专用的模型配置文件。因为模型默认是在models文件下查找配置文件。如果要在agents目录下查找，需要返回上一级后再进入当前agent的目录
         
     def run(self, question, context, mygpt, model_config_yaml, **kwarg):
         # 实现这个方法，即插件运行的逻辑
@@ -36,7 +36,7 @@ Provide the output in JSON format with the following keys: "key", "lang"
         # chatgpt_t0是一个预定义的语言模型配置，就是温度为0的chatgpt
         # llm在生成过程中，会在用户界面流式显示生成过程
         # format_fn 是用来对输出的中间过程格式化，用于在用户界面实时的显示时改变格式,非必须
-        search_key = mygpt.llm(prompt_search_key, model_config_yaml = "chatgpt_t0", format_fn=lambda x:f"生成查询词：{x}")
+        search_key = mygpt.llm(prompt_search_key, model_config_yaml = self.model_config, format_fn=lambda x:f"生成查询词：{x}")
 
 
         # prompt指定了模型用json输出我们需要的结果，下面是提取json
@@ -59,7 +59,7 @@ The page name should be completely consistent with the search result
 """
         
         # 仍然是同样的逻辑，包装prompt后传给模型，得到模型生成的回答，仍然是用json输出方便提取,这一步主要是判断哪个搜索结果最合适
-        page_name = mygpt.llm(prompt_get_page, model_config_yaml = "chatgpt_t0")
+        page_name = mygpt.llm(prompt_get_page, model_config_yaml = self.model_config)
         page_name   = re.findall(r'\{[\s\S]*?\}', page_name)[0]
         page_name  = eval(page_name)
         page_name_str = page_name['page_name']
@@ -74,7 +74,7 @@ Your task is to answer the following questions based on the summary above
 question: ```{question}```
 you must use the same language or the language requested by the question to answer
 """
-        answer = mygpt.llm(prompt_answer, model_config_yaml = "chatgpt_t0")
+        answer = mygpt.llm(prompt_answer, model_config_yaml = self.model_config)
         ny = wikipedia.page(page_name_str)
 
         # 后处理,把最后的结果调整一下格式,返回给应用

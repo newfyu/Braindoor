@@ -53,6 +53,7 @@ class MyGPT:
         if self.opt["key"]:
             self.base_embedding = OpenAIEmbeddings(openai_api_key=self.opt["key"])
 
+        self.engine = self.opt["review_chunk_size"] = 8000 # 暂时写死一下
         self.fulltext_splitter = TokenSplitter(
             chunk_size=self.opt["review_chunk_size"],
             chunk_overlap=self.opt["review_chunk_overlap"],
@@ -203,7 +204,7 @@ class MyGPT:
         self.abort_msg = False
 
         if model_config_yaml is None:
-            model_config_path = os.path.join(ROOT, "models", "chatgpt.yaml")
+            model_config_path = os.path.join(ROOT, "models", "chatgpt-default.yaml")
         else:
             model_config_path = os.path.join(
                 USER, "models", model_config_yaml + ".yaml"
@@ -218,7 +219,13 @@ class MyGPT:
         out = ""
         # chatgpt
         if model_config["model"] == "chatgpt":
-            model_max_token = 4000
+            if model_config["params"]["model"] == "gpt-3.5-turbo-16k":
+                model_max_token = 15000
+            elif model_config["params"]["model"] == "gpt-3.5-turbo":
+                model_max_token = 4000
+            else:
+                model_max_token = 4000
+
             sys_msg = model_config.get("system_message", "You are a helpful assistant")
             messages = [{"role": "system", "content": sys_msg}]
             if len(context) > 0:
@@ -227,7 +234,13 @@ class MyGPT:
                     messages.append({"role": "assistant", "content": a})
             messages.append({"role": "user", "content": input})
 
+            # 计算模型可用的最大token数
             free_tokens = model_max_token - len(tiktoken_encoder.encode(str(messages)))
+            # 如果模型可用的最大token数小于0，就删除messages中的第一个元素，直到模型可用的最大token数大于1000
+            while free_tokens < 1000:
+                messages.pop(0)
+                free_tokens = model_max_token - len(tiktoken_encoder.encode(str(messages)))
+            # max_token是用户指定的token数，如果存在，就尝试使用用户指定的，但也不能超过模型可用的最大token数
             if max_tokens:
                 free_tokens = min(free_tokens, max_tokens)
                 model_config["params"]["max_tokens"] = free_tokens
@@ -235,7 +248,6 @@ class MyGPT:
 
             logger.info("Send message to chatgpt")
             completion = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
                 api_key=self.opt["key"],
                 messages=messages,
                 stream=True,
@@ -412,12 +424,12 @@ user question:```{question}```"""
         ) = self.preprocess_question(question)
         self.stop_review = False
         if model_config_yaml is None:
-            model_config_yaml = "chatgpt_review"
+            model_config_yaml = "chatgpt-review"
 
         logger.info(f"Start full text reading")
         answer = ""
         answer_list = []
-        memory = 3000  # 为最终回答分配的上下文长度
+        memory = 8000  # 为最终回答分配的上下文长度
         chunk_memory = memory // len(chunks)  # 每个片段分配的上下文长度
 
 

@@ -19,7 +19,7 @@ Provide the output in JSON format with the following keys: "q"
 """
         
         # 提取搜索关键词
-        search_key = mygpt.llm(prompt_search_key, model_config_yaml = "chatgpt_t0", format_fn=lambda x:f"生成关键词：{x}")
+        search_key = mygpt.llm(prompt_search_key, model_config_yaml = "../agents/google_search/chatgpt-t0", format_fn=lambda x:f"生成关键词：{x}")
         search_key = re.findall(r'\{[\s\S]*?\}', search_key)[0]
         search_obj = eval(search_key)
 
@@ -51,7 +51,7 @@ Output all result in JSON format with the following keys:
 "answer","position", "newkey"
 """     
         
-        out = mygpt.llm(prompt_link, model_config_yaml = "chatgpt_t0", format_fn=lambda x:f"正在生成答案：{x}")
+        out = mygpt.llm(prompt_link, model_config_yaml = "../agents/google_search/chatgpt-t0", format_fn=lambda x:f"正在生成答案：{x}")
 
         # 后处理,格式化输出
         out_obj = eval(re.findall(r'\{[\s\S]*\}', out)[0])
@@ -71,8 +71,6 @@ Output all result in JSON format with the following keys:
                 _link= s['link']
             if 'title' in s.keys():
                 _title = s['title']
-                #  if len(_title)>20:
-                    #  _title = _title[:20]
             links.append(f'<a href="{_link}">{[i+1]} {_title}...</a><br>')
         
         links = "".join(links)

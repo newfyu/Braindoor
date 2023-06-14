@@ -1,5 +1,5 @@
 model: chatgpt
 params:
-    max_tokens: 1000
+    model: gpt-3.5-turbo-16k
     temperature: 0.2
 system_message: ""

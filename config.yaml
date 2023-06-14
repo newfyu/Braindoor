@@ -7,13 +7,13 @@ enable_config: true
 enable_review: true
 enable_search: true
 key: 
-input_limit: 2000
-max_context: 2000
+input_limit: 8000
+max_context: 12000
 max_l2: 0.4
 proxy: 
 rate_limit: 1
 result_size: 300
 review_chunk_overlap: 10
-review_chunk_size: 2000
+review_chunk_size: 8000
 search_topk: 20
 save_edit: false 

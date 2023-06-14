@@ -1,5 +1,5 @@
 model: chatgpt
 params:
-    max_tokens: 2000
-    temperature: 0.8
+    model: gpt-3.5-turbo-0613
+    temperature: 0.5
 system_message: "你是一个默认使用中文回答的助手，除非用户有特别的指令要求你使用其他语言,你都必须使用中文回答"
