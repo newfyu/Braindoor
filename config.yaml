@@ -7,7 +7,7 @@ enable_config: true
 enable_review: true
 enable_search: true
 key: 
-input_limit: 8000
+input_limit: 12000
 max_context: 12000
 max_l2: 0.4
 proxy: 
