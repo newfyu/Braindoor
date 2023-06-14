@@ -219,12 +219,6 @@ class MyGPT:
         out = ""
         # chatgpt
         if model_config["model"] == "chatgpt":
-            if model_config["params"]["model"] == "gpt-3.5-turbo-16k":
-                model_max_token = 15000
-            elif model_config["params"]["model"] == "gpt-3.5-turbo":
-                model_max_token = 4000
-            else:
-                model_max_token = 4000
 
             sys_msg = model_config.get("system_message", "You are a helpful assistant")
             messages = [{"role": "system", "content": sys_msg}]
@@ -234,19 +228,39 @@ class MyGPT:
                     messages.append({"role": "assistant", "content": a})
             messages.append({"role": "user", "content": input})
 
+            message_len = len(tiktoken_encoder.encode(str(messages)))
+            model_name = model_config["params"].get("model", "")
+
+            if model_name == "gpt-3.5-turbo":
+                model_max_token = 4000
+            elif model_name == "gpt-3.5-turbo-0613":
+                model_max_token = 4000
+            elif model_name == "gpt-3.5-turbo-16k":
+                model_max_token = 15000
+            elif message_len < 4000:
+                model_config["params"]["model"] = "gpt-3.5-turbo"
+                model_name = "gpt-3.5-turbo"
+                model_max_token = 4000
+            else:
+                model_config["params"]["model"] = "gpt-3.5-turbo-16k"
+                model_name = "gpt-3.5-turbo-16k"
+                model_max_token = 15000
+
+
             # 计算模型可用的最大token数
-            free_tokens = model_max_token - len(tiktoken_encoder.encode(str(messages)))
-            # 如果模型可用的最大token数小于0，就删除messages中的第一个元素，直到模型可用的最大token数大于1000
-            while free_tokens < 1000:
+            free_tokens = model_max_token - message_len
+            # 如果模型可用的最大token数小于0，尝试移除messages中的第一个元素，直到模型可用的最大token数大于1000
+            while free_tokens < 1000 and len(messages) > 1:
                 messages.pop(0)
-                free_tokens = model_max_token - len(tiktoken_encoder.encode(str(messages)))
+                message_len = len(tiktoken_encoder.encode(str(messages)))
+                free_tokens = model_max_token - message_len
             # max_token是用户指定的token数，如果存在，就尝试使用用户指定的，但也不能超过模型可用的最大token数
             if max_tokens:
                 free_tokens = min(free_tokens, max_tokens)
                 model_config["params"]["max_tokens"] = free_tokens
 
 
-            logger.info("Send message to chatgpt")
+            logger.info(f"Send message to {model_name} with {message_len} tokens")
             completion = openai.ChatCompletion.create(
                 api_key=self.opt["key"],
                 messages=messages,
