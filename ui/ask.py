@@ -25,6 +25,9 @@ opt = mygpt.opt
 
 def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[], review_mode=False, start_index=99999):
     set_proxy()
+    mygpt.abort_msg = False
+    mygpt.stop_retry = False
+    mygpt.stop_review = False
 
     # 问题插入的位置,默认是最后，但也可以从中间编辑
     if start_index < len(history):
@@ -213,6 +216,7 @@ def change_hyde(i):
 def abort():
     mygpt.abort_msg = True
     mygpt.stop_retry = True
+    mygpt.stop_review = True
 
 with gr.Blocks(title="ask") as ask_interface:
     frontend = gr.Textbox(value="gradio", visible=False)

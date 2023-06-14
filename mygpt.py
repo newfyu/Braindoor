@@ -46,6 +46,7 @@ class MyGPT:
         self.agent_etags = self.load_agent_etags()
         self.abort_msg = False
         self.stop_retry = False
+        self.stop_review = False
         self.all_etags = self.load_etag_list()
 
         openai.api_key = self.opt["key"]
@@ -195,6 +196,8 @@ class MyGPT:
         # max_tokens: 最大生成长度, 不指定则使用模型配置文件自动计算
         if self.stop_retry:
             self.stop_retry = False
+            self.stop_review = False
+            self.abort_msg = False
             logger.info("Stop retry")
             raise AbortRetryException("Stop retry")
         self.abort_msg = False
@@ -407,6 +410,7 @@ user question:```{question}```"""
             _,
             _,
         ) = self.preprocess_question(question)
+        self.stop_review = False
         if model_config_yaml is None:
             model_config_yaml = "chatgpt_review"
 
@@ -421,6 +425,14 @@ user question:```{question}```"""
             answer_list.append(chunks[0])
         else:
             for i, chunk in enumerate(chunks):
+                if self.stop_review:
+                    final_answer = self.temp_result + '...stop by user!'
+                    self.temp_result = ""
+                    self.stop_retry = False
+                    self.stop_review = False
+                    self.abort_msg = False
+                    return final_answer
+
                 print(f'memory:{memory},chunk_memory:{chunk_memory}')
                 ask_prompt = f"""local text:{chunk}
     1.Answer the final user instruction only based on above local text and user requests, do not answer irrelevant content. If the local text is unrelated to the user's request, only output 'no relevant information'
