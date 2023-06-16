@@ -62,7 +62,7 @@ class Agent:
             functions=[search_function],
             function_call = {"name": "get_keyword"},  
         )
-        search_obj = eval(response)
+        search_obj = eval(search_key)
         search_obj["q"] = " ".join(search_obj["q"])
 
         # 得到google搜索结果
