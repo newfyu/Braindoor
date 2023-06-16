@@ -41,7 +41,7 @@ read_function = {
         "items":{"type":"string"}
       }
     },
-    "required": ["answer"]
+    "required": ["answer", "position"]
   }
 }
 

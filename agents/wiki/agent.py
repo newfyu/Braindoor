@@ -24,7 +24,7 @@ search_function = {
       },
       "lang": {
       "type": "string",
-      "description": "Set the language for Wikipedia search, If the user question is related to Chinese knowledge, return the language code 'zh'; otherwise, return 'en'",
+      "description": "Set the language for Wikipedia search, Ignore the language used in the question itself. If the user question is related to Chinese knowledge, return 'zh'; otherwise, return 'en'",
       "enum":["zh","en"]
       },
     },
