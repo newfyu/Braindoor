@@ -188,8 +188,7 @@ class MyGPT:
         ),
     )
     def llm(
-        self, input, context=[], model_config_yaml=None, format_fn=None, max_tokens=None
-    ):
+        self, input, context=[], model_config_yaml=None, format_fn=None, max_tokens=None, functions=None, function_call=None):
         # input: 输入的字符串
         # context: 上下文
         # model_config_yaml: 模型的配置文件名
@@ -219,6 +218,10 @@ class MyGPT:
         out = ""
         # chatgpt
         if model_config["model"] == "chatgpt":
+            if functions:
+                model_config["params"]["functions"] = functions
+            if function_call:
+                model_config["params"]["function_call"] = function_call
 
             sys_msg = model_config.get("system_message", "You are a helpful assistant")
             messages = [{"role": "system", "content": sys_msg}]
@@ -238,12 +241,12 @@ class MyGPT:
             elif model_name == "gpt-3.5-turbo-16k":
                 model_max_token = 15000
             elif message_len < 4000:
-                model_config["params"]["model"] = "gpt-3.5-turbo"
-                model_name = "gpt-3.5-turbo"
+                model_name = "gpt-3.5-turbo-0613"
+                model_config["params"]["model"] = model_name
                 model_max_token = 4000
             else:
-                model_config["params"]["model"] = "gpt-3.5-turbo-16k"
                 model_name = "gpt-3.5-turbo-16k"
+                model_config["params"]["model"] = model_name
                 model_max_token = 15000
 
 
@@ -270,8 +273,11 @@ class MyGPT:
             report = []
             for resp in completion:
                 if not self.abort_msg:
-                    if hasattr(resp["choices"][0].delta, "content"):
-                        report.append(resp["choices"][0].delta.content)
+                    if hasattr(resp["choices"][0].delta, "content") or hasattr(resp.choices[0].delta, "function_call"):
+                        if hasattr(resp.choices[0].delta, "function_call"):
+                            report.append(resp.choices[0].delta.function_call.arguments)
+                        else:
+                            report.append(resp["choices"][0].delta.content)
                         out = "".join(report).strip()
                         if format_fn is not None:
                             mygpt.temp_result = format_fn(out)

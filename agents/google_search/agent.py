@@ -4,6 +4,47 @@ import re
 
 SERPER_API_KEY = "7f69a023e4f07552f4f4179c0fd1061a1f812908"
 
+search_function = {
+  "name": "get_keyword",
+  "description": "Translate users' questions into keywords suitable for Google search",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "q": {
+        "type": "array",
+        "description": "keyword for search, separate with spaces",
+        "items":{"type":"string"}
+      },
+    },
+    "required": ["q"]
+  }
+}
+
+read_function = {
+  "name": "read_and_answer_search_result",
+  "description": "Read the search results and answer the questions in the parameters below",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "answer": {
+        "type": "string",
+        "description": "Answer user questions in detail based on search results"
+      },
+      "position": {
+        "type": "array",
+        "description": "Which search results were used to answer user questions, represented by corresponding positions.",
+        "items":{"type":"number"}
+      },
+      "new key":{
+        "type": "array",
+        "description":"If you are unable to answer the question based on the search results, output the new search keyword you suggest.",
+        "items":{"type":"string"}
+      }
+    },
+    "required": ["answer"]
+  }
+}
+
 class Agent:
     def __init__(self):
         self.name = "google_search"
@@ -11,17 +52,18 @@ class Agent:
         
     def run(self, question, context, mygpt, model_config_yaml, **kwarg):
         
-        prompt_search_key = f"""
-Convert the following question into relevant search keywords for Google
-Keywords should be concise and representative, usually consisting of 1-3 nouns
-question：```{question}```
-Provide the output in JSON format with the following keys: "q"
-"""
+        prompt_search_key = f"""user question：```{question}```"""
         
         # 提取搜索关键词
-        search_key = mygpt.llm(prompt_search_key, model_config_yaml = "../agents/google_search/chatgpt-t0", format_fn=lambda x:f"生成关键词：{x}")
-        search_key = re.findall(r'\{[\s\S]*?\}', search_key)[0]
-        search_obj = eval(search_key)
+        search_key = mygpt.llm(
+            prompt_search_key, 
+            model_config_yaml = "../agents/google_search/chatgpt-t0", 
+            format_fn=lambda x:f"生成关键词：{x}",
+            functions=[search_function],
+            function_call = {"name": "get_keyword"},  
+        )
+        search_obj = eval(response)
+        search_obj["q"] = " ".join(search_obj["q"])
 
         # 得到google搜索结果
         mygpt.temp_result += '\n\n正在获取搜索结果...'
@@ -36,25 +78,21 @@ Provide the output in JSON format with the following keys: "q"
         search_result_text = [{k:v for k,v in dic.items() if (k != 'link') and (k != 'sitelinks')} for dic in search_result_dict]
         
         # 分析搜索结果，回答用户问题
-        prompt_link = f"""
-first analysis what language is used in the user question delimited with triple backticks. Then use the same language or the language requested by the user question to answer the following three questions
-Output all result in JSON format
-
+        prompt_link = prompt_link = f"""
 search results:```{search_result_text}```
 user question: ```{question}```
-
-1. Read the search results, answer the user question as detailed as possible. json key: 'answer'; value type: string
-2. Which search results were used to answer user questions, represented by corresponding positions. json key: 'position', value type:int
-2. If you are unable to answer the question based on the search results, output the new keyword you suggest. json key: 'newkey'
-
-Output all result in JSON format with the following keys: 
-"answer","position", "newkey"
-"""     
+"""
         
-        out = mygpt.llm(prompt_link, model_config_yaml = "../agents/google_search/chatgpt-t0", format_fn=lambda x:f"正在生成答案：{x}")
+        out = mygpt.llm(
+            prompt_link, 
+            model_config_yaml = "../agents/google_search/chatgpt-t0", 
+            format_fn=lambda x:f"正在生成答案：{x}",
+            functions=[read_function],
+            function_call= {"name": "read_and_answer_search_result"},
+        )
 
         # 后处理,格式化输出
-        out_obj = eval(re.findall(r'\{[\s\S]*\}', out)[0])
+        out_obj = eval(link)
         position = out_obj['position']
         answer = out_obj['answer']
         search_result = eval(search_result)
