@@ -4,10 +4,52 @@
 import re
 import os
 import sys
+import json
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 # agent中如果要引入python第三方的包，如wikipedia，要在上面语句之后import
-# 同时还要把这个包复制到agent目录下
+# 同时还要把这个包复制到对应agent目录下
 import wikipedia
+
+# 用于function_call
+search_function = {
+  "name": "get_keyword",
+  "description": "Your task is to convert user question into a keyword for wiki search",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "array",
+        "description": "keyword for wikipedia search, separate with spaces",
+        "items":{"type":"string"}
+      },
+      "lang": {
+      "type": "string",
+      "description": "Set the language for Wikipedia search, If the user question is related to Chinese knowledge, return the language code 'zh'; otherwise, return 'en'",
+      "enum":["zh","en"]
+      },
+    },
+    "required": ["key","lang"]
+  }
+}
+
+read_function = {
+    "name": "get_page",
+    "description": "read search result and select a page for user question",
+    "parameters": {
+        "type": "object",
+        "properties": {
+          "page_name": {
+            "type": "string",
+            "description": "which page's content should be most suitable for answering user question, return one page name, the page name should be completely consistent with the search result",
+        },
+        },
+        "required": ["page_name"]
+      }
+}
+
+
+
+
 
 class Agent: # 实现这个类，类名必须是Agent
     def __init__(self):
@@ -23,25 +65,23 @@ class Agent: # 实现这个类，类名必须是Agent
         # model_config_yaml是一个字符串，指定了当前模型的配置文件，可以用来区分不同模型
         # 以上是应用会自动传入的参数, 下面就是自己去实现逻辑了
         
-        prompt_search_key = f"""
-question：```{question}```
-Your task is to convert question into a keyword for wiki search
-question is delimited with triple backticks above
-Ignore the language used in the question itself
-If the problem is related to Chinese knowledge, return the language code 'zh'; otherwise, return 'en'
-Provide the output in JSON format with the following keys: "key", "lang"
-"""
-        
+        prompt_search_key = f"""user question：```{question}```"""
         # 写一个prompt,然后把这个prompt传给mygpt.llm方法，就可以得到模型生成的回答了,此处用来提取搜索关键词
         # chatgpt_t0是一个预定义的语言模型配置，就是温度为0的chatgpt
         # llm在生成过程中，会在用户界面流式显示生成过程
         # format_fn 是用来对输出的中间过程格式化，用于在用户界面实时的显示时改变格式,非必须
-        search_key = mygpt.llm(prompt_search_key, model_config_yaml = self.model_config, format_fn=lambda x:f"生成查询词：{x}")
+        search_key = mygpt.llm(
+            prompt_search_key, 
+            model_config_yaml = self.model_config, 
+            format_fn=lambda x:f"生成查询词：{x}",
+            functions=[search_function],
+            function_call = {"name": "get_keyword"},  
+        )
 
 
         # prompt指定了模型用json输出我们需要的结果，下面是提取json
-        search_key = re.findall(r'\{[\s\S]*?\}', search_key)[0]
-        search_obj = eval(search_key) # 用eval提取json其实是有风险的，但比json.loads兼容性更好,自己考量风险
+        search_obj = json.loads(search_key) # 提取json，用eval()也可以, 但可能被注入恶意代码，但比json.loads兼容性更好
+        search_obj['key'] = " ".join(search_obj['key'])
 
         # 得到wikipedia搜索结果
         mygpt.temp_result += '\n\n正在获取搜索结果...' # temp_result属性用来在用户界面输出中间过程
@@ -52,21 +92,23 @@ Provide the output in JSON format with the following keys: "key", "lang"
         # 然后需要分析返回的搜索结果，选择最合适的页面读取
         prompt_get_page = f"""
 search result:```{search_result}```
-The search result is a list that stores some wiki pages
-Your task is to determine which page's content should be most suitable for answering questions: qustion:```{question}```
-Use JSON format to output the most suitable page name with the following key: 'page_name'
-The page name should be completely consistent with the search result
+user qustion:```{question}```
 """
         
         # 仍然是同样的逻辑，包装prompt后传给模型，得到模型生成的回答，仍然是用json输出方便提取,这一步主要是判断哪个搜索结果最合适
-        page_name = mygpt.llm(prompt_get_page, model_config_yaml = self.model_config)
-        page_name   = re.findall(r'\{[\s\S]*?\}', page_name)[0]
-        page_name  = eval(page_name)
+        page_name = mygpt.llm(
+            prompt_get_page, 
+            model_config_yaml = self.model_config,
+            functions=[read_function],
+            function_call = {"name": "get_page"},  
+            
+        )
+        page_name  = json.loads(page_name)
         page_name_str = page_name['page_name']
         if search_obj['lang'] == 'zh':
             page_name_str = page_name_str.replace(' ', '')
 
-        # 根据最合适的搜索结果去获取summary。也能获取完整内容，但token太长。用chatgpt基本上会超过限制。当然也可以不使用mygpt.llm, 而使用mygpt.review这个方法来分析内容，这个方法可以处理任意长的文字。或则自己预处理文字的长度
+        # 根据最合适的搜索结果去获取summary。也能获取完整内容，但token太长。用chatgpt基本上会超过限制。当然也可以不使用mygpt.llm, 而使用mygpt.review这个方法来分析长文本内容，这个方法可以处理任意长的文字。
         summary = wikipedia.summary(page_name_str)
         prompt_answer = f"""
 summary:```{summary}```
