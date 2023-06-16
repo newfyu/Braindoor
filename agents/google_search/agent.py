@@ -92,7 +92,7 @@ user question: ```{question}```
         )
 
         # 后处理,格式化输出
-        out_obj = eval(link)
+        out_obj = eval(out)
         position = out_obj['position']
         answer = out_obj['answer']
         search_result = eval(search_result)
