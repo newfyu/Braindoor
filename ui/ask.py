@@ -1,4 +1,6 @@
 from os.path import split
+
+from pandas.io.xml import file_exists
 import gradio as gr
 from utils import (
     histroy_filter,
@@ -79,7 +81,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
     del_proxy()
     return history, history, context, gr.update(value=""), 0, f"1/{len(pages)}", pages, chat_id, chunks, review_mode
 
-def handle_upload_file(file):
+def handle_upload_text(file):
     if isinstance(file, str):
         file_path = file
     else:
@@ -118,6 +120,13 @@ def handle_upload_file(file):
         logger.error(file_path)
         logger.error("read or split text error:" + str(e))
         return str(e), "", "", []
+
+def handle_upload_file(file_path, context):
+    info = (f"请接收一个文件: {file_path}",
+            f"待处理文件路径：```{file_path}```")
+    context.append(info)
+    return context, context, context
+    
 
 def go_page(current_page, offset, pages, jump_page):
     if jump_page in pages:
@@ -254,7 +263,8 @@ with gr.Blocks(title="ask") as ask_interface:
         btn_del.style(full_width=False)
         btn_upload = gr.UploadButton(label='📎',file_types=["file"], elem_id="btn_upload")
         btn_upload.style(full_width=False)
-        remote_upload_box = gr.Textbox("",visible=False, interactive=False, lines=1) # 接受来自braindoor的文件地址
+        remote_upload_box = gr.Textbox("",visible=False, interactive=False, lines=1) # 接受来自braindoor的文本文件地址
+        remote_upload_box2 = gr.Textbox("",visible=False, interactive=False, lines=1) # 接受来自braindoor的任意文件地址
     with gr.Row(elem_id="page_bar"):
         btn_next = gr.Button("<", elem_id="ask_next")
         btn_next.style(full_width=False)
@@ -407,7 +417,7 @@ with gr.Blocks(title="ask") as ask_interface:
     box_hyde.change(fn=change_hyde, inputs=[box_hyde])
 
     btn_upload.upload(
-    fn=handle_upload_file,
+    fn=handle_upload_text,
     inputs=[btn_upload],
     outputs=[
         chatbot,
@@ -426,7 +436,7 @@ with gr.Blocks(title="ask") as ask_interface:
 
     # 处理brainshell的上传api
     remote_upload_box.submit(
-        fn=handle_upload_file,
+        fn=handle_upload_text,
         inputs=[remote_upload_box],
         outputs=[
             chatbot,
@@ -440,9 +450,18 @@ with gr.Blocks(title="ask") as ask_interface:
             btn_page,
             etag_list,
             state_review_mode,
-        ],api_name="upload_file"
+        ],api_name="upload_text"
     )
 
+    remote_upload_box2.submit(
+        fn=handle_upload_file,
+        inputs=[remote_upload_box2, state_context],
+        outputs=[
+            chatbot,
+            state_context,
+            state_history,
+        ],api_name="upload_file"
+    )
 
 
     # 处理brainshell的历史记查询api

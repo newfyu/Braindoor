@@ -103,6 +103,7 @@ class MyGPT:
         etags.append(["ReadTop3", "engine", "/abbr"])
         etags.append(["ReadTop5", "engine", "/abbr"])
         etags.append(["Memo", "engine", "/abbr"])
+        etags.append(["File", "engine", "/abbr"])
 
         etags = pd.DataFrame(etags, columns=["name", "type", "abbr"])
         return etags
