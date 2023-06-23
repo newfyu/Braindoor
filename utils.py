@@ -106,7 +106,6 @@ def set_proxy():
     with open(config_path, "r", encoding="utf-8") as f:
         opt = yaml.load(f, Loader=SafeLoader)
     proxy_address = opt.get("proxy", None)
-    print(proxy_address)
     if proxy_address:
         os.environ["http_proxy"] = f"{proxy_address}"
         os.environ["https_proxy"] = f"{proxy_address}"
