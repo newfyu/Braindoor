@@ -68,7 +68,8 @@ class Agent:
         question = question.replace("#autotag", "").strip()
 
         out = mygpt.llm(
-            question,
+            question=question,
+            context=context,
             functions=[select_tag_function])
 
         # 判断out是否可以转为一个json，并且有tag字段
