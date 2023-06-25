@@ -4,6 +4,7 @@ import json
 import distutils.spawn
 import yaml
 import os
+import sys
 
 PYTHON_PATH = ""
 cwd = os.path.abspath(os.path.dirname(__file__))
@@ -22,7 +23,7 @@ def find_python_interpreter():
 
 # 从当前目录下读取config.yaml,如果值为空则使用find_python_interpreter查找系统python
 config_path = os.path.join(cwd, "config.yaml")
-with open(config_path, 'r') as stream:
+with open(config_path, 'r', encoding='utf-8') as stream:
     try:
         agent_config = yaml.safe_load(stream)
         PYTHON_PATH = agent_config.get('python_path', "")
@@ -121,15 +122,16 @@ All results must be output using the print function, even on the last line of th
         return question, answer, [], ""
 
     def run_script(self, code):
-        process = subprocess.Popen([PYTHON_PATH, '-'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        code = code.encode('utf-8')
+        sys_encoding = sys.stdout.encoding
+        process = subprocess.Popen([PYTHON_PATH, '-'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=False)
 
         try:
             # 设置超时时间为5秒
             stdout, stderr = process.communicate(code, timeout=60)
-            #  print(stdout)
-            return "已执行  \n" + stdout + stderr
+            return "已执行  \n" + stdout.decode(sys_encoding) + stderr.decode(sys_encoding)
         except subprocess.TimeoutExpired:
             process.kill()  # 杀掉子进程
             stdout, stderr = process.communicate()
-            return stderr
+            return stderr.decode(sys_encoding)
 

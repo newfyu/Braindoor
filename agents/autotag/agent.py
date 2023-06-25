@@ -24,6 +24,8 @@ def get_all_agent_description():
 
 def get_all_base_description():
     bases_root = os.path.join(HOME, "bases")
+    if not os.path.exists(bases_root):
+        return []
     base_description = []
     for base in os.listdir(bases_root):
         base_path = os.path.join(bases_root, base)
