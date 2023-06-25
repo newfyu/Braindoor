@@ -384,9 +384,9 @@ def update_config(dir_a, dir_b, filename="config.yaml"):
     if not os.path.exists(path_b):
         shutil.copy(path_a, path_b)
     else:
-        with open(path_a, "r") as f:
+        with open(path_a, "r", encoding='utf-8') as f:
             config_a = yaml.safe_load(f)
-        with open(path_b, "r") as f:
+        with open(path_b, "r", encoding='utf-8') as f:
             config_b = yaml.safe_load(f)
 
         # 如果b中存在和a相同的字段，保持不变
@@ -395,8 +395,8 @@ def update_config(dir_a, dir_b, filename="config.yaml"):
             if key not in config_b:
                 config_b[key] = value
 
-        with open(path_b, "w") as f:
-            yaml.safe_dump(config_b, f)
+        with open(path_b, "w", encoding='utf-8') as f:
+            yaml.safe_dump(config_b, f, allow_unicode=True)
 
 
 # 把根目录下的默认etag文件复制到用户目录下
@@ -408,6 +408,13 @@ def update_etag(src_dir, dst_dir):
             or ".ipynb_checkpoints" in str(file)
             or "__pycache__" in str(file)
         ):
+            continue
+
+        if file.name == "config.yaml":
+            parent = file.parts[-2]
+            if not os.path.exists(Path(dst_dir)/parent):
+                os.makedirs(Path(dst_dir)/parent)
+            update_config(Path(src_dir)/parent, Path(dst_dir)/parent)
             continue
 
         src_file = file
