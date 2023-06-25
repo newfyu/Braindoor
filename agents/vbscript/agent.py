@@ -2,6 +2,9 @@ import re
 import subprocess
 import json
 import tempfile
+import os
+
+CWD = os.path.abspath(os.path.dirname(__file__))
 
 gen_vbscript_function = {
   "name": "gen_vbscript",
@@ -23,6 +26,7 @@ class Agent:
     def __init__(self):
         self.name = "vbscript"
         self.description = "生成和运行VBScript脚本"
+        self.model_config = os.path.join(CWD,"model.yaml") # 可以在agent的目录下放一个该agent专用的模型配置文件。
         
     def run(self, question, context, mygpt, model_config_yaml, **kwarg):
 
@@ -48,6 +52,7 @@ Use VBScript to complete the above user request.
 All the output code is contained in a single markdown code block, marked with ```vbscript ```."""
         
         out = mygpt.llm(prompt, 
+                        model_config_yaml = self.model_config, 
                         context=context,
                         functions=[gen_vbscript_function],
                         function_call={"name": "gen_vbscript"})

@@ -7,7 +7,7 @@ import os
 import sys
 
 PYTHON_PATH = ""
-cwd = os.path.abspath(os.path.dirname(__file__))
+CWD = os.path.abspath(os.path.dirname(__file__))
 
 # 查找系统python目录
 def find_python_interpreter():
@@ -22,7 +22,7 @@ def find_python_interpreter():
             return None
 
 # 从当前目录下读取config.yaml,如果值为空则使用find_python_interpreter查找系统python
-config_path = os.path.join(cwd, "config.yaml")
+config_path = os.path.join(CWD, "config.yaml")
 with open(config_path, 'r', encoding='utf-8') as stream:
     try:
         agent_config = yaml.safe_load(stream)
@@ -62,6 +62,7 @@ class Agent:
     def __init__(self):
         self.name = "python"
         self.description = "生成和运行python脚本"
+        self.model_config = os.path.join(CWD,"model.yaml") # 可以在agent的目录下放一个该agent专用的模型配置文件。
         
     def run(self, question, context, mygpt, model_config_yaml, **kwarg):
 
@@ -94,6 +95,7 @@ All results must be output using the print function, even on the last line of th
         
         out = mygpt.llm(prompt, 
                         context=context,
+                        model_config_yaml = self.model_config, 
                         format_fn = lambda x: f"```json\n{x}\n```",
                         functions=[gen_applescript_function],
                         function_call= {"name": "gen_python"})

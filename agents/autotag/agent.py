@@ -61,6 +61,7 @@ class Agent:
     def __init__(self):
         self.name = "autotag"
         self.description = "根据用户请求自动选择合适的etag"
+        self.model_config = os.path.join(CWD, "model.yaml") 
         
     def run(self, question, context, mygpt, model_config_yaml, base_name, agent_tags, **kwarg):
 
@@ -68,6 +69,7 @@ class Agent:
         question = question.replace("#autotag", "").strip()
 
         out = mygpt.llm(question,
+                        model_config_yaml = self.model_config, 
                         context=context,
                         functions=[select_tag_function])
 

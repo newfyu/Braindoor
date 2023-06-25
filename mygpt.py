@@ -207,8 +207,10 @@ class MyGPT:
             model_config_path = os.path.join(ROOT, "models", "chatgpt-default.yaml")
         else:
             model_config_path = os.path.join(
-                USER, "models", model_config_yaml + ".yaml"
+                USER, "models", model_config_yaml
             )
+            if not model_config_path.endswith(".yaml"):
+                model_config_path += ".yaml"
 
         with open(model_config_path, encoding="utf-8") as f:
             model_config = yaml.load(f, Loader=SafeLoader)

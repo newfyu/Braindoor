@@ -51,7 +51,7 @@ class Agent:
     def __init__(self):
         self.name = "google_search"
         self.description = "轻量级google搜索插件，调用google搜索引擎，回答用户问题。仅读取搜索的摘要，不深入获取网页内容"
-        self.model_config = os.path.join(CWD,"chatgpt-t0")
+        self.model_config = os.path.join(CWD, "model.yaml")
         
     def run(self, question, context, mygpt, model_config_yaml, **kwarg):
         

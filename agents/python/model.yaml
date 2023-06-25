@@ -1,0 +1,5 @@
+model: chatgpt
+params:
+    model: gpt-3.5-turbo-0613
+    temperature: 0.0
+system_message: "你是一个专业的Python程序员"
