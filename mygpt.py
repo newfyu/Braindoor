@@ -372,13 +372,19 @@ class MyGPT:
         # run agent
         if len(agent_tags) > 0:
             sys.path.append(agent_path)
+            #TODO 如果auto-agent在其中，就选择auto-agent
             agent = importlib.import_module(f"{agent_tags[-1]}.agent")
             importlib.reload(agent)
             _agent = agent.Agent()
             mygpt.temp_result = ""
             logger.info("Received answer")
             question, answer, mydocs, draft = _agent.run(
-                question, context, self, model_config_yaml
+                question=question, 
+                context=context, 
+                mygpt=self, 
+                model_config_yaml=model_config_yaml, 
+                base_name=base_name,
+                agent_tags=agent_tags
             )
             return question_out, answer, mydocs, draft
 
