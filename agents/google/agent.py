@@ -60,7 +60,7 @@ class Agent:
         # 提取搜索关键词
         search_key = mygpt.llm(
             prompt_search_key, 
-            model_config_yaml = "../agents/google_search/chatgpt-t0", 
+            model_config_yaml = self.model_config, 
             format_fn=lambda x:f"生成关键词：{x}",
             functions=[search_function],
             function_call = {"name": "get_keyword"},  
