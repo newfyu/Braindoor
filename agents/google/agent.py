@@ -3,6 +3,7 @@ import json
 import re
 
 SERPER_API_KEY = "7f69a023e4f07552f4f4179c0fd1061a1f812908"
+CWD = os.path.abspath(os.path.dirname(__file__))
 
 search_function = {
   "name": "get_keyword",
@@ -49,6 +50,7 @@ class Agent:
     def __init__(self):
         self.name = "google_search"
         self.description = "轻量级google搜索插件，调用google搜索引擎，回答用户问题。仅读取搜索的摘要，不深入获取网页内容"
+        self.model_config = os.path.join(CWD,"chatgpt-t0")
         
     def run(self, question, context, mygpt, model_config_yaml, **kwarg):
         
@@ -85,7 +87,7 @@ user question: ```{question}```
         
         out = mygpt.llm(
             prompt_link, 
-            model_config_yaml = "../agents/google_search/chatgpt-t0", 
+            model_config_yaml = self.model_config, 
             format_fn=lambda x:f"正在生成答案：{x}",
             functions=[read_function],
             function_call= {"name": "read_and_answer_search_result"},
