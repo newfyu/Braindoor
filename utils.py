@@ -415,10 +415,9 @@ def update_etag(src_dir, dst_dir):
         dst_file = Path(dst_file)
         os.makedirs(str(dst_file.parent), exist_ok=True)
         try:
-            shutil.copy2(src_file, dst_file)
-        except:
-            pass
-
+            shutil.copy(src_file, dst_file)
+        except Exception as e:
+            logger.error(e)
 
 class TokenSplitter:
     def __init__(self, chunk_size, chunk_overlap, len_fn):
