@@ -8,7 +8,7 @@ CWD = os.path.abspath(os.path.dirname(__file__))
 
 gen_vbscript_function = {
   "name": "gen_vbscript",
-  "description": "Use VBScript to complete the above user request",
+  "description": "Use VBScript to complete the above user request. Do not use markdown code block tag",
   "parameters": {
     "type": "object",
     "properties": {
@@ -46,10 +46,7 @@ class Agent:
                     return question, answer, [], ""
         
         # 响应用户请求，生成脚本
-        prompt = f"""
-        user request:{question}
-Use VBScript to complete the above user request. 
-All the output code is contained in a single markdown code block, marked with ```vbscript ```."""
+        prompt = f"""user request:{question}"""
         
         out = mygpt.llm(prompt, 
                         model_config_yaml = self.model_config, 
