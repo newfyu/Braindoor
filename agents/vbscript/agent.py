@@ -47,8 +47,14 @@ class Agent:
         
         # 响应用户请求，生成脚本
         prompt = f"""user request:{question}"""
+
+        #现在需要把context中所有```和```之间的内容替换为空,否则会影响生成的代码
+        pattern2 = r"```(.*?)```"
+        for i in range(len(context)):
+            context[i] = (re.sub(pattern2, "", context[i][0]), re.sub(pattern2, "", context[i][1]))
         
         out = mygpt.llm(prompt, 
+                        context=context,
                         model_config_yaml = self.model_config, 
                         functions=[gen_vbscript_function],
                         function_call={"name": "gen_vbscript"})
