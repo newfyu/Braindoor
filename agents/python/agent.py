@@ -84,14 +84,13 @@ class Agent:
         # 响应用户请求，生成脚本
         prompt = f"""
         user request:{question}
-- Write full python code to complete the above user request.
-- If user want to output a pandas DataFrame, you should convert to markdown format and then use the print function to output.
+- Write python code to complete the above user request. Do not use markdown format.
+- If user want to print a pandas DataFrame, you should first use to_markdwon() and then use the print function to output.
 - Do not forget to use print function for all results that need to be printed out, even on the last line of code.
 """
-        #现在需要把context中所有```和```之间的内容替换为空,否则会影响生成的代码
-        pattern2 = r"```(.*?)```"
+        pattern2 = r"```.*?```"
         for i in range(len(context)):
-            context[i] = (re.sub(pattern2, "", context[i][0]), re.sub(pattern2, "", context[i][1]))
+            context[i] = (re.sub(pattern2, "", context[i][0], flags=re.DOTALL), re.sub(pattern2, "", context[i][1], flags=re.DOTALL))
 
         out = mygpt.llm(prompt, 
                         model_config_yaml = self.model_config, 

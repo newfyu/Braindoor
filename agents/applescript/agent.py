@@ -48,9 +48,9 @@ class Agent:
         prompt = f"""user request:{question}"""
 
         #现在需要把context中所有```和```之间的内容替换为空,否则会影响生成的代码
-        pattern2 = r"```(.*?)```"
+        pattern2 = r"```.*?```"
         for i in range(len(context)):
-            context[i] = (re.sub(pattern2, "", context[i][0]), re.sub(pattern2, "", context[i][1]))
+            context[i] = (re.sub(pattern2, "", context[i][0], flags=re.DOTALL), re.sub(pattern2, "", context[i][1], flags=re.DOTALL))
         
         out = mygpt.llm(prompt, 
                         context=context,

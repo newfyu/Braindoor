@@ -122,8 +122,8 @@ def handle_upload_text(file):
         return str(e), "", "", []
 
 def handle_upload_file(file_path, context):
-    info = (f"请接收一个文件: {file_path}",
-            f"待处理文件路径:\n```\n{file_path}\n```")
+    info = (f"上传文件: {file_path}",
+            f"文件路径:  \n{file_path}  \n")
     context.append(info)
     return context, context, context
     
