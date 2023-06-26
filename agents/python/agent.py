@@ -41,15 +41,11 @@ gen_applescript_function = {
     "properties": {
       "code": {
         "type": "string",
-        "description": "python code for user request. If ~ is involved in the path provided by the user, please expand it with os.path.expanduser.",
+        "description": "python code for user request. If ~ is involved in the path provided by the user, please expand it with os.path.expanduser. Do not use markdown tags",
       },
       "file": {
         "type": "string",
-        "description": "If Python code processes and saves a file, output the complete absolute path of the saved file",
-      },
-      "image": {
-        "type": "string",
-        "description": "If Python code uses libraries such as PIL, opencv, matplotlib, seaborn, etc. to output an image, use plt.show output",
+        "description": "If Python code processes and saves a file to local, output the complete absolute path of the saved file",
       },
     },
     "required": ["code"]
@@ -88,9 +84,10 @@ class Agent:
         # 响应用户请求，生成脚本
         prompt = f"""
         user request:{question}
-Write python code to complete the above user request.
-If output a pandas DataFrame, you should convert to markdown format
-All results must be output using the print function, even on the last line of the code
+- Write full python code to complete the above user request.
+- Ignore the code in the previous conversation and assume that memory has been emptied in the python environment.
+- If user want to output a pandas DataFrame, you should convert to markdown format and then use the print function to output.
+- Do not forget to use the print function for all results that need to be printed out, even on the last line of code.
 """
         
         out = mygpt.llm(prompt, 
@@ -110,10 +107,7 @@ All results must be output using the print function, even on the last line of th
         # 判断out_obj是否有file和image
         if 'file' in out_obj.keys():
             file = out_obj['file']
-            out = out + f"  \n文件已保存至{file}"
-        if 'image' in out_obj.keys():
-            image = out_obj['image']
-            out = out + f"  \n图片已保存至{image}"
+            out = out + f"  \n文件将保存至{file}"
 
         matches = re.findall(pattern, out, re.DOTALL)
         if len(matches) == 1: 
