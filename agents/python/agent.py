@@ -91,8 +91,8 @@ class Agent:
 """
         
         out = mygpt.llm(prompt, 
-                        context=context,
                         model_config_yaml = self.model_config, 
+                        context=context,
                         format_fn = lambda x: f"```json\n{x}\n```",
                         functions=[gen_applescript_function],
                         function_call= {"name": "gen_python"})

@@ -50,7 +50,6 @@ class Agent:
         
         out = mygpt.llm(prompt, 
                         model_config_yaml = self.model_config, 
-                        context=context,
                         functions=[gen_vbscript_function],
                         function_call={"name": "gen_vbscript"})
 
