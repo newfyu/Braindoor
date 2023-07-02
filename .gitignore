@@ -17,7 +17,7 @@ bases/
 *.log
 nohup.out
 history/
-config.yaml
+./config.yaml
 dist/
 build/
 extra_files/
