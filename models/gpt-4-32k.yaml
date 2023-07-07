@@ -1,0 +1,5 @@
+model: chatgpt
+params:
+    model: gpt-4-32k-0314
+    temperature: 0.5
+system_message: "you are a help assistant"
