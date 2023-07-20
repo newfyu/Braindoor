@@ -1,4 +1,5 @@
 from os.path import split
+from openai.api_resources import model
 
 from pandas.io.xml import file_exists
 import gradio as gr
@@ -40,7 +41,12 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
 
     
     # 如果question的长度超过限制，自动使用review模式
-    if len(tiktoken_encoder.encode(question)) > mygpt.opt['input_limit']:
+    # load model config，然后决定是否进入review模式
+    _,model_config_yaml,_,_,_ = mygpt.preprocess_question(question)
+    model_config = mygpt.get_model_config(model_config_yaml)
+    input_limit = model_config["params"].get("max_tokens", mygpt.opt['input_limit'])
+
+    if len(tiktoken_encoder.encode(question)) > input_limit:
         chunks = mygpt.fulltext_splitter.split_text(question)
         question = f'"{question[:100]}……"\n这段文字超过了长度限制，将转换为全文阅读模式。'
         answer = f'好的，这段文字已经被拆分为{len(chunks)}块，你可以对文档进行问答了。'

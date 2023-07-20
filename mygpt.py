@@ -180,6 +180,20 @@ class MyGPT:
                 question = template.replace("{text}", question)
         return question
 
+    def get_model_config(self, model_config_yaml):
+        if model_config_yaml is None:
+            model_config_path = os.path.join(ROOT, "models", "chatgpt-default.yaml")
+        else:
+            model_config_path = os.path.join(
+                USER, "models", model_config_yaml
+            )
+            if not model_config_path.endswith(".yaml"):
+                model_config_path += ".yaml"
+
+        with open(model_config_path, encoding="utf-8") as f:
+            model_config = yaml.load(f, Loader=SafeLoader)
+        return model_config
+
     @backoff.on_exception(
         backoff.expo,
         (
@@ -203,17 +217,7 @@ class MyGPT:
             raise AbortRetryException("Stop retry")
         self.abort_msg = False
 
-        if model_config_yaml is None:
-            model_config_path = os.path.join(ROOT, "models", "chatgpt-default.yaml")
-        else:
-            model_config_path = os.path.join(
-                USER, "models", model_config_yaml
-            )
-            if not model_config_path.endswith(".yaml"):
-                model_config_path += ".yaml"
-
-        with open(model_config_path, encoding="utf-8") as f:
-            model_config = yaml.load(f, Loader=SafeLoader)
+        model_config = self.get_model_config(model_config_yaml)
 
         if isinstance(max_tokens, int) and max_tokens > 0:
             model_config["params"]["max_tokens"] = max_tokens
@@ -242,7 +246,11 @@ class MyGPT:
             elif model_name == "gpt-3.5-turbo-0613":
                 model_max_token = 4000
             elif model_name == "gpt-3.5-turbo-16k":
-                model_max_token = 15000
+                model_max_token = 16000
+            elif model_name == "gpt-4-0314":
+                model_max_token = 8000
+            elif model_name == "gpt-4-32k-0314":
+                model_max_token = 32000
             elif message_len < 4000:
                 model_name = "gpt-3.5-turbo-0613"
                 model_config["params"]["model"] = model_name
