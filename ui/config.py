@@ -8,7 +8,6 @@ from utils import logger, get_last_log
 from create_base import create_base
 from update_base import update_base
 from ui import search, ask
-import importlib
 
 opt = mygpt.opt
 USER = os.path.join(os.path.expanduser("~"), "braindoor/")
@@ -34,6 +33,7 @@ def reload():
         opt["input_limit"],
         opt["max_context"],
         opt["save_edit"],
+        opt["api_base"],
     )
     mygpt.load_config()
     return output
@@ -66,12 +66,13 @@ def update_config(
 
 
 # for brainshell
-def save_config_from_brainshell(key, proxy, input_limit, max_context, save_edit):
+def save_config_from_brainshell(key, proxy, input_limit, max_context, save_edit, api_base):
     opt["key"] = key
     opt["proxy"] = proxy
     opt["input_limit"] = input_limit
     opt["max_context"] = max_context
     opt["save_edit"] = save_edit
+    opt["api_base"] = api_base
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(opt, f)
     mygpt.__init__()
@@ -219,6 +220,7 @@ with gr.Blocks(title="ask") as config_interface:
             )
         with gr.Row().style(equal_height=True):
             box_proxy = gr.Textbox(opt["proxy"], label="Proxy")
+            box_api_base = gr.Textbox(opt["api_base"], label="反向代理")
             box_answer_depth = gr.Number(opt["answer_depth"], label="Answer depth")
         with gr.Row().style(equal_height=True):
             box_input_limit = gr.Number(
@@ -244,6 +246,7 @@ with gr.Blocks(title="ask") as config_interface:
         box_input_limit,
         box_max_context,
         box_save_edit,
+        box_api_base,
     ]
 
     with gr.Accordion("Update existing knowledge base", open=False, elem_id="acc"):
@@ -324,7 +327,7 @@ with gr.Blocks(title="ask") as config_interface:
     # save general_configs from brainshell
     btn_save_from_brainshell.click(
         fn=save_config_from_brainshell,
-        inputs=[cmpt_key, box_proxy, box_input_limit, box_max_context, box_save_edit],
+        inputs=[cmpt_key, box_proxy, box_input_limit, box_max_context, box_save_edit, box_api_base],
         outputs=box_info,
         api_name="save_config_from_brainshell",
     )

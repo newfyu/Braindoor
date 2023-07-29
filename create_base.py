@@ -22,6 +22,8 @@ config_path = os.path.join(USER, "config.yaml")
 with open(config_path) as f:
     opt = yaml.load(f, Loader=SafeLoader)
     openai.api_key = opt["key"]
+    if 'api_base' in opt.keys() and opt["api_base"]:
+        openai.api_base = opt["api_base"] + '/v1/'
 
 def get_file_list(bases):
     files = []
@@ -93,6 +95,8 @@ def create_vstore(df_docs):
     with open(config_path) as f:
         opt = yaml.load(f, Loader=SafeLoader)
         openai.api_key = opt["key"]
+        if 'api_base' in opt.keys() and opt["api_base"]:
+            openai.api_base = opt["api_base"] + '/v1/'
     embeddings = OpenAIEmbeddings(openai_api_key=opt["key"])
     metadatas = []
     for file_path in df_docs.file_path:
