@@ -51,9 +51,10 @@ class MyGPT:
 
         openai.api_key = self.opt["key"]
         if 'api_base' in self.opt.keys() and self.opt["api_base"]:
-            openai.api_base = self.opt["api_base"] + '/v1/'
+            openai.api_base = self.opt["api_base"]
         else:
             openai.api_base = 'https://api.openai.com/v1'
+
 
         if self.opt["key"]:
             self.base_embedding = OpenAIEmbeddings(openai_api_key=self.opt["key"])
