@@ -24,6 +24,10 @@ def load_config():
     with open(config_path) as f:
         opt = yaml.load(f, Loader=SafeLoader)
     openai.api_key = opt["key"]
+    if 'api_base' in opt.keys() and opt["api_base"]:
+        openai.api_base = opt["api_base"] + '/v1/'
+    else:
+        openai.api_base = "https://api.openai.com/v1/"
     logger.info(f"Updata config: {opt}")
     return opt
 
