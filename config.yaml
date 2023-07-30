@@ -1,0 +1,20 @@
+HyDE: false
+answer_depth: 1.0
+ask_topk: 5
+bases_root: bases
+enable_ask: true
+enable_config: true
+enable_review: true
+enable_search: true
+key: 
+api_base:  
+input_limit: 12000
+max_context: 12000
+max_l2: 0.4
+proxy: 
+rate_limit: 1
+result_size: 300
+review_chunk_overlap: 10
+review_chunk_size: 8000
+search_topk: 20
+save_edit: false 
