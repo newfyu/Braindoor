@@ -49,6 +49,7 @@ def update_config(
     input_limit,
     max_context,
     save_edit,
+    api_base
 ):
     opt["key"] = key
     opt["rate_limit"] = rate_limit
@@ -59,6 +60,7 @@ def update_config(
     opt["input_limit"] = input_limit
     opt["max_context"] = max_context
     opt["save_edit"] = save_edit
+    opt["api_base"] = api_base
     with open(config_path, "w", encoding="utf-8") as f:
         yaml.dump(opt, f)
     mygpt.__init__()
