@@ -1,4 +1,0 @@
-model: gpt3
-params:
-    max_tokens: 2000
-    temperature: 0.5

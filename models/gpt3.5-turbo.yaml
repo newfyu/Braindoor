@@ -1,4 +1,4 @@
-model: chatgpt
+api: openai
 params:
     temperature: 0.5
 system_message: "you are a help assistant"

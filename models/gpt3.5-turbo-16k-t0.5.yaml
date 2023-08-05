@@ -1,4 +1,4 @@
-model: chatgpt
+api: openai
 params:
     model: gpt-3.5-turbo-16k
     temperature: 0.5

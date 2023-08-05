@@ -56,7 +56,7 @@ class Agent: # 实现这个类，类名必须是Agent
     def __init__(self):
         self.name = 'wikipedia' # agent的名字，任意
         self.description = "根据问题在wikipedia上查找合适的词条后回答用户问题，只从summary中获取上下文，不深入wiki页面内部" # agent的描述，以后会用于模型自动选择agent
-        self.model_config = os.path.join(CWD,"model.yaml") # 可以在agent的目录下放一个该agent专用的模型配置文件。
+        self.model_config = os.path.join(CWD, "model.yaml") # 可以在agent的目录下放一个该agent专用的模型配置文件。
         
     def run(self, question, context, mygpt, model_config_yaml, **kwarg):
         # 实现这个方法，完成插件或智能体的运行逻辑

@@ -1,5 +1,5 @@
-model: chatgpt
+api: openai
 params:
-    model: gpt-4-0314
+    model: gpt-3.5-turbo-0613
     temperature: 0.0
 system_message: "你是一个专业的Vbscript程序员"

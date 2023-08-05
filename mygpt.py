@@ -188,7 +188,7 @@ class MyGPT:
 
     def get_model_config(self, model_config_yaml):
         if model_config_yaml is None:
-            model_config_path = os.path.join(ROOT, "models", "chatgpt-default.yaml")
+            model_config_path = os.path.join(ROOT, "models", "gpt3.5-turbo.yaml")
         else:
             model_config_path = os.path.join(
                 USER, "models", model_config_yaml
@@ -230,7 +230,7 @@ class MyGPT:
 
         out = ""
         # chatgpt
-        if model_config["model"] == "chatgpt":
+        if model_config["api"] == "openai":
             if functions:
                 model_config["params"]["functions"] = functions
             if function_call:
@@ -300,41 +300,6 @@ class MyGPT:
                             mygpt.temp_result = format_fn(out)
                         else:
                             mygpt.temp_result = out
-                else:
-                    mygpt.temp_result += "...abort!"
-                    self.abort_msg = False
-                    logger.info("abort by user")
-                    out = mygpt.temp_result
-                    break
-        # gpt3
-        elif model_config["model"] == "gpt3":
-            model_max_token = 3900
-            prompt = ""
-            if len(context) > 0:
-                for q, a in context:
-                    prompt += f"{q}\n\n"
-                    prompt += f"{a}\n\n"
-            prompt += f"{input}"
-            if not max_tokens:
-                free_tokens = model_max_token - len(tiktoken_encoder.encode(prompt))
-                model_config["params"]["max_tokens"] = free_tokens
-            logger.info("Send message to gpt3")
-            openai.api_key = self.opt["key"]
-            completion = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=prompt,
-                stream=True,
-                **model_config["params"],
-            )
-            report = []
-            for resp in completion:
-                if not self.abort_msg:
-                    report.append(resp["choices"][0]["text"])
-                    out = "".join(report).strip()
-                    if format_fn is not None:
-                        mygpt.temp_result = format_fn(out)
-                    else:
-                        mygpt.temp_result = out
                 else:
                     mygpt.temp_result += "...abort!"
                     self.abort_msg = False
@@ -467,7 +432,7 @@ user question:```{question}```"""
         ) = self.preprocess_question(question)
         self.stop_review = False
         if model_config_yaml is None:
-            model_config_yaml = "chatgpt-review"
+            model_config_yaml = "gpt3.5-turbo-16k"
 
         logger.info(f"Start full text reading")
         answer = ""
