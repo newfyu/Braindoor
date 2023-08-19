@@ -253,9 +253,9 @@ class MyGPT:
                 model_max_token = 4000
             elif model_name == "gpt-3.5-turbo-16k":
                 model_max_token = 16000
-            elif model_name == "gpt-4-0314":
+            elif model_name == "gpt-4-0613":
                 model_max_token = 8000
-            elif model_name == "gpt-4-32k-0314":
+            elif model_name == "gpt-4-32k-0613":
                 model_max_token = 32000
             elif message_len < 4000:
                 model_name = "gpt-3.5-turbo-0613"
