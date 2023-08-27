@@ -1,7 +1,3 @@
-from os.path import split
-from openai.api_resources import model
-
-from pandas.io.xml import file_exists
 import gradio as gr
 from utils import (
     histroy_filter,

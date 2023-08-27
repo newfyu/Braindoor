@@ -4,6 +4,7 @@ import backoff
 import os
 import sys
 import importlib
+import time
 
 import yaml
 from yaml.loader import SafeLoader
@@ -48,6 +49,7 @@ class MyGPT:
         self.stop_retry = False
         self.stop_review = False
         self.all_etags = self.load_etag_list()
+        self.last_request_time = None
 
         openai.api_key = self.opt["key"]
         if 'api_base' in self.opt.keys() and self.opt["api_base"]:
@@ -115,19 +117,22 @@ class MyGPT:
         return etags
 
     def load_base(self, base_paths):
-        if len(base_paths) > 0:
-            base_paths = list(Path(self.bases_root).glob("*.base"))
-            for base_path in base_paths:
-                vstore, df_file_md5, df_docs, metadata = load_base(base_path)
-                base_name = metadata["name"]
-                self.bases[base_name] = {
-                    "df_docs": df_docs,
-                    "df_file_md5": df_file_md5,
-                    "metadata": metadata,
-                    "vstore": vstore,
-                }
-        else:
-            logger.info("no base exists")
+        try:
+            if len(base_paths) > 0:
+                base_paths = list(Path(self.bases_root).glob("*.base"))
+                for base_path in base_paths:
+                    vstore, df_file_md5, df_docs, metadata = load_base(base_path)
+                    base_name = metadata["name"]
+                    self.bases[base_name] = {
+                        "df_docs": df_docs,
+                        "df_file_md5": df_file_md5,
+                        "metadata": metadata,
+                        "vstore": vstore,
+                    }
+            else:
+                logger.info("no base exists")
+        except:
+            logger.info("load base failed")
 
     def load_config(self, config_path=config_path):
         with open(config_path, encoding="utf-8") as f:
@@ -288,6 +293,15 @@ class MyGPT:
                 **model_config["params"],
             )
             report = []
+            # 记录开始时间
+            current_request_time = time.time()
+            if self.last_request_time:
+                # 计算耗时和opt[rate_limit]的差值，如果小于0，则sleep
+                sleep_time = self.opt["rate_limit"] - (current_request_time - self.last_request_time)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+            self.last_request_time = current_request_time
+
             for resp in completion:
                 if not self.abort_msg:
                     if hasattr(resp["choices"][0].delta, "content") or hasattr(resp.choices[0].delta, "function_call"):
@@ -307,6 +321,7 @@ class MyGPT:
                     out = mygpt.temp_result
                     break
         return out
+
 
     def preprocess_question(self, question):
         (

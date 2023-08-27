@@ -68,8 +68,9 @@ def update_config(
 
 
 # for brainshell
-def save_config_from_brainshell(key, proxy, input_limit, max_context, save_edit, api_base):
+def save_config_from_brainshell(key, rate_limit, proxy, input_limit, max_context, save_edit, api_base):
     opt["key"] = key
+    opt["rate_limit"] = rate_limit
     opt["proxy"] = proxy
     opt["input_limit"] = input_limit
     opt["max_context"] = max_context
@@ -329,7 +330,7 @@ with gr.Blocks(title="ask") as config_interface:
     # save general_configs from brainshell
     btn_save_from_brainshell.click(
         fn=save_config_from_brainshell,
-        inputs=[cmpt_key, box_proxy, box_input_limit, box_max_context, box_save_edit, box_api_base],
+        inputs=[cmpt_key, box_rate_limit, box_proxy, box_input_limit, box_max_context, box_save_edit, box_api_base],
         outputs=box_info,
         api_name="save_config_from_brainshell",
     )
