@@ -15,6 +15,7 @@ a = Analysis(
 	('extra_files/gradio_client/*','gradio_client/'),
 	('prompts/*','prompts/'),
 	('models/*','models/'),
+	('bases/Help.base','bases/'),
 	('extra_files/tiktoken/*','tiktoken/'),
 	('extra_files/tiktoken_ext/*','tiktoken_ext/')
 ],

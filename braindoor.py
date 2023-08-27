@@ -11,6 +11,7 @@ update_config(ROOT,USER)
 update_etag(os.path.join(ROOT, "prompts"), os.path.join(USER, "prompts"))
 update_etag(os.path.join(ROOT, "models"), os.path.join(USER, "models"))
 update_etag(os.path.join(ROOT, "agents"), os.path.join(USER, "agents"))
+update_etag(os.path.join(ROOT, "bases"), os.path.join(USER, "bases"))
 
 import gradio as gr
 

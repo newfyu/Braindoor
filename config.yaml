@@ -12,7 +12,7 @@ input_limit: 12000
 max_context: 12000
 max_l2: 0.4
 proxy: 
-rate_limit: 1
+rate_limit: 20
 result_size: 300
 review_chunk_overlap: 10
 review_chunk_size: 8000

@@ -12,11 +12,11 @@ flagged/
 temp/
 .jupyter
 *.vault
-*.base
-bases/
 *.log
 nohup.out
 history/
 dist/
 build/
 extra_files/
+bases/*
+!bases/Help.base
