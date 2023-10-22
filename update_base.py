@@ -3,6 +3,7 @@ import argparse
 import os
 import pickle
 import time
+import shutil
 
 import backoff
 import numpy as np
@@ -36,8 +37,14 @@ opt = load_config()
 
 
 def load_base(base_path):
-    with open(base_path, "rb") as f:
-        base = pickle.load(f)
+    try:
+        with open(base_path, "rb") as f:
+            base = pickle.load(f)
+    except Exception as e:
+        logger.error(f"Load base failed:{e}, try to load backup file:{base_path}.bak")
+        with open(base_path + '.bak', "rb") as f:
+            base = pickle.load(f)
+        logger.info(f"Load base from backup file:{base_path}.bak")
     vstore = base["vstore"]
     df_file_md5 = base["df_file_md5"]
     df_docs = base["df_docs"]
@@ -65,7 +72,7 @@ def check_update(metadata, df_file_md5):
     df_remove = df_remove.drop(labels=["_merge"], axis=1)
     df_remove.columns = ["file_path", "md5"]
 
-    return df_add, df_remove, df_new
+    return df_add, df_remove, df_new, df_old
 
 
 @backoff.on_exception(
@@ -77,12 +84,42 @@ def add_texts_to_vstore_with_backoff(vstore, doc, metadata):
     del_proxy()
 
 
-def add_vstore(df_docs_add, vstore, opt):
+def add_vstore(df_docs_add, vstore, opt, f, save, df_old):
     totel_doc_num = len(df_docs_add)
+    last_file_path = ""
+    df_new = save["df_file_md5"]
+    df_docs = save["df_docs"]
 
     for i, row in df_docs_add.iterrows():
         doc = row["doc"]
         file_path = row["file_path"]
+
+        # 为了在更新时，即时的保存，防止中断后，重复更新, 每更新一个文件就保存一次
+        # 判断last_file_path是否与file_path相同，或i是最后一个, 且i不是第一个
+        if (last_file_path != file_path and i != 0 or i == totel_doc_num - 1) and totel_doc_num != 1:
+            # 从df_old中选择file_path对应的行，把这行加入到df_old中, 由于append已经被弃用，所以使用concat
+            df_old = pd.concat([df_old, df_new[df_new["file_path"] == last_file_path]])
+            # 查找_df_docs中file_path对应的index,_df_docs中可能有多个对应file_path,选择最后一个作为index
+            index = df_docs[df_docs["file_path"] == last_file_path].index.tolist()[-1]
+            # 删除所有大于index中的行
+            _df_docs = df_docs.drop(df_docs.index[index + 1 :])
+
+            _save = {
+                "df_file_md5": df_old,
+                "df_docs": _df_docs,
+                "vstore": vstore,
+                "metadata": save["metadata"],
+            }
+            f.seek(0)
+            pickle.dump(_save, f)
+            f.truncate()
+            logger.info(f"Saved base.")
+            last_file_path = file_path
+        else:
+             last_file_path = file_path
+
+
+        # 写入vstore
         metadata = {"file_path": file_path}
         add_texts_to_vstore_with_backoff(vstore, doc, metadata)
         logger.info(
@@ -119,7 +156,7 @@ def update_base(base_name):
     base_path = os.path.join(USER, opt["bases_root"], base_name)
 
     vstore, df_file_md5, df_docs, metadata = load_base(base_path)
-    df_add, df_remove, df_new = check_update(metadata, df_file_md5)
+    df_add, df_remove, df_new, df_old = check_update(metadata, df_file_md5)
 
     if len(df_add) + len(df_remove) > 0:
         add_set = set(df_add.file_path.to_list())
@@ -155,18 +192,28 @@ def update_base(base_name):
         remove_ids = np.array(df_merged["index"].to_list())
         logger.info("Text split completed!")
 
-        # update vstores
-        if len(df_add) > 0:
-            vstore = add_vstore(df_docs_add, vstore, opt)
-        if len(remove_ids) > 0:
-            vstore.index.remove_ids(remove_ids)
-            vstore = reorder_index_to_docstore_id(remove_ids, vstore)
-
         # update df_docs
         df_docs = pd.concat([df_docs, df_docs_add], ignore_index=True)
         df_docs = df_docs[~df_docs["index"].isin(remove_ids.tolist())]
         df_docs = df_docs.reset_index(drop=True)
         df_docs["index"] = df_docs.index
+
+        if len(remove_ids) > 0:
+            vstore.index.remove_ids(remove_ids)
+            vstore = reorder_index_to_docstore_id(remove_ids, vstore)
+
+        # update vstores
+        if len(df_add) > 0:
+            # backup
+            shutil.copy(base_path, base_path + ".bak")
+            save = {
+                "df_file_md5": df_new,
+                "df_docs": df_docs,
+                "metadata": metadata,
+                "vstore": vstore,
+            }
+            with open(base_path, "wb") as f:
+                vstore = add_vstore(df_docs_add, vstore, opt, f, save, df_old)
 
         with open(base_path, "wb") as f:
             save = {
