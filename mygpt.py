@@ -309,6 +309,7 @@ class MyGPT:
                             report.append(resp.choices[0].delta.function_call.arguments)
                         else:
                             report.append(resp["choices"][0].delta.content)
+                        report = ['' if item is None else item for item in report]
                         out = "".join(report).strip()
                         if format_fn is not None:
                             mygpt.temp_result = format_fn(out)
