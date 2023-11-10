@@ -5,6 +5,7 @@ import os
 import sys
 import importlib
 import time
+import copy
 
 import yaml
 from yaml.loader import SafeLoader
@@ -33,6 +34,8 @@ class Result:
 class AbortRetryException(Exception):
     pass
 
+
+
 class MyGPT:
     def __init__(self, config_path=config_path):
         self.temp_result = ""
@@ -51,12 +54,7 @@ class MyGPT:
         self.all_etags = self.load_etag_list()
         self.last_request_time = None
 
-        openai.api_key = self.opt["key"]
-        if 'api_base' in self.opt.keys() and self.opt["api_base"]:
-            openai.api_base = self.opt["api_base"] + '/v1'
-        else:
-            openai.api_base = 'https://api.openai.com/v1'
-
+        self.init_api()
 
         if self.opt["key"]:
             self.base_embedding = OpenAIEmbeddings(openai_api_key=self.opt["key"])
@@ -67,6 +65,23 @@ class MyGPT:
             chunk_overlap=self.opt["review_chunk_overlap"],
             len_fn=partial(token_len, encoder=tiktoken_encoder),
         )
+
+    def init_api(self):
+        openai.api_key = self.opt["key"]
+        if 'api_base' in self.opt.keys() and self.opt["api_base"]:
+            openai.api_base = self.opt["api_base"] + '/v1'
+        else:
+            openai.api_base = 'https://api.openai.com/v1'
+
+    def reset_proxy(self):
+            os.environ["http_proxy"] = self.opt["proxy"]
+            os.environ["https_proxy"] = self.opt["proxy"]
+
+    def del_proxy(self):
+        if os.environ.get("http_proxy"):
+            del os.environ["http_proxy"]
+            del os.environ["https_proxy"]
+
 
     def load_prompt_etags(self):
         prompt_files = list(Path(prompt_path).glob("*.yaml"))
@@ -214,7 +229,7 @@ class MyGPT:
         ),
     )
     def llm(
-        self, input, context=[], model_config_yaml=None, format_fn=None, max_tokens=None, functions=None, function_call=None):
+        self, input, context=[], model_config_yaml=None, format_fn=None, max_tokens=None, functions=None, function_call=None, **kwargs):
         # input: 输入的字符串
         # context: 上下文
         # model_config_yaml: 模型的配置文件名
@@ -247,34 +262,41 @@ class MyGPT:
                 for q, a in context:
                     messages.append({"role": "user", "content": q})
                     messages.append({"role": "assistant", "content": a})
-            messages.append({"role": "user", "content": input})
+            if kwargs.get("role")=="observation":
+                messages.append({"role": "observation", "content": input})
+            else:
+                messages.append({"role": "user", "content": input})
 
             message_len = len(tiktoken_encoder.encode(str(messages)))
             model_name = model_config["params"].get("model", "")
+            model_max_token = model_config["params"].get("max_tokens", 4000)
 
-            if model_name == "gpt-3.5-turbo":
-                model_max_token = 4000
-            elif model_name == "gpt-3.5-turbo-0613":
-                model_max_token = 4000
-            elif model_name == "gpt-3.5-turbo-16k":
-                model_max_token = 16000
-            elif model_name == "gpt-4-0613":
-                model_max_token = 8000
-            elif model_name == "gpt-4-32k-0613":
-                model_max_token = 32000
-            elif message_len < 4000:
-                model_name = "gpt-3.5-turbo-0613"
-                model_config["params"]["model"] = model_name
-                model_max_token = 4000
-            else:
-                model_name = "gpt-3.5-turbo-16k"
-                model_config["params"]["model"] = model_name
-                model_max_token = 15000
+            if model_name == "":
+                if message_len < 4000:
+                    model_name = "gpt-3.5-turbo-1106"
+                    model_config["params"]["model"] = model_name
+                    model_max_token = 4000
+                else:
+                    model_name = "gpt-3.5-turbo-16k"
+                    model_config["params"]["model"] = model_name
+                    model_max_token = 15000
 
+            # 读取model_config_yaml中braindoor字段下的所有配置（可能为空），对有效的值，将其覆盖self.opt中的同名配置,覆盖前给self.opt创建一个备份
+            self.opt_backup = copy.deepcopy(self.opt)
+            if model_config_yaml:
+                for k, v in model_config.get("braindoor", {}).items():
+                    if k:
+                        self.opt[k] = v
+                        if k=="proxy":
+                            if v:
+                                self.reset_proxy()
+                            else:
+                                self.del_proxy()
+            self.init_api()
 
             # 计算模型可用的最大token数
             free_tokens = model_max_token - message_len
-            # 如果模型可用的最大token数小于0，尝试移除messages中的第一个元素，直到模型可用的最大token数大于1000
+            # 如果模型可用的最大token数小于0，尝试移除messages中的第一轮对话，直到模型可用的最大token数大于1000
             while free_tokens < 1000 and len(messages) > 1:
                 messages.pop(0)
                 message_len = len(tiktoken_encoder.encode(str(messages)))
@@ -321,6 +343,8 @@ class MyGPT:
                     logger.info("abort by user")
                     out = mygpt.temp_result
                     break
+
+        self.opt = self.opt_backup
         return out
 
 
@@ -349,7 +373,7 @@ class MyGPT:
             question = question.replace(f"#{etag}", "")
         return question, model_config_yaml, base_name, engine_tags, agent_tags
 
-    def ask(self, question, context, base_name):
+    def ask(self, question, context, base_name, **kwargs):
         question_out = question
         # 解析etag并处理
         (
@@ -381,7 +405,8 @@ class MyGPT:
                 mygpt=self, 
                 model_config_yaml=model_config_yaml, 
                 base_name=base_name,
-                agent_tags=agent_tags
+                agent_tags=agent_tags,
+                **kwargs
             )
             return question_out, answer, mydocs, draft
 

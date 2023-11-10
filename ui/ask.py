@@ -61,7 +61,7 @@ def run_chat(question, history, context, base_name, chat_id, frontend, chunks=[]
         truncated_context = cutoff_context(context, mygpt) # 截断并移除了local link和etag
         # 进入模型
         try:
-            question, answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name)
+            question, answer, mydocs, _ = mygpt.ask(question, truncated_context, base_name, chat_id=chat_id)
         except Exception as e:
             answer = f"发生了一些错误：<rearslot>{e}</rearslot>"
             mydocs = []
